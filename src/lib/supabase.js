@@ -22,3 +22,5 @@ export const supabase = createClient(
 export function isSupabaseConfigured() {
   return !!(supabaseUrl && supabaseAnonKey)
 }
+
+

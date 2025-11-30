@@ -273,3 +273,163 @@ export function calculateOverallSentimentFromArticles(articles) {
     neutral: neutral,
   }
 }
+
+/**
+ * Transform a topic from snapshot format to news item format
+ * @param {Object} topic - Topic from snapshot topics array
+ * @returns {Object} Transformed news item
+ */
+export function transformSnapshotTopicToNewsItem(topic) {
+  const signalBalance = topic.signal_balance || {}
+  const mainSummary = topic.main_summary || {}
+  const relatedSources = topic.related_sources || []
+
+  // Use signal_balance percentages
+  const sentimentPercentages = {
+    positive: signalBalance.positive?.percentage || 0,
+    negative: signalBalance.negative?.percentage || 0,
+    neutral: signalBalance.neutral?.percentage || 0,
+  }
+
+  // Determine dominant sentiment
+  let dominantSentiment = topic.overall_sentiment || 'neutral'
+  let sentimentPercentage = 0
+
+  const maxSentiment = Object.entries(sentimentPercentages).reduce((a, b) =>
+    a[1] > b[1] ? a : b
+  )
+  if (maxSentiment[1] > 0) {
+    dominantSentiment = maxSentiment[0]
+    sentimentPercentage = maxSentiment[1]
+  } else if (topic.overall_sentiment) {
+    dominantSentiment = topic.overall_sentiment
+    sentimentPercentage = 50
+  }
+
+  // Transform related_sources to sources format
+  const sources = relatedSources.map((source) => ({
+    id: source.id || null,
+    source: source.news_source || 'Unknown Source',
+    headline: source.headline || 'No headline',
+    url: source.hyperlink || '#',
+    sentiment: source.sentiment || 'neutral',
+    excerpt: source.excerpt || null,
+    summary: source.summary || null,
+    timeAgo: calculateTimeAgo(source.date_time), // Use date_time for calculation (ISO timestamp)
+    dateTime: source.date_time || null,
+    category: topic.primary_category || null,
+    topicId: topic.topic_id || null,
+    topicName: topic.topic_name,
+    author: source.author || '',
+    authorTime: source.author_time || source.relative_time || null, // Keep relative_time for display
+    imageUrl: source.image_url || null,
+  }))
+
+  return {
+    id: topic.topic_id || topic.topic_name,
+    title: topic.topic_name || mainSummary.headline || 'Untitled Topic',
+    category: topic.primary_category || mainSummary.category || 'General',
+    timeAgo: calculateTimeAgo(topic.created_at || topic.updated_at),
+    summary: mainSummary.summary || 'No summary available.',
+    sentiment: {
+      type: dominantSentiment,
+      percentage: sentimentPercentage,
+      positive: sentimentPercentages.positive,
+      neutral: sentimentPercentages.neutral,
+      negative: sentimentPercentages.negative,
+    },
+    image: mainSummary.image_url || null,
+    sources: sources,
+    quote: null,
+    quoteAuthor: null,
+    tags: topic.tags || [],
+    statistics: topic.statistics || {},
+  }
+}
+
+/**
+ * Transform snapshot data to news items array
+ * @param {Object} snapshot - Snapshot object from topics_snapshots table
+ * @returns {Array} Array of transformed news items
+ */
+export function transformSnapshotToNewsItems(snapshot) {
+  if (!snapshot) {
+    console.warn('No snapshot provided to transformSnapshotToNewsItems')
+    return []
+  }
+
+  // Handle both cases: snapshot might have topics directly or in a data/topics field
+  let topics = []
+  
+  if (snapshot.topics && Array.isArray(snapshot.topics)) {
+    topics = snapshot.topics
+  } else if (snapshot.data && snapshot.data.topics && Array.isArray(snapshot.data.topics)) {
+    topics = snapshot.data.topics
+  } else if (typeof snapshot === 'object' && 'topics' in snapshot) {
+    // If the snapshot itself is the JSON object with topics
+    topics = snapshot.topics || []
+  }
+
+  if (!topics || topics.length === 0) {
+    console.warn('No topics found in snapshot:', snapshot)
+    return []
+  }
+
+  return topics.map(topic => transformSnapshotTopicToNewsItem(topic))
+}
+
+/**
+ * Calculate overall sentiment from snapshot's global_signal_balance
+ * @param {Object} snapshot - Snapshot object from topics_snapshots table
+ * @returns {Object} Overall sentiment object
+ */
+export function calculateOverallSentimentFromSnapshot(snapshot) {
+  if (!snapshot) {
+    return {
+      type: 'neutral',
+      percentage: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 100,
+    }
+  }
+
+  // Handle both cases: global_signal_balance might be at root or in data
+  let globalSignalBalance = snapshot.global_signal_balance
+  
+  if (!globalSignalBalance && snapshot.data && snapshot.data.global_signal_balance) {
+    globalSignalBalance = snapshot.data.global_signal_balance
+  }
+
+  if (!globalSignalBalance) {
+    // Fallback: calculate from all topics
+    const topics = snapshot.topics || snapshot.data?.topics || []
+    const allArticles = topics.flatMap(topic => topic.related_sources || [])
+    return calculateOverallSentimentFromArticles(allArticles)
+  }
+
+  const total = globalSignalBalance.total_articles || 1
+  const positive = globalSignalBalance.positive?.percentage || 0
+  const negative = globalSignalBalance.negative?.percentage || 0
+  const neutral = globalSignalBalance.neutral?.percentage || 0
+
+  // Determine dominant sentiment
+  let dominant = 'neutral'
+  let percentage = neutral
+  if (positive > percentage) {
+    dominant = 'positive'
+    percentage = positive
+  }
+  if (negative > percentage) {
+    dominant = 'negative'
+    percentage = negative
+  }
+
+  return {
+    type: dominant,
+    percentage: Math.round(percentage),
+    positive: Math.round(positive),
+    negative: Math.round(negative),
+    neutral: Math.round(neutral),
+  }
+}

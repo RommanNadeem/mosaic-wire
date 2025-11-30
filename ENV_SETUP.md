@@ -41,3 +41,5 @@ Make sure your Supabase database has the following views:
 2. **`latest_articles_view`** - Contains articles with full details
 
 Refer to the main README.md for the complete schema details.
+
+

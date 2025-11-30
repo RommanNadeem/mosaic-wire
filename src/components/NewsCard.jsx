@@ -19,53 +19,79 @@ function NewsCard({ newsItem }) {
       Science: 'bg-indigo-500',
       World: 'bg-red-500',
       Economy: 'bg-teal-500',
+      Law: 'bg-indigo-500',
+      Energy: 'bg-yellow-500',
+      Tech: 'bg-blue-500',
+      Security: 'bg-red-500',
+      'Foreign Policy': 'bg-gray-500',
+      Diplomacy: 'bg-blue-500',
+      Trade: 'bg-green-500',
+      Infrastructure: 'bg-gray-600',
+      Environment: 'bg-green-600',
+      Disaster: 'bg-red-600',
+      Education: 'bg-purple-600',
     }
     return colors[category] || 'bg-gray-500'
   }
 
-  const categoryColor = getCategoryColor(newsItem.category)
+  // Handle multiple categories (comma-separated or array)
+  const categories = newsItem.category 
+    ? (typeof newsItem.category === 'string' 
+        ? newsItem.category.split(',').map(c => c.trim())
+        : Array.isArray(newsItem.category) 
+          ? newsItem.category 
+          : [newsItem.category])
+    : []
+
+  const timeAgo = newsItem.timeAgo ? formatTimeAgo(newsItem.timeAgo) : null
 
   return (
     <article className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
       <div className="p-6">
-        {/* Main Content: Image on left, text on right */}
-        <div className="flex gap-6 mb-6">
-          {/* Left: Image */}
-          {newsItem.image && (
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 rounded-lg overflow-hidden shadow-sm">
-                <img 
-                  src={newsItem.image} 
-                  alt={newsItem.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                  }}
-                />
-              </div>
-            </div>
-          )}
-          
-          {/* Right: Title, Summary, Category, Time */}
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
-              {newsItem.title}
-            </h3>
-            <p className="text-gray-700 text-sm leading-relaxed mb-3 line-clamp-3">
-              {newsItem.summary}
-            </p>
-            <div className="flex items-center space-x-3 flex-wrap">
-              <span className={`${categoryColor} text-white px-3 py-1 rounded-full text-xs font-medium`}>
-                {newsItem.category}
-              </span>
-              <span className="text-xs text-gray-500 flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {formatTimeAgo(newsItem.timeAgo)}
-              </span>
+        {/* Image at top left */}
+        {newsItem.image && (
+          <div className="mb-4">
+            <div className="w-full h-48 rounded-lg overflow-hidden shadow-sm">
+              <img 
+                src={newsItem.image} 
+                alt={newsItem.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                }}
+              />
             </div>
           </div>
+        )}
+
+        {/* Title */}
+        <h3 className="mb-3 leading-tight" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontSize: '18px', fontWeight: '600', color: 'rgb(33, 36, 44)' }}>
+          {newsItem.title}
+        </h3>
+
+        {/* Summary */}
+        <p className="leading-relaxed mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: '14px', color: 'rgb(103, 111, 126)' }}>
+          {newsItem.summary}
+        </p>
+
+        {/* Category and Time */}
+        <div className="flex items-center gap-3 mb-6" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          {categories.map((cat, idx) => (
+            <span 
+              key={idx}
+              className={`${getCategoryColor(cat)} text-white px-3 py-1 rounded-full text-xs font-medium`}
+            >
+              {cat}
+            </span>
+          ))}
+          {timeAgo && (
+            <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{timeAgo}</span>
+            </div>
+          )}
         </div>
 
         {/* Signal Balance Bar */}
@@ -73,36 +99,13 @@ function NewsCard({ newsItem }) {
           <SignalBalance sentiment={newsItem.sentiment} />
         </div>
 
-        {/* Sources */}
-        <div className="pt-6 border-t border-gray-200">
-          {newsItem.sources && newsItem.sources.length > 0 ? (
+        {/* Related Sources */}
+        {newsItem.sources && newsItem.sources.length > 0 && (
+          <div className="pt-6 border-t border-gray-200">
+            <h4 className="text-xs font-semibold text-gray-700 mb-4 uppercase tracking-wide" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              Related Sources
+            </h4>
             <SourceList sources={newsItem.sources} />
-          ) : (
-            <div>
-              <p className="text-gray-500 text-sm italic">No sources available for this topic</p>
-              {console.warn('NewsCard: No sources for topic', {
-                topicId: newsItem.id,
-                topicName: newsItem.title,
-                sources: newsItem.sources
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Quote */}
-        {newsItem.quote && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <blockquote className="text-gray-700 italic text-lg leading-relaxed">
-              "{newsItem.quote}"
-            </blockquote>
-            {newsItem.quoteAuthor && (
-              <a 
-                href={`#${newsItem.quoteAuthor}`}
-                className="mt-2 text-blue-600 hover:text-blue-800 font-medium inline-block transition-colors"
-              >
-                @{newsItem.quoteAuthor}
-              </a>
-            )}
           </div>
         )}
       </div>

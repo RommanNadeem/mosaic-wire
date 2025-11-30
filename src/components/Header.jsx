@@ -1,19 +1,18 @@
 function Header() {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="container mx-auto px-4 py-4 max-w-6xl">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">M</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">MosaicWire</h1>
+          <div>
+            <h1 className="text-[36px] font-bold" style={{ fontFamily: '"Playfair Display", Georgia, serif', color: 'rgb(33, 36, 44)' }}>MosaicWire</h1>
+            <p className="text-sm mt-0.5" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: 'rgb(103, 111, 126)' }}>Pakistan's news, unmasked.</p>
           </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-medium">Home</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-medium">Categories</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 font-medium">About</a>
-          </nav>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>Live</span>
+            <span className="text-gray-400">•</span>
+            <span className="text-sm text-gray-700" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>Today's Top Signals</span>
+          </div>
         </div>
       </div>
     </header>
@@ -21,3 +20,4 @@ function Header() {
 }
 
 export default Header
+

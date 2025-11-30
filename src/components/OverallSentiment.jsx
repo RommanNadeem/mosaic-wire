@@ -1,56 +1,53 @@
 function OverallSentiment({ sentiment }) {
-  const getSentimentColor = (type) => {
-    switch (type) {
-      case 'positive':
-        return 'bg-sentiment-positive'
-      case 'negative':
-        return 'bg-sentiment-negative'
-      default:
-        return 'bg-sentiment-neutral'
-    }
-  }
+  const { positive = 0, neutral = 0, negative = 0 } = sentiment
 
-  const getSentimentLabel = (type) => {
-    switch (type) {
-      case 'positive':
-        return 'Positive'
-      case 'negative':
-        return 'Negative'
-      default:
-        return 'Neutral'
-    }
-  }
-
-  const sentimentColor = getSentimentColor(sentiment.type)
-  const sentimentLabel = getSentimentLabel(sentiment.type)
+  // Calculate total to ensure percentages are correct
+  const total = positive + neutral + negative || 100
+  const positiveWidth = total > 0 ? (positive / total) * 100 : 0
+  const neutralWidth = total > 0 ? (neutral / total) * 100 : 0
+  const negativeWidth = total > 0 ? (negative / total) * 100 : 0
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Overall Sentiment</h2>
-      <div className="flex items-center space-x-4 mb-4">
-        <div className="flex-1 h-8 bg-gray-200 rounded-full overflow-hidden">
-          <div 
-            className={`h-full ${sentimentColor} transition-all duration-500 rounded-full shadow-sm`}
-            style={{ width: `${sentiment.percentage}%` }}
-          />
-        </div>
-        <div className="flex items-center space-x-2 min-w-[140px]">
-          <span className="text-lg font-semibold text-gray-900">{sentimentLabel}</span>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          Today's Signal Balance
+        </h2>
+        <div className="flex items-center gap-4 text-sm" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <span className="flex items-center gap-1.5 text-gray-700">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span>Uplift {positive}%</span>
+          </span>
+          <span className="flex items-center gap-1.5 text-gray-700">
+            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <span>Balanced {neutral}%</span>
+          </span>
+          <span className="flex items-center gap-1.5 text-gray-700">
+            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+            <span>Critical {negative}%</span>
+          </span>
         </div>
       </div>
-      <div className="flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-sentiment-positive"></div>
-          <span className="text-gray-600">Positive: {sentiment.positive}%</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-sentiment-neutral"></div>
-          <span className="text-gray-600">Neutral: {sentiment.neutral}%</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-sentiment-negative"></div>
-          <span className="text-gray-600">Negative: {sentiment.negative}%</span>
-        </div>
+      {/* Bar */}
+      <div className="w-full h-4 rounded overflow-hidden flex">
+        {positive > 0 && (
+          <div
+            className="bg-green-500 h-full transition-all duration-300 flex-shrink-0"
+            style={{ width: `${positiveWidth}%`, minWidth: positiveWidth > 0 ? '2px' : '0' }}
+          />
+        )}
+        {neutral > 0 && (
+          <div
+            className="bg-yellow-500 h-full transition-all duration-300 flex-shrink-0"
+            style={{ width: `${neutralWidth}%`, minWidth: neutralWidth > 0 ? '2px' : '0' }}
+          />
+        )}
+        {negative > 0 && (
+          <div
+            className="bg-red-500 h-full transition-all duration-300 flex-shrink-0"
+            style={{ width: `${negativeWidth}%`, minWidth: negativeWidth > 0 ? '2px' : '0' }}
+          />
+        )}
       </div>
     </div>
   )

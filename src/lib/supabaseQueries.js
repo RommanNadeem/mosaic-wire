@@ -90,3 +90,42 @@ export async function getArticlesBySentiment(sentiment) {
 
   return data || []
 }
+
+/**
+ * Fetch the latest snapshot from topics_snapshots table
+ * Orders by created_at descending and returns the most recent entry
+ * The snapshot data is stored in the 'data' JSONB column
+ * @returns {Promise<Object>} Latest snapshot object with topics array and metadata
+ */
+export async function getLatestTopicsSnapshot() {
+  const { data, error } = await supabase
+    .from('topics_snapshots')
+    .select('id, snapshot_date, data, created_at, updated_at')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) {
+    console.error('Error fetching latest topics snapshot:', error)
+    throw error
+  }
+
+  if (!data) {
+    return null
+  }
+
+  // The snapshot JSON data is stored in the 'data' JSONB column
+  // Return the JSONB data along with row metadata for reference
+  if (data.data && typeof data.data === 'object') {
+    return {
+      ...data.data,
+      _row_created_at: data.created_at,
+      _row_snapshot_date: data.snapshot_date,
+      _row_id: data.id
+    }
+  }
+  
+  // Fallback: return the data column if it exists, or the whole row
+  return data.data || data
+}
+

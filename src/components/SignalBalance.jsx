@@ -9,47 +9,55 @@ function SignalBalance({ sentiment }) {
 
   return (
     <div>
-      <h4 className="text-xs font-semibold text-gray-900 mb-2 uppercase tracking-wide">Signal Balance</h4>
-      <div className="flex items-center h-6 bg-gray-200 rounded overflow-hidden">
+      {/* Heading and Percentages Row */}
+      <div className="flex items-center justify-between mb-3">
+        <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wide" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          Signal Balance
+        </h5>
+        
+        {/* Percentages with dots */}
+        <div className="flex items-center gap-3 text-xs text-gray-700" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          {positive > 0 && (
+            <span className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span>{positive}%</span>
+            </span>
+          )}
+          {neutral > 0 && (
+            <span className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+              <span>{neutral}%</span>
+            </span>
+          )}
+          {negative > 0 && (
+            <span className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              <span>{negative}%</span>
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {/* Bar - segments in order: positive (green), neutral (yellow), negative (red) */}
+      <div className="w-full h-4 rounded overflow-hidden flex">
         {positive > 0 && (
           <div
-            className="bg-green-500 h-full flex items-center justify-center text-white text-xs font-medium transition-all duration-300"
-            style={{ width: `${positiveWidth}%` }}
-          >
-            {positiveWidth > 12 && <span>{positive}%</span>}
-          </div>
+            className="bg-green-500 h-full transition-all duration-300 flex-shrink-0"
+            style={{ width: `${positiveWidth}%`, minWidth: positiveWidth > 0 ? '2px' : '0' }}
+          />
         )}
         {neutral > 0 && (
           <div
-            className="bg-yellow-500 h-full flex items-center justify-center text-white text-xs font-medium transition-all duration-300"
-            style={{ width: `${neutralWidth}%` }}
-          >
-            {neutralWidth > 12 && <span>{neutral}%</span>}
-          </div>
+            className="bg-yellow-500 h-full transition-all duration-300 flex-shrink-0"
+            style={{ width: `${neutralWidth}%`, minWidth: neutralWidth > 0 ? '2px' : '0' }}
+          />
         )}
         {negative > 0 && (
           <div
-            className="bg-red-500 h-full flex items-center justify-center text-white text-xs font-medium transition-all duration-300"
-            style={{ width: `${negativeWidth}%` }}
-          >
-            {negativeWidth > 12 && <span>{negative}%</span>}
-          </div>
+            className="bg-red-500 h-full transition-all duration-300 flex-shrink-0"
+            style={{ width: `${negativeWidth}%`, minWidth: negativeWidth > 0 ? '2px' : '0' }}
+          />
         )}
-      </div>
-      {/* Always show percentages below */}
-      <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
-        <span className="flex items-center space-x-1.5">
-          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-          <span>{positive}%</span>
-        </span>
-        <span className="flex items-center space-x-1.5">
-          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-          <span>{neutral}%</span>
-        </span>
-        <span className="flex items-center space-x-1.5">
-          <div className="w-2 h-2 rounded-full bg-red-500"></div>
-          <span>{negative}%</span>
-        </span>
       </div>
     </div>
   )

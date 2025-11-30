@@ -3,8 +3,8 @@ import Header from './components/Header'
 import OverallSentiment from './components/OverallSentiment'
 import NewsCard from './components/NewsCard'
 import { sampleNewsData } from './data/sampleData'
-import { getLatestTopics, getAllLatestArticles } from './lib/supabaseQueries'
-import { transformTopicsToNewsItems, calculateOverallSentimentFromArticles } from './utils/dataTransformers'
+import { getLatestTopicsSnapshot } from './lib/supabaseQueries'
+import { transformSnapshotToNewsItems, calculateOverallSentimentFromSnapshot } from './utils/dataTransformers'
 import { isSupabaseConfigured } from './lib/supabase'
 
 function App() {
@@ -36,21 +36,22 @@ function App() {
       }
 
       try {
-        // Fetch topics and articles in parallel
-        const [topics, articles] = await Promise.all([
-          getLatestTopics(),
-          getAllLatestArticles(),
-        ])
+        // Fetch latest snapshot from topics_snapshots table
+        const snapshot = await getLatestTopicsSnapshot()
 
-        console.log('Fetched data:', {
-          topicsCount: topics?.length || 0,
-          articlesCount: articles?.length || 0,
-          sampleTopic: topics?.[0],
-          sampleArticle: articles?.[0]
+        console.log('Fetched snapshot:', {
+          snapshot: snapshot,
+          hasTopics: snapshot?.topics?.length > 0,
+          topicsCount: snapshot?.topics?.length || 0,
+          sampleTopic: snapshot?.topics?.[0]
         })
 
-        // Transform data to match component structure
-        const transformedItems = transformTopicsToNewsItems(topics, articles)
+        if (!snapshot) {
+          throw new Error('No snapshot data found in topics_snapshots table')
+        }
+
+        // Transform snapshot data to match component structure
+        const transformedItems = transformSnapshotToNewsItems(snapshot)
         
         console.log('Transformed items:', {
           count: transformedItems.length,
@@ -58,8 +59,8 @@ function App() {
           sampleItem: transformedItems[0]
         })
         
-        // Calculate overall sentiment from articles
-        const overall = calculateOverallSentimentFromArticles(articles)
+        // Calculate overall sentiment from snapshot
+        const overall = calculateOverallSentimentFromSnapshot(snapshot)
 
         setNewsItems(transformedItems)
         setOverallSentiment(overall)
@@ -119,7 +120,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
         {usingSampleData && (
           <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800 text-sm">
@@ -152,7 +153,7 @@ function App() {
                 <p className="text-gray-600 text-lg">No news items found.</p>
               </div>
             ) : (
-              <div className="mt-8 space-y-6">
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 {newsItems.map((item) => (
                   <NewsCard key={item.id} newsItem={item} />
                 ))}

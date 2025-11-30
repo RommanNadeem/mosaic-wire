@@ -42,3 +42,5 @@ function SentimentBar({ sentiment }) {
 }
 
 export default SentimentBar
+
+
