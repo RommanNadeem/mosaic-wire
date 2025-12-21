@@ -1,14 +1,55 @@
+import { useState, useEffect } from 'react'
 import SignalBalance from './SignalBalance'
 import SourceList from './SourceList'
 import { useTheme } from '../contexts/ThemeContext'
 import { formatTimeAgo } from '../utils/dataTransformers'
+import { getSignedImageUrl } from '../utils/imageUtils'
 
 function NewsCard({ newsItem }) {
   const { theme } = useTheme()
+  const [imageUrl, setImageUrl] = useState(null)
+  const [imageError, setImageError] = useState(false)
+  const [selectedSentiment, setSelectedSentiment] = useState(null)
   
   if (!newsItem) return null
 
   const { id, title, category, timeAgo, summary, sentiment, image, sources, quote, quoteAuthor, recentArticlesCount } = newsItem
+
+  // Filter sources based on selected sentiment
+  const filteredSources = selectedSentiment 
+    ? sources.filter(source => {
+        const sourceSentiment = source.sentiment?.toLowerCase() || 'neutral'
+        return sourceSentiment === selectedSentiment
+      })
+    : sources
+
+  // Get signed URL for images that need authentication
+  useEffect(() => {
+    if (image) {
+      // Log the original image URL for debugging
+      console.log('Processing image URL:', image)
+      
+      getSignedImageUrl(image)
+        .then(url => {
+          if (url) {
+            console.log('Image URL processed successfully:', url)
+            setImageUrl(url)
+            setImageError(false)
+          } else {
+            console.warn('Image URL could not be processed (likely needs backend signing):', image)
+            setImageError(true)
+            setImageUrl(null) // Don't try to load unsigned URLs
+          }
+        })
+        .catch(error => {
+          console.error('Error getting signed image URL:', error)
+          setImageError(true)
+          setImageUrl(null) // Don't try to load on error
+        })
+    } else {
+      setImageUrl(null)
+    }
+  }, [image])
 
   const cardBg = theme === 'light' ? 'bg-white' : 'bg-ground-dark-secondary'
   const borderColor = theme === 'light' ? 'border-gray-200 hover:border-gray-300' : 'border-ground-dark-tertiary hover:border-ground-medium-grey'
@@ -22,15 +63,22 @@ function NewsCard({ newsItem }) {
   return (
     <article className={`${cardBg} rounded-lg border ${borderColor} overflow-hidden transition-all flex flex-col h-full`}>
       {/* Image */}
-      {image && (
+      {imageUrl && !imageError && (
         <div className={`w-full h-48 ${imageBg} overflow-hidden flex-shrink-0`}>
           <img
-            src={image}
-            alt={title}
+            src={imageUrl}
+            alt={title || 'News image'}
             className="w-full h-full object-cover"
             onError={(e) => {
+              console.error('Image failed to load:', imageUrl)
+              setImageError(true)
               e.target.style.display = 'none'
+              // Hide the container if image fails
+              if (e.target.parentElement) {
+                e.target.parentElement.style.display = 'none'
+              }
             }}
+            loading="lazy"
           />
         </div>
       )}
@@ -70,16 +118,41 @@ function NewsCard({ newsItem }) {
         {/* Signal Balance */}
         {sentiment && (
           <div className="mb-4">
-            <SignalBalance sentiment={sentiment} />
+            <SignalBalance 
+              sentiment={sentiment} 
+              onSentimentClick={setSelectedSentiment}
+              selectedSentiment={selectedSentiment}
+            />
+            {selectedSentiment && (
+              <div className={`mt-2 text-xs ${textTertiary} flex items-center justify-between`}>
+                <span>
+                  Filtered by: <span className="font-medium capitalize">{selectedSentiment}</span>
+                </span>
+                <button
+                  onClick={() => setSelectedSentiment(null)}
+                  className={`text-xs underline hover:no-underline ${textSecondary} ${
+                    theme === 'light' ? 'hover:text-gray-900' : 'hover:text-ground-text-primary'
+                  }`}
+                >
+                  Clear filter
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {/* Sources - flex-1 to push expandable to bottom */}
-        {sources && sources.length > 0 && (
+        {filteredSources && filteredSources.length > 0 ? (
           <div className="mb-4 flex-1 flex flex-col">
-            <SourceList sources={sources} />
+            <SourceList sources={filteredSources} />
           </div>
-        )}
+        ) : sources && sources.length > 0 ? (
+          <div className="mb-4 flex-1 flex flex-col">
+            <div className={`text-sm ${textTertiary} py-4 text-center`}>
+              No articles match the selected sentiment filter.
+            </div>
+          </div>
+        ) : null}
 
         {/* Quote */}
         {quote && (
