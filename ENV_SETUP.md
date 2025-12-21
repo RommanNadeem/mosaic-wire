@@ -43,3 +43,4 @@ Make sure your Supabase database has the following views:
 Refer to the main README.md for the complete schema details.
 
 
+

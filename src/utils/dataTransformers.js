@@ -1,435 +1,250 @@
 /**
- * Transform Supabase data to match component structure
- */
-
-/**
- * Calculate time ago in minutes from ISO timestamp
- * @param {string} timestamp - ISO timestamp string
+ * Calculate time ago in minutes/hours from ISO timestamp
+ * @param {string} dateTime - ISO timestamp string
  * @returns {number} Minutes ago
  */
-export function calculateTimeAgo(timestamp) {
-  if (!timestamp) return 0
+export function calculateTimeAgo(dateTime) {
+  if (!dateTime) return 0
   
   const now = new Date()
-  const past = new Date(timestamp)
-  const diffMs = now - past
-  const diffMinutes = Math.floor(diffMs / (1000 * 60))
+  const then = new Date(dateTime)
+  const diffMs = now - then
+  const diffMins = Math.floor(diffMs / (1000 * 60))
   
-  return Math.max(0, diffMinutes)
+  return diffMins
 }
 
 /**
- * Transform a topic with its articles into the news card format
- * @param {Object} topic - Topic from latest_topics_view
- * @param {Array} articles - Articles from latest_articles_view for this topic
- * @returns {Object} Transformed news item
+ * Format time ago as "Xh ago" or "Xm ago"
+ * @param {number} minutesAgo - Minutes ago
+ * @returns {string} Formatted string
  */
-export function transformTopicToNewsItem(topic, articles = []) {
-  // Calculate sentiment percentage from articles
-  const sentimentCounts = articles.reduce((acc, article) => {
-    acc[article.sentiment] = (acc[article.sentiment] || 0) + 1
-    return acc
-  }, {})
-
-  const total = articles.length || 1
-  const sentimentPercentages = {
-    positive: Math.round((sentimentCounts.positive || 0) / total * 100),
-    negative: Math.round((sentimentCounts.negative || 0) / total * 100),
-    neutral: Math.round((sentimentCounts.neutral || 0) / total * 100),
+export function formatTimeAgo(minutesAgo) {
+  if (minutesAgo < 60) {
+    return `${minutesAgo}m ago`
   }
-
-  // Determine dominant sentiment
-  let dominantSentiment = topic.overall_sentiment || 'neutral'
-  let sentimentPercentage = 0
-
-  // If no articles, use topic's overall_sentiment with default percentage
-  if (articles.length === 0) {
-    sentimentPercentage = 50 // Default percentage when no articles
-  } else {
-    // Use calculated percentage from articles
-    const maxSentiment = Object.entries(sentimentPercentages).reduce((a, b) =>
-      a[1] > b[1] ? a : b
-    )
-    dominantSentiment = maxSentiment[0]
-    sentimentPercentage = maxSentiment[1]
-  }
-  
-  // Fallback to topic's overall_sentiment if calculated percentage is 0
-  if (sentimentPercentage === 0 && topic.overall_sentiment) {
-    dominantSentiment = topic.overall_sentiment
-    sentimentPercentage = 50
-  }
-
-  // Transform articles to sources format using all fields from latest_articles_view
-  // Schema fields: id, topic_name, topic_id, headline, hyperlink, excerpt, summary, 
-  // sentiment, date_time, news_source, category, snapshot_timestamp, created_at
-  const sources = articles.map((article) => ({
-    id: article.id,
-    source: article.news_source || 'Unknown Source',
-    headline: article.headline || 'No headline',
-    url: article.hyperlink || '#',
-    sentiment: article.sentiment || 'neutral',
-    excerpt: article.excerpt || null, // Article excerpt from latest_articles_view
-    summary: article.summary || null, // Article-level AI summary from latest_articles_view
-    timeAgo: calculateTimeAgo(article.date_time || article.created_at), // Time for each article
-    dateTime: article.date_time || article.created_at, // Raw timestamp from latest_articles_view
-    category: article.category || null, // Category from article (may differ from topic category)
-    topicId: article.topic_id, // Reference to parent topic
-    topicName: article.topic_name, // Topic name (denormalized)
-  }))
-
-  return {
-    id: topic.id,
-    title: topic.topic_name,
-    category: topic.category || 'General',
-    timeAgo: calculateTimeAgo(topic.snapshot_timestamp || topic.created_at),
-    summary: topic.ai_summary || 'No summary available.',
-    sentiment: {
-      type: dominantSentiment,
-      percentage: sentimentPercentage,
-      positive: sentimentPercentages.positive,
-      neutral: sentimentPercentages.neutral,
-      negative: sentimentPercentages.negative,
-    },
-    image: null, // Can be added later if images are stored
-    sources: sources,
-    quote: null, // Can be added later if quotes are stored
-    quoteAuthor: null,
-  }
+  const hours = Math.floor(minutesAgo / 60)
+  return `${hours}h ago`
 }
 
 /**
- * Group articles by topic
- * @param {Array} articles - Array of articles from latest_articles_view
- * @returns {Object} Object with topic_id as keys and arrays of articles as values
+ * Group articles by frontend_topic_id (integer foreign key to topic_snapshots.id)
+ * @param {Array} articles - Array of article objects
+ * @returns {Object} Object with frontend_topic_id as keys and arrays of articles as values
  */
 export function groupArticlesByTopic(articles) {
-  if (!articles || articles.length === 0) {
-    console.warn('No articles provided to groupArticlesByTopic')
+  if (!articles || !Array.isArray(articles)) {
     return {}
   }
 
-  const grouped = articles.reduce((acc, article) => {
-    // Try topic_id first, fallback to topic_name if topic_id is missing
-    const topicId = article.topic_id
-    const topicName = article.topic_name
-    
-    if (!topicId && !topicName) {
-      console.warn('Article missing both topic_id and topic_name:', article)
-      return acc
+  return articles.reduce((acc, article) => {
+    // Use frontend_topic_id (integer) which references topic_snapshots.id
+    const topicId = article.frontend_topic_id
+    if (!acc[topicId]) {
+      acc[topicId] = []
     }
-
-    // Use topic_id as primary key, or topic_name as fallback
-    const key = topicId || `name_${topicName}`
-    
-    if (!acc[key]) {
-      acc[key] = []
-    }
-    acc[key].push(article)
+    acc[topicId].push(article)
     return acc
   }, {})
-
-  console.log('Grouped articles by topic:', {
-    totalArticles: articles.length,
-    groups: Object.keys(grouped).map(key => ({
-      key,
-      count: grouped[key].length,
-      sample: grouped[key][0]?.topic_name || grouped[key][0]?.topic_id
-    }))
-  })
-
-  return grouped
 }
 
 /**
- * Transform multiple topics with articles into news items
- * @param {Array} topics - Array of topics from latest_topics_view
- * @param {Array} articles - Array of articles from latest_articles_view
- * @returns {Array} Array of transformed news items
+ * Calculate sentiment percentages from articles
+ * @param {Array} articles - Array of article objects with sentiment field
+ * @returns {Object} Sentiment object with type, percentage, and counts
  */
-export function transformTopicsToNewsItems(topics, articles) {
-  if (!topics || topics.length === 0) {
-    console.warn('No topics provided to transformTopicsToNewsItems')
-    return []
-  }
-
-  if (!articles || articles.length === 0) {
-    console.warn('No articles provided to transformTopicsToNewsItems - topics will have no sources')
-    // Return topics without articles
-    return topics.map(topic => transformTopicToNewsItem(topic, []))
-  }
-
-  // Group articles by both topic_id and topic_name for flexible matching
-  const articlesByTopicId = {}
-  const articlesByTopicName = {}
-
-  articles.forEach((article) => {
-    // Group by topic_id
-    if (article.topic_id) {
-      if (!articlesByTopicId[article.topic_id]) {
-        articlesByTopicId[article.topic_id] = []
-      }
-      articlesByTopicId[article.topic_id].push(article)
-    }
-
-    // Also group by topic_name as fallback
-    if (article.topic_name) {
-      const topicNameKey = article.topic_name.trim().toLowerCase()
-      if (!articlesByTopicName[topicNameKey]) {
-        articlesByTopicName[topicNameKey] = []
-      }
-      articlesByTopicName[topicNameKey].push(article)
-    }
-  })
-
-  console.log('Grouped articles:', {
-    byTopicId: Object.keys(articlesByTopicId).length,
-    byTopicName: Object.keys(articlesByTopicName).length,
-    totalArticles: articles.length,
-    topicIdKeys: Object.keys(articlesByTopicId),
-    sampleTopicNames: Object.keys(articlesByTopicName).slice(0, 3)
-  })
-
-  return topics.map((topic) => {
-    let topicArticles = []
-
-    // First try matching by topic.id
-    if (topic.id && articlesByTopicId[topic.id]) {
-      topicArticles = articlesByTopicId[topic.id]
-    }
-    // Fallback: match by topic_name (case-insensitive)
-    else if (topic.topic_name && topicArticles.length === 0) {
-      const topicNameKey = topic.topic_name.trim().toLowerCase()
-      topicArticles = articlesByTopicName[topicNameKey] || []
-    }
-
-    const transformedItem = transformTopicToNewsItem(topic, topicArticles)
-    
-    // Debug: Log article data for each topic
-    if (topicArticles.length > 0) {
-      console.log(`✅ Topic ${topic.id} (${topic.topic_name}): ${topicArticles.length} articles`, {
-        topicId: topic.id,
-        topicName: topic.topic_name,
-        firstArticle: topicArticles[0],
-        transformedSourcesCount: transformedItem.sources.length
-      })
-    } else {
-      console.warn(`⚠️ Topic ${topic.id} (${topic.topic_name}): No articles found`, {
-        topicId: topic.id,
-        topicName: topic.topic_name,
-        availableTopicIds: Object.keys(articlesByTopicId),
-        availableTopicNames: Object.keys(articlesByTopicName).slice(0, 5)
-      })
-    }
-    
-    return transformedItem
-  })
-}
-
-/**
- * Calculate overall sentiment from all articles
- * @param {Array} articles - Array of articles from latest_articles_view
- * @returns {Object} Overall sentiment object
- */
-export function calculateOverallSentimentFromArticles(articles) {
-  // Handle empty articles array
-  if (!articles || articles.length === 0) {
+export function calculateSentiment(articles) {
+  if (!articles || !Array.isArray(articles) || articles.length === 0) {
     return {
       type: 'neutral',
       percentage: 0,
       positive: 0,
-      negative: 0,
-      neutral: 100,
+      neutral: 0,
+      negative: 0
     }
   }
 
-  const sentimentCounts = articles.reduce((acc, article) => {
-    acc[article.sentiment] = (acc[article.sentiment] || 0) + 1
-    return acc
-  }, {})
+  const counts = {
+    positive: 0,
+    neutral: 0,
+    negative: 0
+  }
+
+  articles.forEach(article => {
+    const sentiment = article.sentiment?.toLowerCase() || 'neutral'
+    if (counts.hasOwnProperty(sentiment)) {
+      counts[sentiment]++
+    } else {
+      counts.neutral++
+    }
+  })
 
   const total = articles.length
-  const positive = Math.round((sentimentCounts.positive || 0) / total * 100)
-  const negative = Math.round((sentimentCounts.negative || 0) / total * 100)
-  const neutral = Math.round((sentimentCounts.neutral || 0) / total * 100)
+  const percentages = {
+    positive: Math.round((counts.positive / total) * 100),
+    neutral: Math.round((counts.neutral / total) * 100),
+    negative: Math.round((counts.negative / total) * 100)
+  }
 
   // Determine dominant sentiment
-  let dominant = 'neutral'
-  let percentage = neutral
-  if (positive > percentage) {
-    dominant = 'positive'
-    percentage = positive
+  let dominantType = 'neutral'
+  let maxCount = counts.neutral
+  if (counts.positive > maxCount) {
+    dominantType = 'positive'
+    maxCount = counts.positive
   }
-  if (negative > percentage) {
-    dominant = 'negative'
-    percentage = negative
+  if (counts.negative > maxCount) {
+    dominantType = 'negative'
+    maxCount = counts.negative
   }
 
   return {
-    type: dominant,
-    percentage: percentage,
-    positive: positive,
-    negative: negative,
-    neutral: neutral,
+    type: dominantType,
+    percentage: percentages[dominantType],
+    positive: percentages.positive,
+    neutral: percentages.neutral,
+    negative: percentages.negative
   }
 }
 
 /**
- * Transform a topic from snapshot format to news item format
- * @param {Object} topic - Topic from snapshot topics array
- * @returns {Object} Transformed news item
+ * Transform article from new Supabase format to component format
+ * Handles both top_articles format (simplified) and full article_snapshots format
+ * @param {Object} article - Article from top_articles array or article_snapshots table
+ * @returns {Object} Transformed article object
  */
-export function transformSnapshotTopicToNewsItem(topic) {
-  const signalBalance = topic.signal_balance || {}
-  const mainSummary = topic.main_summary || {}
-  const relatedSources = topic.related_sources || []
-
-  // Use signal_balance percentages
-  const sentimentPercentages = {
-    positive: signalBalance.positive?.percentage || 0,
-    negative: signalBalance.negative?.percentage || 0,
-    neutral: signalBalance.neutral?.percentage || 0,
+export function transformArticle(article) {
+  if (!article) {
+    return null
   }
 
-  // Determine dominant sentiment
-  let dominantSentiment = topic.overall_sentiment || 'neutral'
-  let sentimentPercentage = 0
-
-  const maxSentiment = Object.entries(sentimentPercentages).reduce((a, b) =>
-    a[1] > b[1] ? a : b
-  )
-  if (maxSentiment[1] > 0) {
-    dominantSentiment = maxSentiment[0]
-    sentimentPercentage = maxSentiment[1]
-  } else if (topic.overall_sentiment) {
-    dominantSentiment = topic.overall_sentiment
-    sentimentPercentage = 50
-  }
-
-  // Transform related_sources to sources format
-  const sources = relatedSources.map((source) => ({
-    id: source.id || null,
-    source: source.news_source || 'Unknown Source',
-    headline: source.headline || 'No headline',
-    url: source.hyperlink || '#',
-    sentiment: source.sentiment || 'neutral',
-    excerpt: source.excerpt || null,
-    summary: source.summary || null,
-    timeAgo: calculateTimeAgo(source.date_time), // Use date_time for calculation (ISO timestamp)
-    dateTime: source.date_time || null,
-    category: topic.primary_category || null,
-    topicId: topic.topic_id || null,
-    topicName: topic.topic_name,
-    author: source.author || '',
-    authorTime: source.author_time || source.relative_time || null, // Keep relative_time for display
-    imageUrl: source.image_url || null,
-  }))
-
-  return {
-    id: topic.topic_id || topic.topic_name,
-    title: topic.topic_name || mainSummary.headline || 'Untitled Topic',
-    category: topic.primary_category || mainSummary.category || 'General',
-    timeAgo: calculateTimeAgo(topic.created_at || topic.updated_at),
-    summary: mainSummary.summary || 'No summary available.',
-    sentiment: {
-      type: dominantSentiment,
-      percentage: sentimentPercentage,
-      positive: sentimentPercentages.positive,
-      neutral: sentimentPercentages.neutral,
-      negative: sentimentPercentages.negative,
-    },
-    image: mainSummary.image_url || null,
-    sources: sources,
-    quote: null,
-    quoteAuthor: null,
-    tags: topic.tags || [],
-    statistics: topic.statistics || {},
-  }
-}
-
-/**
- * Transform snapshot data to news items array
- * @param {Object} snapshot - Snapshot object from topics_snapshots table
- * @returns {Array} Array of transformed news items
- */
-export function transformSnapshotToNewsItems(snapshot) {
-  if (!snapshot) {
-    console.warn('No snapshot provided to transformSnapshotToNewsItems')
-    return []
-  }
-
-  // Handle both cases: snapshot might have topics directly or in a data/topics field
-  let topics = []
+  // Handle both formats:
+  // top_articles format: { id, title, url, source, sentiment, published_at }
+  // article_snapshots format: { article_id, title, url, source_name, sentiment_label, published_at, snippet, topic_ids }
   
-  if (snapshot.topics && Array.isArray(snapshot.topics)) {
-    topics = snapshot.topics
-  } else if (snapshot.data && snapshot.data.topics && Array.isArray(snapshot.data.topics)) {
-    topics = snapshot.data.topics
-  } else if (typeof snapshot === 'object' && 'topics' in snapshot) {
-    // If the snapshot itself is the JSON object with topics
-    topics = snapshot.topics || []
-  }
-
-  if (!topics || topics.length === 0) {
-    console.warn('No topics found in snapshot:', snapshot)
-    return []
-  }
-
-  return topics.map(topic => transformSnapshotTopicToNewsItem(topic))
-}
-
-/**
- * Calculate overall sentiment from snapshot's global_signal_balance
- * @param {Object} snapshot - Snapshot object from topics_snapshots table
- * @returns {Object} Overall sentiment object
- */
-export function calculateOverallSentimentFromSnapshot(snapshot) {
-  if (!snapshot) {
-    return {
-      type: 'neutral',
-      percentage: 0,
-      positive: 0,
-      negative: 0,
-      neutral: 100,
+  let timeAgo
+  if (article.time_ago) {
+    // Already formatted string like "2 hours ago"
+    timeAgo = article.time_ago
+  } else {
+    // Calculate from timestamp
+    const timestamp = article.published_at || article.date_time || article.created_at
+    if (timestamp) {
+      const minutesAgo = calculateTimeAgo(timestamp)
+      timeAgo = formatTimeAgo(minutesAgo)
+    } else {
+      timeAgo = 'Unknown'
     }
   }
-
-  // Handle both cases: global_signal_balance might be at root or in data
-  let globalSignalBalance = snapshot.global_signal_balance
   
-  if (!globalSignalBalance && snapshot.data && snapshot.data.global_signal_balance) {
-    globalSignalBalance = snapshot.data.global_signal_balance
+  return {
+    id: article.article_id || article.id,
+    source: article.source_name || article.source || 'Unknown',
+    headline: article.title || article.headline,
+    url: article.url || article.hyperlink,
+    sentiment: (article.sentiment_label || article.sentiment)?.toLowerCase() || 'neutral',
+    timeAgo: timeAgo,
+    excerpt: article.snippet || article.excerpt,
+    summary: article.summary,
+    dateTime: article.published_at || article.date_time,
+    category: article.category || article.tag,
+    topicId: article.topic_ids?.[0] || article.topic_id,
+    topicName: article.topic_name
+  }
+}
+
+/**
+ * Transform topic from new Supabase format to news item format
+ * @param {Object} topic - Topic from topic_snapshots table
+ * @param {Array} articles - Optional additional articles (top_articles are precomputed)
+ * @returns {Object} Transformed news item object
+ */
+export function transformTopicToNewsItem(topic, articles = []) {
+  if (!topic) {
+    return null
   }
 
-  if (!globalSignalBalance) {
-    // Fallback: calculate from all topics
-    const topics = snapshot.topics || snapshot.data?.topics || []
-    const allArticles = topics.flatMap(topic => topic.related_sources || [])
-    return calculateOverallSentimentFromArticles(allArticles)
+  // Use precomputed top_articles if available, otherwise use provided articles
+  const articlesToUse = topic.top_articles || articles
+  
+  // Filter out null articles and transform
+  const transformedArticles = (articlesToUse || [])
+    .map(transformArticle)
+    .filter(article => article !== null)
+  
+  // Use precomputed signal_balance if available, otherwise calculate from articles
+  let sentiment
+  if (topic.signal_balance) {
+    const { positive, neutral, negative } = topic.signal_balance
+    const total = positive + neutral + negative
+    if (total > 0) {
+      sentiment = {
+        type: positive > negative && positive > neutral ? 'positive' : 
+               negative > positive && negative > neutral ? 'negative' : 'neutral',
+        percentage: Math.round((Math.max(positive, neutral, negative) / total) * 100),
+        positive: Math.round((positive / total) * 100),
+        neutral: Math.round((neutral / total) * 100),
+        negative: Math.round((negative / total) * 100)
+      }
+    } else {
+      sentiment = calculateSentiment(transformedArticles)
+    }
+  } else {
+    sentiment = calculateSentiment(transformedArticles)
   }
 
-  const total = globalSignalBalance.total_articles || 1
-  const positive = globalSignalBalance.positive?.percentage || 0
-  const negative = globalSignalBalance.negative?.percentage || 0
-  const neutral = globalSignalBalance.neutral?.percentage || 0
-
-  // Determine dominant sentiment
-  let dominant = 'neutral'
-  let percentage = neutral
-  if (positive > percentage) {
-    dominant = 'positive'
-    percentage = positive
-  }
-  if (negative > percentage) {
-    dominant = 'negative'
-    percentage = negative
-  }
+  // Use precomputed time_ago if available, prefer topic_time_ago for topic creation time
+  const timeAgo = topic.topic_time_ago || topic.time_ago || calculateTimeAgo(topic.updated_at || topic.created_at)
 
   return {
-    type: dominant,
-    percentage: Math.round(percentage),
-    positive: Math.round(positive),
-    negative: Math.round(negative),
-    neutral: Math.round(neutral),
+    id: topic.topic_id || topic.id,
+    title: topic.headline || topic.topic_name,
+    category: topic.tag || topic.category,
+    timeAgo: typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo),
+    summary: topic.summary || topic.ai_summary || '',
+    sentiment: sentiment,
+    image: topic.image_url || null, // Use image_url from backend, or null if not available
+    sources: transformedArticles,
+    quote: null,
+    quoteAuthor: null,
+    articleCount: topic.article_count,
+    sourceCount: topic.source_count,
+    recentArticlesCount: topic.recent_articles_count
   }
+}
+
+/**
+ * Transform Supabase data to frontend format
+ * Topics now have precomputed top_articles, so articles parameter is optional
+ * @param {Array} topics - Topics from topic_snapshots table (with top_articles precomputed)
+ * @param {Array} articles - Optional additional articles from article_snapshots table
+ * @returns {Array} Array of news item objects
+ */
+export function transformSupabaseData(topics, articles = []) {
+  if (!topics || !Array.isArray(topics) || topics.length === 0) {
+    return []
+  }
+  
+  // Topics now have top_articles precomputed, so we can use them directly
+  // If additional articles are provided, we can merge them, but top_articles takes precedence
+  return topics
+    .map(topic => {
+      if (!topic) {
+        return null
+      }
+      
+      // If topic has top_articles, use them; otherwise try to find articles by topic_id
+      let topicArticles = []
+      if (topic.top_articles && Array.isArray(topic.top_articles) && topic.top_articles.length > 0) {
+        topicArticles = topic.top_articles
+      } else if (articles && articles.length > 0 && topic.topic_id) {
+        // Fallback: find articles that contain this topic_id in their topic_ids array
+        topicArticles = articles.filter(article => 
+          article && article.topic_ids && article.topic_ids.includes(topic.topic_id)
+        )
+      }
+      
+      return transformTopicToNewsItem(topic, topicArticles)
+    })
+    .filter(item => item !== null) // Remove any null items
 }

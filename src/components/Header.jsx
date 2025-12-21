@@ -1,18 +1,32 @@
+import { useTheme } from '../contexts/ThemeContext'
+
 function Header() {
+  const { theme } = useTheme()
+  
+  const headerBg = theme === 'light' ? 'bg-gray-50' : 'bg-ground-dark-secondary'
+  const borderColor = theme === 'light' ? 'border-gray-200' : 'border-ground-dark-tertiary'
+  const titleColor = theme === 'light' ? 'text-gray-900' : 'text-ground-text-primary'
+  const subtitleColor = theme === 'light' ? 'text-gray-600' : 'text-ground-text-tertiary'
+  const linkColor = theme === 'light' ? 'text-gray-700 hover:text-gray-900' : 'text-ground-text-secondary hover:text-ground-text-primary'
+
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <header className={`${headerBg} border-b ${borderColor}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[36px] font-bold" style={{ fontFamily: '"Playfair Display", Georgia, serif', color: 'rgb(33, 36, 44)' }}>MosaicWire</h1>
-            <p className="text-sm mt-0.5" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: 'rgb(103, 111, 126)' }}>Pakistan's news, unmasked.</p>
+          <div className="flex flex-col">
+            <h1 className={`text-2xl font-bold ${titleColor} tracking-tight`}>MosaicWire</h1>
+            <span className={`text-sm ${subtitleColor}`}>Pakistan's news, unmasked.</span>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>Live</span>
-            <span className="text-gray-400">•</span>
-            <span className="text-sm text-gray-700" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>Today's Top Signals</span>
-          </div>
+          <nav className="hidden md:flex items-center space-x-6">
+            <a href="#" className={`${linkColor} flex items-center space-x-2 transition-colors`}>
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span>Live</span>
+            </a>
+            <a href="#" className={`${linkColor} flex items-center space-x-2 transition-colors`}>
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span>Today's Top Signals</span>
+            </a>
+          </nav>
         </div>
       </div>
     </header>
@@ -20,4 +34,3 @@ function Header() {
 }
 
 export default Header
-

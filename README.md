@@ -63,28 +63,29 @@ The built files will be in the `dist` directory.
 
 ## Supabase Integration
 
-The application reads from Supabase views:
+The application reads directly from Supabase snapshot tables:
 
-- **`latest_topics_view`**: Contains all latest topics with article counts and sentiment
-- **`latest_articles_view`**: Contains all latest articles with full details
+- **`topic_snapshots`**: Contains topic snapshots with article counts and sentiment
+- **`article_snapshots`**: Contains article snapshots with full details
 
 ### Data Flow
 
-1. App fetches topics from `latest_topics_view`
-2. App fetches articles from `latest_articles_view`
-3. Articles are grouped by topic_id
-4. Data is transformed to match component structure
-5. Overall sentiment is calculated from all articles
+1. App gets the latest `snapshot_timestamp` from `topic_snapshots`
+2. App fetches topics from `topic_snapshots` filtered by latest snapshot
+3. App fetches articles from `article_snapshots` filtered by latest snapshot
+4. Articles are grouped by topic_id
+5. Data is transformed to match component structure
+6. Overall sentiment is calculated from all articles
 
-### Views Schema
+### Tables Schema
 
-The views must contain the following fields:
+The tables must contain the following fields:
 
-**latest_topics_view:**
-- `id`, `topic_name`, `category`, `date`, `ai_summary`, `overall_sentiment`, `article_count`, `snapshot_timestamp`, `created_at`
+**topic_snapshots:**
+- `id`, `topic_id` (UUID), `topic_name`, `category`, `date`, `ai_summary`, `overall_sentiment`, `article_count`, `snapshot_timestamp`, `created_at`, `snapshot_version`
 
-**latest_articles_view:**
-- `id`, `topic_name`, `topic_id`, `headline`, `hyperlink`, `excerpt`, `summary`, `sentiment`, `date_time`, `news_source`, `category`, `snapshot_timestamp`, `created_at`
+**article_snapshots:**
+- `id`, `topic_id` (UUID), `topic_name`, `headline`, `hyperlink`, `excerpt`, `summary`, `sentiment`, `date_time`, `news_source`, `category`, `snapshot_timestamp`, `created_at`
 
 ## Project Structure
 
