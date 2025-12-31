@@ -31,8 +31,8 @@ function App() {
         setError(null)
 
         if (isSupabaseConfigured) {
-          // Fetch topics from Supabase (topics now have top_articles precomputed)
-          const topics = await getLatestTopics(20)
+          // Fetch all topics from Supabase (topics now have top_articles precomputed)
+          const topics = await getLatestTopics()
 
           if (topics && topics.length > 0) {
             // Topics now include top_articles, so we don't need to fetch articles separately

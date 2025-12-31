@@ -1,22 +1,28 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 
 /**
- * Fetch top topics from topic_snapshots table
+ * Fetch topics from topic_snapshots table
  * Uses rank_score for ordering (precomputed snapshots)
- * @param {number} limit - Maximum number of topics to return
+ * @param {number|null} limit - Maximum number of topics to return (null or undefined = fetch all)
  * @returns {Promise<Array>} Array of topic objects
  */
-export async function getLatestTopics(limit = 20) {
+export async function getLatestTopics(limit = null) {
   if (!isSupabaseConfigured) {
     return []
   }
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('topic_snapshots')
       .select('*')
       .order('rank_score', { ascending: false })
-      .limit(limit)
+    
+    // Only apply limit if provided
+    if (limit !== null && limit !== undefined) {
+      query = query.limit(limit)
+    }
+    
+    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching topics:', error)
