@@ -1,4 +1,4 @@
-# Setup Instructions for MosaicWire Frontend
+# Setup Instructions for MosaicBeat Frontend
 
 ## Important Note
 

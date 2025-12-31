@@ -1,6 +1,6 @@
 # Backend Data Format Specification
 
-This document defines the exact data format that the MosaicWire frontend expects from the backend API.
+This document defines the exact data format that the MosaicBeat frontend expects from the backend API.
 
 ## Overview
 

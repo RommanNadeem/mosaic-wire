@@ -1,4 +1,4 @@
-# MosaicWire - News Aggregator
+# MosaicBeat - News Aggregator
 
 A modern, clean news aggregation website that displays news articles with AI-generated summaries, sentiment analysis, and source tracking.
 

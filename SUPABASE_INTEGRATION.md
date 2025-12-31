@@ -1,6 +1,6 @@
 # Supabase Integration Complete ✅
 
-The MosaicWire frontend has been fully integrated with Supabase views. The application now reads from your database views instead of using static sample data.
+The MosaicBeat frontend has been fully integrated with Supabase views. The application now reads from your database views instead of using static sample data.
 
 ## What Was Added
 

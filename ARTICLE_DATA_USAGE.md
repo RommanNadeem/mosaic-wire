@@ -1,6 +1,6 @@
 # Article Data Usage from `latest_articles_view`
 
-This document explains how data from the `latest_articles_view` is used in the MosaicWire frontend.
+This document explains how data from the `latest_articles_view` is used in the MosaicBeat frontend.
 
 ## Fields from `latest_articles_view`
 

@@ -5,13 +5,13 @@ const ThemeContext = createContext()
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     // Get theme from localStorage or default to 'dark'
-    const savedTheme = localStorage.getItem('mosaicwire-theme')
+    const savedTheme = localStorage.getItem('mosaicbeat-theme')
     return savedTheme || 'dark'
   })
 
   useEffect(() => {
     // Save theme to localStorage
-    localStorage.setItem('mosaicwire-theme', theme)
+    localStorage.setItem('mosaicbeat-theme', theme)
     
     // Apply theme class to body
     if (theme === 'dark') {
