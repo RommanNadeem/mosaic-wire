@@ -73,15 +73,25 @@ function App() {
       const hash = window.location.hash;
       if (hash.startsWith('#news-')) {
         const newsId = hash.replace('#news-', '');
-        setHighlightedNewsId(newsId);
         
-        // Scroll to the highlighted news after a short delay to ensure it's rendered
-        setTimeout(() => {
-          const element = document.getElementById(`news-${newsId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
+        // Check if the news item exists in the current data
+        const newsExists = newsData.some(item => String(item.id) === newsId);
+        
+        if (newsExists) {
+          setHighlightedNewsId(newsId);
+          
+          // Scroll to the highlighted news after a short delay to ensure it's rendered
+          setTimeout(() => {
+            const element = document.getElementById(`news-${newsId}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+        } else {
+          // News item doesn't exist - redirect to main page by clearing the hash
+          window.location.hash = '';
+          setHighlightedNewsId(null);
+        }
       } else {
         setHighlightedNewsId(null);
       }
