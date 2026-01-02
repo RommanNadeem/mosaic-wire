@@ -82,7 +82,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
   return (
     <article 
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] rounded-lg border overflow-hidden transition-all flex flex-row h-full hover:border-[var(--text-muted)] ${
+      className={`bg-[var(--bg-card)] rounded-lg border overflow-hidden transition-all flex flex-row lg:flex-row ${(isExpanded || isHighlighted) ? 'flex-col lg:flex-row' : 'flex-row'} h-full hover:border-[var(--text-muted)] ${
         isHighlighted 
           ? 'border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative' 
           : 'border-[var(--border-subtle)]'
@@ -91,7 +91,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
     >
       {/* Rounded Square Thumbnail */}
       {imageUrl && !imageError ? (
-        <div className="w-28 h-28 bg-[var(--bg-surface)] overflow-hidden flex-shrink-0 self-start m-3 rounded relative">
+        <div className={`${(isExpanded || isHighlighted) ? 'w-full h-48 lg:w-28 lg:h-28 lg:m-3 m-0 rounded-t-lg lg:rounded' : 'w-28 h-28 m-3 rounded'} bg-[var(--bg-surface)] overflow-hidden flex-shrink-0 ${(isExpanded || isHighlighted) ? 'lg:self-start' : 'self-start'} relative`}>
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
             <button
@@ -123,7 +123,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
           />
         </div>
       ) : (
-        <div className="w-28 h-28 bg-[var(--bg-surface)] flex-shrink-0 self-start m-3 rounded flex items-center justify-center relative">
+        <div className={`${(isExpanded || isHighlighted) ? 'w-full h-48 lg:w-28 lg:h-28 lg:m-3 m-0 rounded-t-lg lg:rounded' : 'w-28 h-28 m-3 rounded'} bg-[var(--bg-surface)] flex-shrink-0 ${(isExpanded || isHighlighted) ? 'lg:self-start' : 'self-start'} flex items-center justify-center relative`}>
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
             <button
@@ -151,7 +151,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
       )}
 
       {/* Content Area - Reduced spacing */}
-      <div className="flex flex-col flex-1 min-w-0 py-3 pr-3 relative">
+      <div className={`flex flex-col flex-1 min-w-0 ${(isExpanded || isHighlighted) ? 'py-3 px-3 lg:py-3 lg:pr-3' : 'py-3 pr-3'} relative`}>
         {/* Share Button */}
         <ShareButton 
           newsItem={newsItem}
@@ -205,7 +205,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
 
         {/* THE MOODLINE Section - aligned with image left edge */}
         {sentiment && (
-          <div className="mb-2 -ml-[124px] pl-3">
+          <div className={`mb-2 ${(isExpanded || isHighlighted) ? 'lg:-ml-[124px] lg:pl-3 pl-0' : '-ml-[124px] pl-3'}`}>
             <Moodline
               sentiment={sentiment}
               onSentimentClick={setSelectedSentiment}
@@ -234,11 +234,11 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
 
         {/* Source List - Flex-1 to push to bottom, aligned with image left edge */}
         {filteredSources && filteredSources.length > 0 ? (
-          <div className="flex-1 flex flex-col min-h-0 -ml-[124px] pl-3">
+          <div className={`flex-1 flex flex-col min-h-0 ${(isExpanded || isHighlighted) ? 'lg:-ml-[124px] lg:pl-3 pl-0' : '-ml-[124px] pl-3'}`}>
             <SourceList sources={filteredSources} />
           </div>
         ) : sources && sources.length > 0 ? (
-          <div className="flex-1 flex flex-col -ml-[124px] pl-3">
+          <div className={`flex-1 flex flex-col ${(isExpanded || isHighlighted) ? 'lg:-ml-[124px] lg:pl-3 pl-0' : '-ml-[124px] pl-3'}`}>
             <div className="text-sm text-[var(--text-muted)] py-4 text-left">
               No articles match the selected sentiment filter.
             </div>
