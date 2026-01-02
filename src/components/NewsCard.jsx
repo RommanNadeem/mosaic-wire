@@ -153,13 +153,11 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
       {/* Content Area - Reduced spacing */}
       <div className="flex flex-col flex-1 min-w-0 py-3 pr-3 relative">
         {/* Share Button */}
-        {!isExpanded && (
-          <ShareButton 
-            newsItem={newsItem}
-            onShare={onShare}
-            className="absolute top-3 right-3 z-10"
-          />
-        )}
+        <ShareButton 
+          newsItem={newsItem}
+          onShare={onShare}
+          className="absolute top-3 right-3 z-10"
+        />
         
         {/* Topic Headline - Clickable */}
         <h2 
