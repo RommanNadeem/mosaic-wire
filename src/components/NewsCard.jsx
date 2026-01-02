@@ -206,9 +206,18 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
           {title}
         </h2>
 
-        {/* Summary - Full if expanded, truncated otherwise */}
+        {/* Summary - Full if expanded, truncated otherwise - Clickable */}
         {displaySummary && (
-          <p className={`text-xs sm:text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${isExpanded ? '' : 'line-clamp-3'}`}>
+          <p 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onTitleClick) {
+                onTitleClick(id);
+              }
+            }}
+            className={`text-xs sm:text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${isExpanded ? '' : 'line-clamp-3'} cursor-pointer hover:text-[var(--text-primary)] transition-colors`}
+          >
             {displaySummary}
           </p>
         )}

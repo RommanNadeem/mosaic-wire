@@ -140,8 +140,39 @@ function App() {
     }
   }, [expandedNewsId]);
 
+  // Prevent body scroll when card is expanded
+  useEffect(() => {
+    if (expandedNewsId) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore scroll position
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [expandedNewsId]);
+
   const handleTitleClick = (newsId) => {
-    setExpandedNewsId(String(newsId));
+    // If card is highlighted (from shared link), clear highlight first
+    if (highlightedNewsId === String(newsId)) {
+      window.location.hash = '';
+      setHighlightedNewsId(null);
+      // Small delay to allow highlight to clear before opening expanded view
+      setTimeout(() => {
+        setExpandedNewsId(String(newsId));
+      }, 100);
+    } else {
+      setExpandedNewsId(String(newsId));
+    }
   };
 
   const handleCloseHighlight = () => {
@@ -227,7 +258,7 @@ function App() {
                   
                   return (
                     <div 
-                      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                      className="fixed inset-0 z-50 flex items-start lg:items-center justify-center p-0 lg:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
                       onClick={(e) => {
                         if (e.target === e.currentTarget) {
                           setExpandedNewsId(null);
@@ -235,7 +266,7 @@ function App() {
                       }}
                     >
                       <div 
-                        className="expanded-news-modal bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                        className="expanded-news-modal bg-[var(--bg-card)] rounded-lg lg:rounded-lg border border-[var(--border-subtle)] max-w-4xl w-full min-h-screen lg:min-h-0 lg:max-h-[90vh] overflow-y-auto shadow-2xl lg:mt-0"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <NewsCard 
