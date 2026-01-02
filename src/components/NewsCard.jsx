@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Moodline from "./Moodline";
 import SourceList from "./SourceList";
+import ShareButton from "./ShareButton";
 import { formatTimeAgo } from "../utils/dataTransformers";
 import { getSignedImageUrl } from "../utils/imageUtils";
 
@@ -8,7 +9,6 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
-  const [shareCopied, setShareCopied] = useState(false);
 
   if (!newsItem) return null;
 
@@ -64,58 +64,6 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
     : null;
   
   const displaySummary = isExpanded ? summary : truncatedSummary;
-
-  const handleShare = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const shareUrl = `${window.location.origin}${window.location.pathname}#news-${id}`;
-    const shareTitle = title || 'Check out this news on MosaicBeat';
-    const shareText = summary ? `${title}\n\n${summary.substring(0, 200)}...` : title;
-    
-    // Check if Web Share API is available (typically on mobile)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
-        });
-        
-        if (onShare) {
-          onShare(shareUrl);
-        }
-        return; // Successfully shared via native share
-      } catch (err) {
-        // User cancelled or share failed, fall through to clipboard
-        if (err.name !== 'AbortError') {
-          console.error('Share failed:', err);
-        }
-      }
-    }
-    
-    // Fallback to clipboard copy (desktop or if share API not available)
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
-      
-      if (onShare) {
-        onShare(shareUrl);
-      }
-    } catch (err) {
-      console.error('Failed to copy:', err);
-      // Fallback: select text
-      const textArea = document.createElement('textarea');
-      textArea.value = shareUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
-    }
-  };
 
   // Check if there's a highlighted news and this is not it (but don't blur if expanded)
   const shouldBlur = highlightedNewsId && highlightedNewsId !== String(id) && !isExpanded;
@@ -205,22 +153,13 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
       {/* Content Area - Reduced spacing */}
       <div className="flex flex-col flex-1 min-w-0 py-3 pr-3 relative">
         {/* Share Button */}
-        <button
-          onClick={handleShare}
-          className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-[var(--bg-surface)] transition-colors z-10"
-          title={shareCopied ? "Link copied!" : "Share this news"}
-          aria-label="Share this news"
-        >
-          {shareCopied ? (
-            <svg className="w-4 h-4 text-[var(--accent-positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-          )}
-        </button>
+        {!isExpanded && (
+          <ShareButton 
+            newsItem={newsItem}
+            onShare={onShare}
+            className="absolute top-3 right-3 z-10"
+          />
+        )}
         
         {/* Topic Headline - Clickable */}
         <h2 
