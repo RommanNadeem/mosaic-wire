@@ -1,19 +1,12 @@
 import { useState } from 'react'
-import { useTheme } from '../contexts/ThemeContext'
 import { formatTimeAgo } from '../utils/dataTransformers'
 
 function SourceList({ sources }) {
-  const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(false)
-
-  const textPrimary = theme === 'light' ? 'text-gray-900' : 'text-ground-text-primary'
-  const textSecondary = theme === 'light' ? 'text-gray-700' : 'text-ground-text-secondary'
-  const textTertiary = theme === 'light' ? 'text-gray-500' : 'text-ground-text-tertiary'
-  const dividerColor = theme === 'light' ? 'border-gray-200' : 'border-ground-dark-tertiary'
 
   if (!sources || sources.length === 0) {
     return (
-      <div className={`text-sm ${textTertiary} py-4`}>
+      <div className="text-sm text-[var(--text-muted)] py-4 text-left">
         No sources available
       </div>
     )
@@ -22,11 +15,11 @@ function SourceList({ sources }) {
   const getSentimentColor = (sentiment) => {
     switch (sentiment?.toLowerCase()) {
       case 'positive':
-        return 'bg-sentiment-positive'
+        return 'bg-[var(--accent-positive)]'
       case 'negative':
-        return 'bg-sentiment-negative'
+        return 'bg-[var(--accent-negative)]'
       default:
-        return 'bg-sentiment-neutral'
+        return 'bg-[var(--accent-neutral)]'
     }
   }
 
@@ -74,12 +67,18 @@ function SourceList({ sources }) {
   }
 
   const renderSource = (source) => (
-    <div key={source.id} className="flex items-start space-x-2 py-1.5">
-      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getSentimentColor(source.sentiment)}`} />
+    <div key={source.id} className="flex items-start gap-2 py-1.5">
+      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getSentimentColor(source.sentiment)}`} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2 mb-0.5">
-          <span className={`text-sm font-medium ${textPrimary}`}>{source.source}</span>
-          <span className={`text-xs ${textTertiary}`}>
+        <div className="flex items-center gap-2 mb-1 flex-wrap text-left">
+          <span className="text-sm font-medium text-[var(--text-primary)]">{source.source}</span>
+          {source.author && (
+            <span className="text-xs text-[var(--text-muted)]">•</span>
+          )}
+          {source.author && (
+            <span className="text-xs text-[var(--text-muted)]">{source.author}</span>
+          )}
+          <span className="text-xs text-[var(--text-muted)]">
             {typeof source.timeAgo === 'string' ? source.timeAgo : formatTimeAgo(source.timeAgo)}
           </span>
         </div>
@@ -87,9 +86,7 @@ function SourceList({ sources }) {
           href={source.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`text-sm ${textSecondary} hover:underline transition-colors ${
-            theme === 'light' ? 'hover:text-gray-900' : 'hover:text-ground-text-primary'
-          }`}
+          className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline transition-colors leading-relaxed text-left block"
         >
           {source.headline}
         </a>
@@ -98,8 +95,8 @@ function SourceList({ sources }) {
   )
 
   return (
-    <div className="space-y-2 flex flex-col flex-1">
-      <div className="flex-1">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex-1 space-y-0">
         {visibleSources.map(renderSource)}
       </div>
 
@@ -110,43 +107,41 @@ function SourceList({ sources }) {
             e.preventDefault()
             setIsExpanded(true)
           }}
-          className={`w-full flex items-center space-x-2 py-2 text-sm ${textTertiary} transition-colors cursor-pointer mt-auto ${
-            theme === 'light' ? 'hover:text-gray-900' : 'hover:text-ground-text-primary'
-          }`}
+          className="w-full flex items-center gap-2 py-2 text-sm text-[var(--text-muted)] transition-colors cursor-pointer mt-2 hover:text-[var(--text-primary)] text-left"
         >
           {/* Sentiment dots cluster */}
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center gap-1">
             {sentimentCounts.positive > 0 && (
-              <div className="flex -space-x-1">
+              <div className="flex -space-x-0.5">
                 {Array(Math.min(sentimentCounts.positive, 5)).fill(0).map((_, i) => (
-                  <div key={`pos-${i}`} className={`w-2 h-2 rounded-full bg-sentiment-positive border ${theme === 'light' ? 'border-gray-100' : 'border-white'}`} />
+                  <div key={`pos-${i}`} className="w-1.5 h-1.5 rounded-full bg-[var(--accent-positive)] border border-[var(--bg-card)]" />
                 ))}
               </div>
             )}
             {sentimentCounts.neutral > 0 && (
-              <div className="flex -space-x-1">
+              <div className="flex -space-x-0.5">
                 {Array(Math.min(sentimentCounts.neutral, 5)).fill(0).map((_, i) => (
-                  <div key={`neu-${i}`} className={`w-2 h-2 rounded-full bg-sentiment-neutral border ${theme === 'light' ? 'border-gray-100' : 'border-white'}`} />
+                  <div key={`neu-${i}`} className="w-1.5 h-1.5 rounded-full bg-[var(--accent-neutral)] border border-[var(--bg-card)]" />
                 ))}
               </div>
             )}
             {sentimentCounts.negative > 0 && (
-              <div className="flex -space-x-1">
+              <div className="flex -space-x-0.5">
                 {Array(Math.min(sentimentCounts.negative, 5)).fill(0).map((_, i) => (
-                  <div key={`neg-${i}`} className={`w-2 h-2 rounded-full bg-sentiment-negative border ${theme === 'light' ? 'border-gray-100' : 'border-white'}`} />
+                  <div key={`neg-${i}`} className="w-1.5 h-1.5 rounded-full bg-[var(--accent-negative)] border border-[var(--bg-card)]" />
                 ))}
               </div>
             )}
           </div>
-          <span className={`text-sm ${textSecondary}`}>
+          <span className="text-sm text-[var(--text-secondary)]">
             {hiddenCount} more source{hiddenCount !== 1 ? 's' : ''}
           </span>
         </button>
       )}
 
       {isExpanded && hiddenCount > 0 && (
-        <div className={`mt-2 pt-2 border-t ${dividerColor}`}>
-          <div className="space-y-2">
+        <div className="mt-2 pt-2 border-t border-[var(--border-subtle)]">
+          <div className="space-y-0">
             {hiddenSources.map((source) => renderSource(source))}
           </div>
           <button
@@ -155,13 +150,11 @@ function SourceList({ sources }) {
               e.preventDefault()
               setIsExpanded(false)
             }}
-            className={`w-full flex items-center justify-center py-2 text-sm ${textTertiary} transition-colors cursor-pointer mt-2 ${
-              theme === 'light' ? 'hover:text-gray-900' : 'hover:text-ground-text-primary'
-            }`}
+            className="w-full flex items-center gap-1 py-2 text-sm text-[var(--text-muted)] transition-colors cursor-pointer mt-2 hover:text-[var(--text-primary)] text-left"
           >
             <span className="mr-1">Show less</span>
             <svg
-              className={`w-4 h-4 ${textTertiary}`}
+              className="w-4 h-4 text-[var(--text-muted)]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

@@ -7,30 +7,29 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Semantic tokens using CSS variables
+        'bg-primary': 'var(--bg-primary)',
+        'bg-surface': 'var(--bg-surface)',
+        'bg-card': 'var(--bg-card)',
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-muted': 'var(--text-muted)',
+        'border-subtle': 'var(--border-subtle)',
+        'accent-positive': 'var(--accent-positive)',
+        'accent-neutral': 'var(--accent-neutral)',
+        'accent-negative': 'var(--accent-negative)',
+        // Legacy support (will be phased out)
         sentiment: {
-          positive: '#10b981',
-          negative: '#ef4444',
-          neutral: '#f59e0b',
+          positive: 'var(--accent-positive)',
+          negative: 'var(--accent-negative)',
+          neutral: 'var(--accent-neutral)',
         },
-        ground: {
-          dark: '#1a1a1a',
-          'dark-secondary': '#2a2a2a',
-          'dark-tertiary': '#3a3a3a',
-          light: '#ffffff',
-          'light-secondary': '#f9fafb',
-          'light-tertiary': '#f3f4f6',
-          'light-grey': '#f5f5f5',
-          'medium-grey': '#9ca3af',
-          'text-primary': '#ffffff',
-          'text-secondary': '#d1d5db',
-          'text-tertiary': '#9ca3af',
-          'text-dark-primary': '#111827',
-          'text-dark-secondary': '#374151',
-          'text-dark-tertiary': '#6b7280',
-        }
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
+      },
+      gridTemplateColumns: {
+        '20': 'repeat(20, minmax(0, 1fr))',
       },
     },
   },

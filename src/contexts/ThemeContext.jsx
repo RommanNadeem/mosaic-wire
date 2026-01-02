@@ -4,23 +4,27 @@ const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    // Get theme from localStorage or default to 'dark'
+    // Check localStorage first
     const savedTheme = localStorage.getItem('mosaicbeat-theme')
-    return savedTheme || 'dark'
+    if (savedTheme) {
+      return savedTheme
+    }
+    
+    // Check system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark'
+    }
+    
+    // Default to light theme (primary design)
+    return 'light'
   })
 
   useEffect(() => {
     // Save theme to localStorage
     localStorage.setItem('mosaicbeat-theme', theme)
     
-    // Apply theme class to body
-    if (theme === 'dark') {
-      document.body.classList.remove('light-theme')
-      document.body.classList.add('dark-theme')
-    } else {
-      document.body.classList.remove('dark-theme')
-      document.body.classList.add('light-theme')
-    }
+    // Apply theme data attribute for CSS variables
+    document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
   const toggleTheme = (newTheme) => {

@@ -153,6 +153,7 @@ export function transformArticle(article) {
     category: article.category || article.tag,
     topicId: article.topic_ids?.[0] || article.topic_id,
     topicName: article.topic_name,
+    author: article.author || article.author_name || null, // Add author support
   };
 }
 

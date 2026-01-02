@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
-import SignalBalance from "./SignalBalance";
+import Moodline from "./Moodline";
 import SourceList from "./SourceList";
-import { useTheme } from "../contexts/ThemeContext";
 import { formatTimeAgo } from "../utils/dataTransformers";
 import { getSignedImageUrl } from "../utils/imageUtils";
 
-function NewsCard({ newsItem }) {
-  const { theme } = useTheme();
+function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitleClick, isExpanded, onClose, onCloseHighlight }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
+  const [shareCopied, setShareCopied] = useState(false);
 
   if (!newsItem) return null;
 
@@ -22,8 +21,6 @@ function NewsCard({ newsItem }) {
     sentiment,
     image,
     sources,
-    quote,
-    quoteAuthor,
     recentArticlesCount,
     updatedAt,
   } = newsItem;
@@ -45,161 +42,207 @@ function NewsCard({ newsItem }) {
             setImageUrl(url);
             setImageError(false);
           } else {
-            console.warn(
-              "Image URL could not be processed (likely needs backend signing):",
-              image
-            );
             setImageError(true);
-            setImageUrl(null); // Don't try to load unsigned URLs
+            setImageUrl(null);
           }
         })
         .catch((error) => {
           console.error("Error getting signed image URL:", error);
           setImageError(true);
-          setImageUrl(null); // Don't try to load on error
+          setImageUrl(null);
         });
     } else {
       setImageUrl(null);
     }
   }, [image]);
 
-  const cardBg = theme === "light" ? "bg-white" : "bg-ground-dark-secondary";
-  const borderColor =
-    theme === "light"
-      ? "border-gray-200 hover:border-gray-300"
-      : "border-ground-dark-tertiary hover:border-ground-medium-grey";
-  const imageBg = theme === "light" ? "bg-gray-100" : "bg-ground-dark-tertiary";
-  const textPrimary =
-    theme === "light" ? "text-gray-900" : "text-ground-text-primary";
-  const textSecondary =
-    theme === "light" ? "text-gray-700" : "text-ground-text-secondary";
-  const textTertiary =
-    theme === "light" ? "text-gray-500" : "text-ground-text-tertiary";
-  const categoryBg =
-    theme === "light" ? "bg-gray-100" : "bg-ground-dark-tertiary";
-  const dividerColor =
-    theme === "light" ? "border-gray-200" : "border-ground-dark-tertiary";
+  // Truncate summary to 3 lines (approximately 225 characters) - only if not expanded
+  const truncatedSummary = summary 
+    ? summary.length > 225 && !isExpanded
+      ? summary.substring(0, 225) + "..." 
+      : summary
+    : null;
+  
+  const displaySummary = isExpanded ? summary : truncatedSummary;
 
-  function getTimeAgo(isoTimestamp) {
-    // Handle null, undefined, or invalid timestamps
-    if (!isoTimestamp) {
-      return "Unknown";
+  const handleShare = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}#news-${id}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+      
+      if (onShare) {
+        onShare(shareUrl);
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      // Fallback: select text
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
     }
+  };
 
-    const now = new Date();
-    const updatedAt = new Date(isoTimestamp);
-
-    // Check if the date is valid
-    if (isNaN(updatedAt.getTime())) {
-      return "Unknown";
+  // Check if there's a highlighted news and this is not it (but don't blur if expanded)
+  const shouldBlur = highlightedNewsId && highlightedNewsId !== String(id) && !isExpanded;
+  
+  const handleCardClick = (e) => {
+    // Prevent closing when clicking inside the highlighted card
+    if (isHighlighted) {
+      e.stopPropagation();
     }
-
-    const diffMs = now - updatedAt;
-
-    // Handle future dates (shouldn't happen, but just in case)
-    if (diffMs < 0) {
-      return "Just now";
+    // Prevent closing when clicking inside expanded modal
+    if (isExpanded) {
+      e.stopPropagation();
     }
-
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMinutes < 1) return "Just now";
-    if (diffMinutes < 60)
-      return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
-
-    const weeks = Math.floor(diffDays / 7);
-    if (weeks < 4) return `${weeks} week${weeks !== 1 ? "s" : ""} ago`;
-
-    const months = Math.floor(diffDays / 30);
-    if (months < 12) return `${months} month${months !== 1 ? "s" : ""} ago`;
-
-    const years = Math.floor(diffDays / 365);
-    return `${years} year${years !== 1 ? "s" : ""} ago`;
-  }
+  };
 
   return (
-    <article
-      className={`${cardBg} rounded-lg border ${borderColor} overflow-hidden transition-all flex flex-col h-full`}
+    <article 
+      onClick={handleCardClick}
+      className={`bg-[var(--bg-card)] rounded-lg border overflow-hidden transition-all flex flex-col sm:flex-row h-full hover:border-[var(--text-muted)] ${
+        isHighlighted 
+          ? 'border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative' 
+          : 'border-[var(--border-subtle)]'
+      } ${shouldBlur ? 'blur-sm opacity-50 pointer-events-none' : ''} ${isExpanded ? 'sm:flex-row' : ''}`}
+      id={`news-${id}`}
     >
-      {/* Image */}
-      {imageUrl && !imageError && (
-        <div className={`w-full h-48 ${imageBg} overflow-hidden flex-shrink-0`}>
+      {/* Rounded Square Thumbnail - Stack on mobile, side on desktop */}
+      {imageUrl && !imageError ? (
+        <div className="w-full h-48 sm:w-28 sm:h-28 bg-[var(--bg-surface)] overflow-hidden flex-shrink-0 sm:self-start sm:m-3 rounded-t-lg sm:rounded relative">
+          {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
+          {(isExpanded || isHighlighted) && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isExpanded && onClose) {
+                  onClose();
+                } else if (isHighlighted && onCloseHighlight) {
+                  onCloseHighlight();
+                }
+              }}
+              className="lg:hidden absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
           <img
             src={imageUrl}
             alt={title || "News image"}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              console.error("Image failed to load:", imageUrl);
+            onError={() => {
               setImageError(true);
-              e.target.style.display = "none";
-              // Hide the container if image fails
-              if (e.target.parentElement) {
-                e.target.parentElement.style.display = "none";
-              }
             }}
             loading="lazy"
           />
         </div>
+      ) : (
+        <div className="w-full h-48 sm:w-28 sm:h-28 bg-[var(--bg-surface)] flex-shrink-0 sm:self-start sm:m-3 rounded-t-lg sm:rounded flex items-center justify-center relative">
+          {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
+          {(isExpanded || isHighlighted) && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isExpanded && onClose) {
+                  onClose();
+                } else if (isHighlighted && onCloseHighlight) {
+                  onCloseHighlight();
+                }
+              }}
+              className="lg:hidden absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+          <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
       )}
 
-      <div className="p-6 flex flex-col flex-1">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
-              {category && (
-                <span
-                  className={`px-2 py-1 text-xs font-medium ${categoryBg} ${textSecondary} rounded`}
-                >
-                  {category}
-                </span>
-              )}
-              <span className={`text-xs ${textTertiary}`}>
-                {/* {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)} */}
-                {getTimeAgo(updatedAt)}
-              </span>
-              {recentArticlesCount > 0 && (
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded ${
-                    theme === "light"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-green-900/30 text-green-400"
-                  }`}
-                >
-                  {recentArticlesCount} new
-                </span>
-              )}
-            </div>
-            <h2
-              className={`text-xl font-bold ${textPrimary} mb-2 leading-tight`}
-            >
-              {title}
-            </h2>
-          </div>
-        </div>
+      {/* Content Area - Reduced spacing */}
+      <div className="flex flex-col flex-1 min-w-0 p-3 sm:py-3 sm:pr-3 relative">
+        {/* Share Button */}
+        <button
+          onClick={handleShare}
+          className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-[var(--bg-surface)] transition-colors z-10"
+          title={shareCopied ? "Link copied!" : "Share this news"}
+          aria-label="Share this news"
+        >
+          {shareCopied ? (
+            <svg className="w-4 h-4 text-[var(--accent-positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          )}
+        </button>
+        
+        {/* Topic Headline - Clickable */}
+        <h2 
+          onClick={() => onTitleClick && onTitleClick(id)}
+          className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 pr-8 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
+        >
+          {title}
+        </h2>
 
-        {/* Summary */}
-        {summary && (
-          <p className={`${textSecondary} mb-4 leading-relaxed`}>{summary}</p>
+        {/* Summary - Full if expanded, truncated otherwise */}
+        {displaySummary && (
+          <p className={`text-xs sm:text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${isExpanded ? '' : 'line-clamp-3'}`}>
+            {displaySummary}
+          </p>
         )}
 
-        {/* Signal Balance */}
+        {/* Metadata Row */}
+        <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
+          {category && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-secondary)] rounded-full">
+              {category}
+            </span>
+          )}
+          <span className="text-[var(--text-muted)] flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
+          {recentArticlesCount > 0 && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)] rounded-full">
+              {recentArticlesCount} new
+            </span>
+          )}
+        </div>
+
+        {/* THE MOODLINE Section - aligned with image left edge (12px from card left) */}
         {sentiment && (
-          <div className="mb-4">
-            <SignalBalance
+          <div className="mb-2 sm:-ml-[136px] sm:pl-0">
+            <Moodline
               sentiment={sentiment}
               onSentimentClick={setSelectedSentiment}
               selectedSentiment={selectedSentiment}
             />
             {selectedSentiment && (
-              <div
-                className={`mt-2 text-xs ${textTertiary} flex items-center justify-between`}
-              >
+              <div className="mt-1.5 text-xs text-[var(--text-muted)] flex items-center justify-between">
                 <span>
                   Filtered by:{" "}
                   <span className="font-medium capitalize">
@@ -208,43 +251,29 @@ function NewsCard({ newsItem }) {
                 </span>
                 <button
                   onClick={() => setSelectedSentiment(null)}
-                  className={`text-xs underline hover:no-underline ${textSecondary} ${
-                    theme === "light"
-                      ? "hover:text-gray-900"
-                      : "hover:text-ground-text-primary"
-                  }`}
+                  className="text-xs underline hover:no-underline text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Clear filter
                 </button>
               </div>
             )}
+            {/* Divider below Moodline */}
+            <div className="mt-2 border-t border-[var(--border-subtle)]"></div>
           </div>
         )}
 
-        {/* Sources - flex-1 to push expandable to bottom */}
+        {/* Source List - Flex-1 to push to bottom, aligned with image left edge (12px from card left) */}
         {filteredSources && filteredSources.length > 0 ? (
-          <div className="mb-4 flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0 sm:-ml-[136px] sm:pl-0">
             <SourceList sources={filteredSources} />
           </div>
         ) : sources && sources.length > 0 ? (
-          <div className="mb-4 flex-1 flex flex-col">
-            <div className={`text-sm ${textTertiary} py-4 text-center`}>
+          <div className="flex-1 flex flex-col sm:-ml-[136px] sm:pl-0">
+            <div className="text-sm text-[var(--text-muted)] py-4 text-left">
               No articles match the selected sentiment filter.
             </div>
           </div>
         ) : null}
-
-        {/* Quote */}
-        {quote && (
-          <div className={`mt-4 pt-4 border-t ${dividerColor}`}>
-            <blockquote className={`${textSecondary} italic mb-2`}>
-              "{quote}"
-            </blockquote>
-            {quoteAuthor && (
-              <cite className={`text-sm ${textTertiary}`}>— {quoteAuthor}</cite>
-            )}
-          </div>
-        )}
       </div>
     </article>
   );
