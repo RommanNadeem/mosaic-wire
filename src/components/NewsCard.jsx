@@ -70,7 +70,31 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
     e.stopPropagation();
     
     const shareUrl = `${window.location.origin}${window.location.pathname}#news-${id}`;
+    const shareTitle = title || 'Check out this news on MosaicBeat';
+    const shareText = summary ? `${title}\n\n${summary.substring(0, 200)}...` : title;
     
+    // Check if Web Share API is available (typically on mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        
+        if (onShare) {
+          onShare(shareUrl);
+        }
+        return; // Successfully shared via native share
+      } catch (err) {
+        // User cancelled or share failed, fall through to clipboard
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+        }
+      }
+    }
+    
+    // Fallback to clipboard copy (desktop or if share API not available)
     try {
       await navigator.clipboard.writeText(shareUrl);
       setShareCopied(true);
@@ -132,7 +156,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
                   onCloseHighlight();
                 }
               }}
-              className="lg:hidden absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
+              className="lg:hidden absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
               aria-label="Close"
             >
               <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +188,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
                   onCloseHighlight();
                 }
               }}
-              className="lg:hidden absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
+              className="lg:hidden absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
               aria-label="Close"
             >
               <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
