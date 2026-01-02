@@ -248,7 +248,7 @@ function App() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+      <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         {newsData.length > 0 ? (
           <>
             {/* Pakistan Mood - Full width */}
@@ -260,7 +260,7 @@ function App() {
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
               {/* News Cards - 80% width */}
               <div className="flex-1 lg:w-4/5 order-2 lg:order-1 relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {newsData.map((item) => (
                     <NewsCard 
                       key={item.id} 
