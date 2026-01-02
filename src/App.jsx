@@ -9,6 +9,7 @@ import { getLatestTopics } from "./lib/supabaseQueries";
 import { transformSupabaseData } from "./utils/dataTransformers";
 import { sampleNewsData } from "./data/sampleData";
 import { isSupabaseConfigured } from "./lib/supabase";
+import { updateMetaTags, resetMetaTags } from "./utils/metaTags";
 
 function App() {
   const { theme } = useTheme();
@@ -69,6 +70,9 @@ function App() {
 
   // Handle hash-based routing for shared news
   useEffect(() => {
+    // Only process hash if we have data loaded
+    if (loading || newsData.length === 0) return;
+
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash.startsWith('#news-')) {
@@ -80,20 +84,29 @@ function App() {
         if (newsExists) {
           setHighlightedNewsId(newsId);
           
-          // Scroll to the highlighted news after a short delay to ensure it's rendered
+          // Update meta tags for the shared news item
+          const newsItem = newsData.find(item => String(item.id) === newsId);
+          if (newsItem) {
+            const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
+            updateMetaTags(newsItem, shareUrl);
+          }
+          
+          // Scroll to the highlighted news after a delay to ensure it's rendered
           setTimeout(() => {
             const element = document.getElementById(`news-${newsId}`);
             if (element) {
               element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-          }, 100);
+          }, 300);
         } else {
           // News item doesn't exist - redirect to main page by clearing the hash
           window.location.hash = '';
           setHighlightedNewsId(null);
+          resetMetaTags();
         }
       } else {
         setHighlightedNewsId(null);
+        resetMetaTags();
       }
     };
 
@@ -106,7 +119,7 @@ function App() {
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
-  }, [newsData]);
+  }, [newsData, loading]);
 
   // Handle clicking outside to close highlight
   useEffect(() => {
