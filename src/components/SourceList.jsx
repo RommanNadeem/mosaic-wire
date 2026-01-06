@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { formatTimeAgo } from '../utils/dataTransformers'
 
-function SourceList({ sources, onMoreSourcesClick }) {
+function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   if (!sources || sources.length === 0) {
@@ -94,24 +94,29 @@ function SourceList({ sources, onMoreSourcesClick }) {
     </div>
   )
 
+  // If showAll is true, show all sources without expansion
+  const allSources = showAll ? sources : visibleSources;
+  const shouldShowMoreButton = !showAll && hiddenCount > 0 && !isExpanded;
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 space-y-0">
-        {visibleSources.map((source, index) => renderSource(source, index))}
+        {allSources.map((source, index) => renderSource(source, index))}
       </div>
 
-      {hiddenCount > 0 && !isExpanded && (
+      {shouldShowMoreButton && (
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             if (onMoreSourcesClick) {
               onMoreSourcesClick()
             } else {
               setIsExpanded(true)
             }
           }}
-          className="w-full flex items-center gap-2 py-2 text-sm text-[var(--text-muted)] transition-colors cursor-pointer mt-2 hover:text-[var(--text-primary)] text-left"
+          className="w-full flex items-center gap-2 py-2 text-sm text-[var(--text-muted)] transition-colors cursor-pointer mt-2 hover:text-[var(--text-primary)] text-left relative z-10"
         >
           {/* Sentiment dots cluster */}
           <div className="flex items-center gap-1">
@@ -143,7 +148,7 @@ function SourceList({ sources, onMoreSourcesClick }) {
         </button>
       )}
 
-      {isExpanded && hiddenCount > 0 && (
+      {!showAll && isExpanded && hiddenCount > 0 && (
         <div className="mt-2 pt-2 border-t border-[var(--border-subtle)]">
           <div className="space-y-0">
             {hiddenSources.map((source, index) => renderSource(source, index))}

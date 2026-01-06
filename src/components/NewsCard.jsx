@@ -5,7 +5,16 @@ import ShareButton from "./ShareButton";
 import { formatTimeAgo } from "../utils/dataTransformers";
 import { getSignedImageUrl } from "../utils/imageUtils";
 
-function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitleClick, isExpanded, onClose, onCloseHighlight }) {
+function NewsCard({
+  newsItem,
+  isHighlighted,
+  highlightedNewsId,
+  onShare,
+  onTitleClick,
+  isExpanded,
+  onClose,
+  onCloseHighlight,
+}) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
@@ -57,17 +66,18 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
   }, [image]);
 
   // Truncate summary to 3 lines (approximately 225 characters) - only if not expanded
-  const truncatedSummary = summary 
+  const truncatedSummary = summary
     ? summary.length > 225 && !isExpanded
-      ? summary.substring(0, 225) + "..." 
+      ? summary.substring(0, 225) + "..."
       : summary
     : null;
-  
+
   const displaySummary = isExpanded ? summary : truncatedSummary;
 
   // Check if there's a highlighted news and this is not it (but don't blur if expanded)
-  const shouldBlur = highlightedNewsId && highlightedNewsId !== String(id) && !isExpanded;
-  
+  const shouldBlur =
+    highlightedNewsId && highlightedNewsId !== String(id) && !isExpanded;
+
   const handleCardClick = (e) => {
     // Prevent closing when clicking inside the highlighted card
     if (isHighlighted) {
@@ -80,13 +90,15 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
   };
 
   return (
-    <article 
+    <article
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] border overflow-hidden transition-all flex flex-col h-full hover:border-[var(--text-muted)] ${
-        isHighlighted 
-          ? 'border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative' 
-          : 'border-[var(--border-subtle)]'
-      } ${shouldBlur ? 'blur-sm opacity-50 pointer-events-none' : ''}`}
+      className={`bg-[var(--bg-card)] border overflow-hidden transition-all flex flex-col ${
+        isExpanded ? "h-full" : "h-full"
+      } hover:border-[var(--text-muted)] ${
+        isHighlighted
+          ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
+          : "border-[var(--border-subtle)]"
+      } ${shouldBlur ? "blur-sm opacity-50 pointer-events-none" : ""}`}
       id={`news-${id}`}
     >
       {/* Image at the top */}
@@ -107,8 +119,18 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
               className="lg:hidden absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
               aria-label="Close"
             >
-              <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5 text-black"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -116,7 +138,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
             src={imageUrl}
             alt={title || "News image"}
             className="w-full h-full object-cover"
-            style={{ objectPosition: 'center top' }}
+            style={{ objectPosition: "center top" }}
             onError={() => {
               setImageError(true);
             }}
@@ -140,28 +162,52 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
               className="lg:hidden absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
               aria-label="Close"
             >
-              <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5 text-black"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
-          <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg
+            className="w-8 h-8 text-[var(--text-muted)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
         </div>
       )}
 
       {/* Content Area - Reduced spacing */}
-      <div className="flex flex-col flex-1 min-w-0 py-3 px-3 relative">
+      <div
+        className={`flex flex-col flex-1 min-w-0 py-3 px-3 relative ${
+          isExpanded ? "overflow-hidden" : ""
+        }`}
+      >
         {/* Share Button */}
-        <ShareButton 
+        <ShareButton
           newsItem={newsItem}
           onShare={onShare}
           className="absolute top-3 right-3 z-10"
         />
-        
+
         {/* Topic Headline - Clickable */}
-        <h2 
+        <h2
           onClick={() => onTitleClick && onTitleClick(id)}
           className="text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 pr-8 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
         >
@@ -176,8 +222,18 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
             </span>
           )}
           <span className="text-[var(--text-muted)] flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
           </span>
@@ -191,13 +247,17 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
         {/* Sentiment Bar Section - Above Summary */}
         {sentiment && (
           <div className="mb-3">
-            <SentimentBar sentiment={sentiment} height="h-[12px]" showPercentages={true} />
+            <SentimentBar
+              sentiment={sentiment}
+              height="h-[12px]"
+              showPercentages={true}
+            />
           </div>
         )}
 
         {/* Summary - Full if expanded, truncated otherwise - Clickable */}
         {displaySummary && (
-          <p 
+          <p
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -205,7 +265,9 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
                 onTitleClick(id);
               }
             }}
-            className={`text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${isExpanded ? '' : 'line-clamp-3'} cursor-pointer hover:text-[var(--text-primary)] transition-colors`}
+            className={`text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${
+              isExpanded ? "" : "line-clamp-3"
+            } cursor-pointer hover:text-[var(--text-primary)] transition-colors`}
           >
             {displaySummary}
           </p>
@@ -213,8 +275,16 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
 
         {/* Source List */}
         {filteredSources && filteredSources.length > 0 ? (
-          <div className="flex-1 flex flex-col min-h-0">
-            <SourceList sources={filteredSources} />
+          <div
+            className={`flex-1 flex flex-col ${
+              isExpanded ? "min-h-0 overflow-y-auto" : "min-h-0"
+            }`}
+          >
+            <SourceList
+              sources={filteredSources}
+              onMoreSourcesClick={() => onTitleClick && onTitleClick(id)}
+              showAll={isExpanded}
+            />
           </div>
         ) : sources && sources.length > 0 ? (
           <div className="flex-1 flex flex-col">
