@@ -18,6 +18,7 @@ function NewsCard({
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
+  const [hoveredSegment, setHoveredSegment] = useState(null);
 
   if (!newsItem) return null;
 
@@ -92,8 +93,8 @@ function NewsCard({
   return (
     <article
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] border overflow-hidden transition-all flex flex-col ${
-        isExpanded ? "h-full" : "h-full"
+      className={`bg-[var(--bg-card)] border transition-all flex flex-col ${
+        isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
       } hover:border-[var(--text-muted)] ${
         isHighlighted
           ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
@@ -103,7 +104,11 @@ function NewsCard({
     >
       {/* Image at the top */}
       {imageUrl && !imageError ? (
-        <div className="w-full h-48 bg-[var(--bg-surface)] overflow-hidden relative">
+        <div
+          className={`w-full bg-[var(--bg-surface)] relative ${
+            isExpanded ? "h-auto overflow-visible" : "h-48 overflow-hidden"
+          }`}
+        >
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
             <button
@@ -137,8 +142,16 @@ function NewsCard({
           <img
             src={imageUrl}
             alt={title || "News image"}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: "center top" }}
+            className={`w-full ${
+              isExpanded
+                ? "h-auto max-h-none object-contain"
+                : "h-full object-cover"
+            }`}
+            style={
+              isExpanded
+                ? { maxHeight: "none" }
+                : { objectPosition: "center top" }
+            }
             onError={() => {
               setImageError(true);
             }}
@@ -146,7 +159,11 @@ function NewsCard({
           />
         </div>
       ) : (
-        <div className="w-full h-48 bg-[var(--bg-surface)] flex items-center justify-center relative">
+        <div
+          className={`w-full bg-[var(--bg-surface)] flex items-center justify-center relative ${
+            isExpanded ? "h-auto min-h-[200px]" : "h-48"
+          }`}
+        >
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
             <button
@@ -196,7 +213,7 @@ function NewsCard({
       {/* Content Area - Reduced spacing */}
       <div
         className={`flex flex-col flex-1 min-w-0 py-3 px-3 relative ${
-          isExpanded ? "overflow-hidden" : ""
+          isExpanded ? "overflow-y-auto" : "overflow-visible"
         }`}
       >
         {/* Share Button */}
@@ -245,15 +262,227 @@ function NewsCard({
         </div>
 
         {/* Sentiment Bar Section - Above Summary */}
-        {sentiment && (
-          <div className="mb-3">
-            <SentimentBar
-              sentiment={sentiment}
-              height="h-[12px]"
-              showPercentages={true}
-            />
-          </div>
-        )}
+        {sentiment &&
+          (() => {
+            const { positive, neutral, negative } = sentiment;
+            const total = positive + neutral + negative;
+            const percentages =
+              total > 0
+                ? {
+                    positive: Math.round((positive / total) * 100),
+                    neutral: Math.round((neutral / total) * 100),
+                    negative: Math.round((negative / total) * 100),
+                  }
+                : { positive: 0, neutral: 0, negative: 0 };
+
+            const getTooltipContent = (segment) => {
+              if (!segment) return null;
+              const segmentData = {
+                negative: {
+                  label: "Negative",
+                  percentage: percentages.negative,
+                  color: "var(--accent-negative)",
+                  count: negative,
+                  description:
+                    "Stories emphasizing risk, conflict, decline, or concern.",
+                },
+                neutral: {
+                  label: "Neutral",
+                  percentage: percentages.neutral,
+                  color: "var(--accent-neutral)",
+                  count: neutral,
+                  description:
+                    "Informational or balanced coverage without strong emotional framing.",
+                },
+                positive: {
+                  label: "Positive",
+                  percentage: percentages.positive,
+                  color: "var(--accent-positive)",
+                  count: positive,
+                  description:
+                    "Stories framed with optimism, progress, opportunity, or growth.",
+                },
+              };
+              return segmentData[segment];
+            };
+
+            const tooltipData = getTooltipContent(hoveredSegment);
+
+            // Calculate tooltip position based on segment
+            const getTooltipPosition = () => {
+              if (!hoveredSegment)
+                return { left: "50%", transform: "translateX(-50%)" };
+
+              let leftPercent = 0;
+              if (hoveredSegment === "negative") {
+                leftPercent = percentages.negative / 2;
+              } else if (hoveredSegment === "neutral") {
+                leftPercent = percentages.negative + percentages.neutral / 2;
+              } else if (hoveredSegment === "positive") {
+                leftPercent =
+                  percentages.negative +
+                  percentages.neutral +
+                  percentages.positive / 2;
+              }
+
+              return { left: `${leftPercent}%`, transform: "translateX(-50%)" };
+            };
+
+            const tooltipPosition = getTooltipPosition();
+
+            return (
+              <div className="mb-3 relative overflow-visible">
+                {/* Custom Sentiment Bar with Hover Areas */}
+                <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
+                  {/* Negative Segment */}
+                  {percentages.negative > 0 && (
+                    <div
+                      className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                      style={{ width: `${percentages.negative}%` }}
+                      onMouseEnter={() => setHoveredSegment("negative")}
+                      onMouseLeave={() => setHoveredSegment(null)}
+                    >
+                      <span className="text-[10px] font-medium text-white px-1">
+                        {percentages.negative}%
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Neutral Segment */}
+                  {percentages.neutral > 0 && (
+                    <div
+                      className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                      style={{ width: `${percentages.neutral}%` }}
+                      onMouseEnter={() => setHoveredSegment("neutral")}
+                      onMouseLeave={() => setHoveredSegment(null)}
+                    >
+                      <span className="text-[10px] font-medium text-white px-1">
+                        {percentages.neutral}%
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Positive Segment */}
+                  {percentages.positive > 0 && (
+                    <div
+                      className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                      style={{ width: `${percentages.positive}%` }}
+                      onMouseEnter={() => setHoveredSegment("positive")}
+                      onMouseLeave={() => setHoveredSegment(null)}
+                    >
+                      <span className="text-[10px] font-medium text-white px-1">
+                        {percentages.positive}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Custom Design Tooltip - Shows only when hovering */}
+                {tooltipData && (
+                  <div
+                    className="absolute bottom-full mb-4 opacity-0 invisible transition-all duration-300 ease-out z-[100] pointer-events-none transform translate-y-2"
+                    style={{
+                      ...tooltipPosition,
+                      opacity: hoveredSegment ? 1 : 0,
+                      visibility: hoveredSegment ? "visible" : "hidden",
+                      transform: hoveredSegment
+                        ? "translateX(-50%) translateY(0)"
+                        : "translateX(-50%) translateY(8px)",
+                    }}
+                  >
+                    <div className="relative">
+                      {/* Main Tooltip Container */}
+                      <div className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl p-5 min-w-[280px] max-w-[320px] backdrop-blur-md">
+                        {/* Decorative top accent - matches hovered segment */}
+                        <div
+                          className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
+                          style={{ backgroundColor: tooltipData.color }}
+                        ></div>
+
+                        {/* Tooltip Header */}
+                        <div className="flex items-center gap-2 mb-4 mt-1">
+                          <div
+                            className="w-1.5 h-1.5 rounded-full animate-pulse"
+                            style={{ backgroundColor: tooltipData.color }}
+                          ></div>
+                          <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
+                            {tooltipData.label} Sentiment
+                          </span>
+                        </div>
+
+                        {/* Tooltip Content */}
+                        <div className="space-y-3">
+                          {/* Percentage Display */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <div
+                                  className="w-3 h-3 rounded-full shadow-lg"
+                                  style={{
+                                    backgroundColor: tooltipData.color,
+                                    boxShadow: `${tooltipData.color}30 0 0 8px`,
+                                  }}
+                                ></div>
+                                <div
+                                  className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                  style={{ backgroundColor: tooltipData.color }}
+                                ></div>
+                              </div>
+                              <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                {tooltipData.label}
+                              </span>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                              <span
+                                className="text-2xl font-bold"
+                                style={{ color: tooltipData.color }}
+                              >
+                                {tooltipData.percentage}
+                              </span>
+                              <span className="text-xs text-[var(--text-muted)]">
+                                %
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div className="pt-2 border-t border-[var(--border-subtle)]">
+                            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                              <span className="font-semibold text-[var(--text-primary)]">
+                                {tooltipData.label}:
+                              </span>{" "}
+                              {tooltipData.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Custom Arrow - positioned based on segment */}
+                      <div
+                        className="absolute top-full -mt-px"
+                        style={{ left: "50%", transform: "translateX(-50%)" }}
+                      >
+                        <svg
+                          width="20"
+                          height="10"
+                          viewBox="0 0 20 10"
+                          fill="none"
+                          className="drop-shadow-lg"
+                        >
+                          <path
+                            d="M10 10L0 0L20 0L10 10Z"
+                            fill="var(--bg-card)"
+                            stroke="var(--border-subtle)"
+                            strokeWidth="1"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
         {/* Summary - Full if expanded, truncated otherwise - Clickable */}
         {displaySummary && (
