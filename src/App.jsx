@@ -30,12 +30,12 @@ function App() {
 
         if (isSupabaseConfigured) {
           // Fetch all topics from Supabase (topics now have top_articles precomputed)
-          const topics = await getLatestTopics()
+          const topics = await getLatestTopics();
 
           if (topics && topics.length > 0) {
             // Topics now include top_articles, so we don't need to fetch articles separately
             const transformedData = transformSupabaseData(topics);
-            
+
             if (transformedData && transformedData.length > 0) {
               setNewsData(transformedData);
               setUsingSampleData(false);
@@ -76,32 +76,32 @@ function App() {
 
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash.startsWith('#news-')) {
-        const newsId = hash.replace('#news-', '');
-        
+      if (hash.startsWith("#news-")) {
+        const newsId = hash.replace("#news-", "");
+
         // Check if the news item exists in the current data
-        const newsExists = newsData.some(item => String(item.id) === newsId);
-        
+        const newsExists = newsData.some((item) => String(item.id) === newsId);
+
         if (newsExists) {
           setHighlightedNewsId(newsId);
-          
+
           // Update meta tags for the shared news item
-          const newsItem = newsData.find(item => String(item.id) === newsId);
+          const newsItem = newsData.find((item) => String(item.id) === newsId);
           if (newsItem) {
             const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
             updateMetaTags(newsItem, shareUrl);
           }
-          
+
           // Scroll to the highlighted news after a delay to ensure it's rendered
           setTimeout(() => {
             const element = document.getElementById(`news-${newsId}`);
             if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
             }
           }, 300);
         } else {
           // News item doesn't exist - redirect to main page by clearing the hash
-          window.location.hash = '';
+          window.location.hash = "";
           setHighlightedNewsId(null);
           resetMetaTags();
         }
@@ -115,10 +115,10 @@ function App() {
     handleHashChange();
 
     // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener("hashchange", handleHashChange);
 
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener("hashchange", handleHashChange);
     };
   }, [newsData, loading]);
 
@@ -126,24 +126,24 @@ function App() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!highlightedNewsId && !expandedNewsId) return;
-      
+
       // Check if click is outside any news card
       const clickedElement = event.target;
       const newsCard = clickedElement.closest('article[id^="news-"]');
-      const modalCard = clickedElement.closest('.expanded-news-modal');
-      
+      const modalCard = clickedElement.closest(".expanded-news-modal");
+
       if (!newsCard && !modalCard) {
         // Clicked outside, clear highlight and expanded view
-        window.location.hash = '';
+        window.location.hash = "";
         setHighlightedNewsId(null);
         setExpandedNewsId(null);
       }
     };
 
     if (highlightedNewsId || expandedNewsId) {
-      document.addEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
       return () => {
-        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener("click", handleClickOutside);
       };
     }
   }, [highlightedNewsId, expandedNewsId]);
@@ -151,15 +151,15 @@ function App() {
   // Handle ESC key to close expanded view
   useEffect(() => {
     const handleEsc = (event) => {
-      if (event.key === 'Escape' && expandedNewsId) {
+      if (event.key === "Escape" && expandedNewsId) {
         setExpandedNewsId(null);
       }
     };
 
     if (expandedNewsId) {
-      document.addEventListener('keydown', handleEsc);
+      document.addEventListener("keydown", handleEsc);
       return () => {
-        document.removeEventListener('keydown', handleEsc);
+        document.removeEventListener("keydown", handleEsc);
       };
     }
   }, [expandedNewsId]);
@@ -169,17 +169,17 @@ function App() {
     if (expandedNewsId) {
       // Save current scroll position
       const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
+      document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-      
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
       return () => {
         // Restore scroll position
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
         window.scrollTo(0, scrollY);
       };
     }
@@ -188,7 +188,7 @@ function App() {
   const handleTitleClick = (newsId) => {
     // If card is highlighted (from shared link), clear highlight first
     if (highlightedNewsId === String(newsId)) {
-      window.location.hash = '';
+      window.location.hash = "";
       setHighlightedNewsId(null);
       // Small delay to allow highlight to clear before opening expanded view
       setTimeout(() => {
@@ -200,7 +200,7 @@ function App() {
   };
 
   const handleCloseHighlight = () => {
-    window.location.hash = '';
+    window.location.hash = "";
     setHighlightedNewsId(null);
   };
 
@@ -211,9 +211,7 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--text-primary)]"></div>
-            <p className="mt-4 text-[var(--text-secondary)]">
-              Loading news...
-            </p>
+            <p className="mt-4 text-[var(--text-secondary)]">Loading news...</p>
           </div>
         </div>
         <Footer />
@@ -227,7 +225,9 @@ function App() {
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="bg-[var(--bg-card)] border border-[var(--accent-negative)] p-4">
-            <p className="text-[var(--accent-negative)]">Error loading data: {error}</p>
+            <p className="text-[var(--accent-negative)]">
+              Error loading data: {error}
+            </p>
           </div>
         </div>
         <Footer />
@@ -257,8 +257,8 @@ function App() {
               {/* Featured News - 75% width */}
               <div className="flex-1 lg:w-[75%] order-2 lg:order-1">
                 {newsData.length > 0 && (
-                  <FeaturedNews 
-                    newsItem={newsData[0]} 
+                  <FeaturedNews
+                    newsItem={newsData[0]}
                     onTitleClick={handleTitleClick}
                     onShare={(url) => {
                       const shareUrl = `${window.location.origin}${window.location.pathname}#news-${newsData[0].id}`;
@@ -267,27 +267,31 @@ function App() {
                   />
                 )}
               </div>
-              
+
               {/* Sidebar - 25% width */}
-              <div className={`lg:w-[25%] lg:flex-shrink-0 order-1 lg:order-2 space-y-4 transition-all ${
-                (highlightedNewsId || expandedNewsId) ? 'blur-sm opacity-60 pointer-events-none' : ''
-              }`}>
+              <div
+                className={`lg:w-[25%] lg:flex-shrink-0 order-1 lg:order-2 space-y-2 transition-all ${
+                  highlightedNewsId || expandedNewsId
+                    ? "blur-sm opacity-60 pointer-events-none"
+                    : ""
+                }`}
+              >
                 <BiasDistribution newsData={newsData} />
-                <HowToRead 
-                  newsData={newsData} 
+                <HowToRead
+                  newsData={newsData}
                   isExpanded={sidebarExpanded}
                   onToggle={() => setSidebarExpanded(!sidebarExpanded)}
                 />
               </div>
             </div>
-            
+
             {/* News Cards Grid - 3 columns */}
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {newsData.slice(1).map((item) => (
-                  <NewsCard 
-                    key={item.id} 
-                    newsItem={item} 
+                  <NewsCard
+                    key={item.id}
+                    newsItem={item}
                     isHighlighted={highlightedNewsId === String(item.id)}
                     highlightedNewsId={highlightedNewsId}
                     isExpanded={expandedNewsId === String(item.id)}
@@ -296,37 +300,40 @@ function App() {
                   />
                 ))}
               </div>
-              
+
               {/* Expanded News Modal */}
-              {expandedNewsId && (() => {
-                const expandedItem = newsData.find(item => String(item.id) === expandedNewsId);
-                if (!expandedItem) return null;
-                
-                return (
-                  <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        setExpandedNewsId(null);
-                      }
-                    }}
-                  >
-                    <div 
-                      className="expanded-news-modal bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-                      onClick={(e) => e.stopPropagation()}
+              {expandedNewsId &&
+                (() => {
+                  const expandedItem = newsData.find(
+                    (item) => String(item.id) === expandedNewsId
+                  );
+                  if (!expandedItem) return null;
+
+                  return (
+                    <div
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
+                      onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                          setExpandedNewsId(null);
+                        }
+                      }}
                     >
-                      <NewsCard 
-                        newsItem={expandedItem} 
-                        isHighlighted={false}
-                        highlightedNewsId={null}
-                        isExpanded={true}
-                        onTitleClick={() => setExpandedNewsId(null)}
-                        onClose={() => setExpandedNewsId(null)}
-                      />
+                      <div
+                        className="expanded-news-modal bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <NewsCard
+                          newsItem={expandedItem}
+                          isHighlighted={false}
+                          highlightedNewsId={null}
+                          isExpanded={true}
+                          onTitleClick={() => setExpandedNewsId(null)}
+                          onClose={() => setExpandedNewsId(null)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
             </div>
           </>
         ) : (
@@ -336,7 +343,9 @@ function App() {
             </p>
             {error && (
               <div className="mt-4 bg-[var(--bg-card)] border border-[var(--accent-negative)] rounded-lg p-4 max-w-md mx-auto">
-                <p className="text-[var(--accent-negative)] font-semibold">Error:</p>
+                <p className="text-[var(--accent-negative)] font-semibold">
+                  Error:
+                </p>
                 <p className="text-[var(--text-secondary)] text-sm">{error}</p>
               </div>
             )}

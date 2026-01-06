@@ -66,8 +66,8 @@ function SourceList({ sources, onMoreSourcesClick }) {
     negative: hiddenSentiments.filter(s => s === 'negative').length
   }
 
-  const renderSource = (source) => (
-    <div key={source.id} className="flex items-start gap-2 py-1.5">
+  const renderSource = (source, index = 0) => (
+    <div key={source.id} className={`flex items-start gap-2 py-1.5 ${index > 0 ? 'border-t border-[var(--border-subtle)]' : ''}`}>
       <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getSentimentColor(source.sentiment)}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap text-left">
@@ -97,7 +97,7 @@ function SourceList({ sources, onMoreSourcesClick }) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 space-y-0">
-        {visibleSources.map(renderSource)}
+        {visibleSources.map((source, index) => renderSource(source, index))}
       </div>
 
       {hiddenCount > 0 && !isExpanded && (
@@ -146,7 +146,7 @@ function SourceList({ sources, onMoreSourcesClick }) {
       {isExpanded && hiddenCount > 0 && (
         <div className="mt-2 pt-2 border-t border-[var(--border-subtle)]">
           <div className="space-y-0">
-            {hiddenSources.map((source) => renderSource(source))}
+            {hiddenSources.map((source, index) => renderSource(source, index))}
           </div>
           <button
             type="button"

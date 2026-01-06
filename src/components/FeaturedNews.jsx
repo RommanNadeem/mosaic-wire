@@ -46,9 +46,8 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
     }
   }, [image]);
 
-
   return (
-    <article 
+    <article
       id={`news-${id}`}
       className="bg-[var(--bg-card)] border border-[var(--border-subtle)] overflow-hidden"
     >
@@ -62,41 +61,55 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                 src={imageUrl}
                 alt={title || "News image"}
                 className="w-full h-full object-cover"
-                style={{ objectPosition: 'center top' }}
+                style={{ objectPosition: "center top" }}
                 onError={() => {
                   setImageError(true);
                 }}
                 loading="lazy"
               />
             ) : (
-              <svg className="w-16 h-16 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-16 h-16 text-[var(--text-muted)]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             )}
           </div>
 
           {/* Sentiment Bar */}
           {sentiment && (
-            <div className="px-4 sm:px-6 py-3 border-t border-[var(--border-subtle)] flex-shrink-0">
-              <SentimentBar sentiment={sentiment} height="h-4" showPercentages={true} />
+            <div className="px-4 sm:px-6 py-3 flex-shrink-0">
+              <SentimentBar
+                sentiment={sentiment}
+                height="h-4"
+                showPercentages={true}
+              />
             </div>
           )}
 
           {/* Headline - Below Sentiment Bar */}
-          <h2 
+          <h2
             onClick={() => {
               if (onTitleClick) {
                 onTitleClick(id);
               }
             }}
-            className="px-4 sm:px-6 py-3 border-t border-[var(--border-subtle)] flex-shrink-0 text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors line-clamp-3"
+            className="px-4 sm:px-6 py-3 flex-shrink-0 text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors line-clamp-3"
           >
             {title}
           </h2>
 
           {/* Summary - Moved to Column 1 - Clickable */}
           {summary && (
-            <div 
+            <div
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -104,7 +117,7 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                   onTitleClick(id);
                 }
               }}
-              className="px-4 sm:px-6 py-3 border-t border-[var(--border-subtle)] flex-shrink-0 cursor-pointer"
+              className="px-4 sm:px-6 py-3 flex-shrink-0 cursor-pointer"
             >
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-normal hover:text-[var(--text-primary)] transition-colors">
                 {summary}
@@ -124,25 +137,31 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                 </span>
               )}
               <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
               </span>
             </div>
             {/* Share Button */}
-            <ShareButton 
-              newsItem={newsItem}
-              onShare={onShare}
-              className=""
-            />
+            <ShareButton newsItem={newsItem} onShare={onShare} className="" />
           </div>
 
           {/* Sources List - Using SourceList component to show descriptions */}
           {sources && sources.length > 0 ? (
             <div className="flex-1 flex flex-col min-h-0">
-              <SourceList 
-                sources={sources} 
+              <SourceList
+                sources={sources}
                 onMoreSourcesClick={() => onTitleClick && onTitleClick(id)}
               />
             </div>
@@ -154,4 +173,3 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
 }
 
 export default FeaturedNews;
-
