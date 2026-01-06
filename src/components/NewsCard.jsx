@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import SentimentBar from "./SentimentBar";
 import SourceList from "./SourceList";
 import ShareButton from "./ShareButton";
@@ -19,6 +19,9 @@ function NewsCard({
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
   const [hoveredSegment, setHoveredSegment] = useState(null);
+  const [tooltipStyle, setTooltipStyle] = useState({});
+  const tooltipRef = useRef(null);
+  const sentimentBarRef = useRef(null);
 
   if (!newsItem) return null;
 
@@ -308,30 +311,123 @@ function NewsCard({
 
             const tooltipData = getTooltipContent(hoveredSegment);
 
-            // Calculate tooltip position based on segment
-            const getTooltipPosition = () => {
-              if (!hoveredSegment)
-                return { left: "50%", transform: "translateX(-50%)" };
-
-              let leftPercent = 0;
-              if (hoveredSegment === "negative") {
-                leftPercent = percentages.negative / 2;
-              } else if (hoveredSegment === "neutral") {
-                leftPercent = percentages.negative + percentages.neutral / 2;
-              } else if (hoveredSegment === "positive") {
-                leftPercent =
-                  percentages.negative +
-                  percentages.neutral +
-                  percentages.positive / 2;
+            // Calculate and adjust tooltip position to stay within viewport
+            useEffect(() => {
+              if (
+                !hoveredSegment ||
+                !tooltipRef.current ||
+                !sentimentBarRef.current ||
+                !sentiment
+              ) {
+                setTooltipStyle({});
+                return;
               }
 
-              return { left: `${leftPercent}%`, transform: "translateX(-50%)" };
-            };
+              const { positive, neutral, negative } = sentiment;
+              const total = positive + neutral + negative;
+              const percentages =
+                total > 0
+                  ? {
+                      positive: Math.round((positive / total) * 100),
+                      neutral: Math.round((neutral / total) * 100),
+                      negative: Math.round((negative / total) * 100),
+                    }
+                  : { positive: 0, neutral: 0, negative: 0 };
 
-            const tooltipPosition = getTooltipPosition();
+              const updatePosition = () => {
+                const container = sentimentBarRef.current;
+                const tooltip = tooltipRef.current;
+                if (!container || !tooltip) return;
+
+                const containerRect = container.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const padding = 16; // Minimum distance from viewport edges
+
+                // Calculate initial position based on segment
+                let leftPercent = 0;
+                if (hoveredSegment === "negative") {
+                  leftPercent = percentages.negative / 2;
+                } else if (hoveredSegment === "neutral") {
+                  leftPercent = percentages.negative + percentages.neutral / 2;
+                } else if (hoveredSegment === "positive") {
+                  leftPercent =
+                    percentages.negative +
+                    percentages.neutral +
+                    percentages.positive / 2;
+                }
+
+                // Convert percentage to pixel position
+                const containerWidth = containerRect.width;
+                const tooltipWidth = tooltipRect.width || 320; // Approximate width
+                const leftPosition = (containerWidth * leftPercent) / 100;
+                const tooltipLeft =
+                  containerRect.left + leftPosition - tooltipWidth / 2;
+
+                // Adjust if tooltip would overflow left
+                let adjustedLeft = leftPercent;
+                if (tooltipLeft < padding) {
+                  const overflow = padding - tooltipLeft;
+                  adjustedLeft =
+                    leftPercent + (overflow / containerWidth) * 100;
+                }
+
+                // Adjust if tooltip would overflow right
+                const tooltipRight =
+                  containerRect.left +
+                  (containerWidth * adjustedLeft) / 100 +
+                  tooltipWidth / 2;
+                if (tooltipRight > viewportWidth - padding) {
+                  const overflow = tooltipRight - (viewportWidth - padding);
+                  adjustedLeft =
+                    adjustedLeft - (overflow / containerWidth) * 100;
+                }
+
+                // Check if there's enough space above, otherwise show below
+                const spaceAbove = containerRect.top;
+                const spaceBelow = viewportHeight - containerRect.bottom;
+                const tooltipHeight = tooltipRect.height || 200; // Approximate height
+                const showAbove =
+                  spaceAbove > tooltipHeight + padding ||
+                  spaceAbove > spaceBelow;
+
+                // Calculate arrow position to point to segment center
+                // Arrow should be positioned relative to tooltip to point at segment center
+                const tooltipCenterX =
+                  containerRect.left + (containerWidth * adjustedLeft) / 100;
+                const segmentCenterX =
+                  containerRect.left + (containerWidth * leftPercent) / 100;
+                const arrowOffset = segmentCenterX - tooltipCenterX;
+                const arrowPositionPercent = (arrowOffset / tooltipWidth) * 100;
+
+                setTooltipStyle({
+                  left: `${adjustedLeft}%`,
+                  transform: "translateX(-50%)",
+                  bottom: showAbove ? "100%" : "auto",
+                  top: showAbove ? "auto" : "100%",
+                  marginBottom: showAbove ? "0.5rem" : "0",
+                  marginTop: showAbove ? "0" : "0.5rem",
+                  arrowOffset: `${arrowPositionPercent}%`,
+                });
+              };
+
+              // Small delay to ensure tooltip is rendered
+              setTimeout(updatePosition, 10);
+              window.addEventListener("resize", updatePosition);
+              window.addEventListener("scroll", updatePosition, true);
+
+              return () => {
+                window.removeEventListener("resize", updatePosition);
+                window.removeEventListener("scroll", updatePosition, true);
+              };
+            }, [hoveredSegment, sentiment]);
 
             return (
-              <div className="mb-3 relative overflow-visible">
+              <div
+                ref={sentimentBarRef}
+                className="mb-3 relative overflow-visible"
+              >
                 {/* Custom Sentiment Bar with Hover Areas */}
                 <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
                   {/* Negative Segment */}
@@ -380,13 +476,15 @@ function NewsCard({
                 {/* Custom Design Tooltip - Shows only when hovering */}
                 {tooltipData && (
                   <div
-                    className="absolute bottom-full mb-4 opacity-0 invisible transition-all duration-300 ease-out z-[100] pointer-events-none transform translate-y-2"
+                    ref={tooltipRef}
+                    className="absolute opacity-0 invisible transition-all duration-300 ease-out z-[100] pointer-events-none"
                     style={{
-                      ...tooltipPosition,
+                      ...tooltipStyle,
                       opacity: hoveredSegment ? 1 : 0,
                       visibility: hoveredSegment ? "visible" : "hidden",
                       transform: hoveredSegment
-                        ? "translateX(-50%) translateY(0)"
+                        ? tooltipStyle.transform ||
+                          "translateX(-50%) translateY(0)"
                         : "translateX(-50%) translateY(8px)",
                     }}
                   >
@@ -457,10 +555,18 @@ function NewsCard({
                         </div>
                       </div>
 
-                      {/* Custom Arrow - positioned based on segment */}
+                      {/* Custom Arrow - points to segment center */}
                       <div
-                        className="absolute top-full -mt-px"
-                        style={{ left: "50%", transform: "translateX(-50%)" }}
+                        className={`absolute -mt-px`}
+                        style={{
+                          left: tooltipStyle.arrowOffset
+                            ? `calc(50% + ${tooltipStyle.arrowOffset})`
+                            : "50%",
+                          transform: "translateX(-50%)",
+                          ...(tooltipStyle.bottom !== undefined
+                            ? { top: "100%" }
+                            : { bottom: "100%" }),
+                        }}
                       >
                         <svg
                           width="20"
@@ -468,6 +574,12 @@ function NewsCard({
                           viewBox="0 0 20 10"
                           fill="none"
                           className="drop-shadow-lg"
+                          style={{
+                            transform:
+                              tooltipStyle.bottom !== undefined
+                                ? "rotate(0deg)"
+                                : "rotate(180deg)",
+                          }}
                         >
                           <path
                             d="M10 10L0 0L20 0L10 10Z"
