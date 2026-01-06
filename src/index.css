@@ -31,6 +31,17 @@
     --accent-negative: #A50000;
   }
 
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  #root {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
   body {
     @apply antialiased;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;

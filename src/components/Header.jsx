@@ -1,7 +1,12 @@
 import { useTheme } from "../contexts/ThemeContext";
+import { useState, useRef } from "react";
 
 function Header() {
   const { theme, toggleTheme } = useTheme();
+  const [mobileTooltipPosition, setMobileTooltipPosition] = useState("top");
+  const [desktopTooltipPosition, setDesktopTooltipPosition] = useState("top");
+  const mobileThemeButtonRef = useRef(null);
+  const desktopThemeButtonRef = useRef(null);
 
   return (
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
@@ -17,8 +22,15 @@ function Header() {
             </span>
           </div>
 
-          {/* Mobile navigation - Live and Theme toggle */}
+          {/* Mobile navigation - Today's Front Page, Live and Theme toggle */}
           <nav className="flex md:hidden items-center space-x-3">
+            {/* Today's Front Page */}
+            <a
+              href="#"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
+            >
+              Today's Front Page
+            </a>
             {/* Live indicator */}
             <div className="flex items-center space-x-1.5 text-[var(--text-secondary)]">
               <span className="w-1.5 h-1.5 bg-[var(--accent-positive)] rounded-full"></span>
@@ -27,8 +39,16 @@ function Header() {
 
             {/* Theme toggle */}
             <button
+              ref={mobileThemeButtonRef}
+              onMouseEnter={() => {
+                if (mobileThemeButtonRef.current) {
+                  const rect = mobileThemeButtonRef.current.getBoundingClientRect();
+                  const spaceAbove = rect.top;
+                  setMobileTooltipPosition(spaceAbove < 60 ? "bottom" : "top");
+                }
+              }}
               onClick={() => toggleTheme(theme === "light" ? "dark" : "light")}
-              className="p-2 hover:bg-[var(--bg-surface)] transition-colors"
+              className="p-2 hover:bg-[var(--bg-surface)] transition-colors relative group"
               aria-label="Toggle theme"
             >
               {theme === "light" ? (
@@ -60,15 +80,38 @@ function Header() {
                   />
                 </svg>
               )}
+              {/* Tooltip */}
+              <span className={`absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-[var(--bg-card)] bg-[var(--text-primary)] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999] ${
+                mobileTooltipPosition === "top" 
+                  ? "bottom-full mb-2" 
+                  : "top-full mt-2"
+              }`}>
+                {theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+              </span>
             </button>
           </nav>
 
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+            {/* Today's Front Page */}
+            <a
+              href="#"
+              className="text-sm lg:text-base text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
+            >
+              Today's Front Page
+            </a>
             {/* Theme toggle */}
             <button
+              ref={desktopThemeButtonRef}
+              onMouseEnter={() => {
+                if (desktopThemeButtonRef.current) {
+                  const rect = desktopThemeButtonRef.current.getBoundingClientRect();
+                  const spaceAbove = rect.top;
+                  setDesktopTooltipPosition(spaceAbove < 60 ? "bottom" : "top");
+                }
+              }}
               onClick={() => toggleTheme(theme === "light" ? "dark" : "light")}
-              className="p-2 hover:bg-[var(--bg-surface)] transition-colors"
+              className="p-2 hover:bg-[var(--bg-surface)] transition-colors relative group"
               aria-label="Toggle theme"
             >
               {theme === "light" ? (
@@ -100,6 +143,14 @@ function Header() {
                   />
                 </svg>
               )}
+              {/* Tooltip */}
+              <span className={`absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-[var(--bg-card)] bg-[var(--text-primary)] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999] ${
+                desktopTooltipPosition === "top" 
+                  ? "bottom-full mb-2" 
+                  : "top-full mt-2"
+              }`}>
+                {theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+              </span>
             </button>
           </nav>
         </div>

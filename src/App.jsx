@@ -206,14 +206,14 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-primary)]">
+      <div className="flex-1 bg-[var(--bg-primary)] flex flex-col">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--text-primary)]"></div>
             <p className="mt-4 text-[var(--text-secondary)]">Loading news...</p>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
@@ -221,22 +221,22 @@ function App() {
 
   if (error && newsData.length === 0) {
     return (
-      <div className="min-h-screen bg-[var(--bg-primary)]">
+      <div className="flex-1 bg-[var(--bg-primary)] flex flex-col">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
           <div className="bg-[var(--bg-card)] border border-[var(--accent-negative)] p-4">
             <p className="text-[var(--accent-negative)]">
               Error loading data: {error}
             </p>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
+    <div className="flex-1 bg-[var(--bg-primary)] flex flex-col">
       <Header />
 
       {usingSampleData && (
@@ -253,9 +253,9 @@ function App() {
         {newsData.length > 0 ? (
           <>
             {/* Featured News and Sidebar - 75/25 split */}
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8 lg:items-stretch">
               {/* Featured News - 75% width */}
-              <div className="flex-1 lg:w-[75%] order-2 lg:order-1">
+              <div className="flex-1 lg:w-[75%] order-2 lg:order-1 flex">
                 {newsData.length > 0 && (
                   <FeaturedNews
                     newsItem={newsData[0]}
@@ -268,9 +268,9 @@ function App() {
                 )}
               </div>
 
-              {/* Sidebar - 25% width */}
+              {/* Sidebar - 25% width, sticky on scroll */}
               <div
-                className={`lg:w-[25%] lg:flex-shrink-0 order-1 lg:order-2 space-y-2 transition-all ${
+                className={`lg:w-[25%] lg:flex-shrink-0 order-1 lg:order-2 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:self-start ${
                   highlightedNewsId || expandedNewsId
                     ? "blur-sm opacity-60 pointer-events-none"
                     : ""
@@ -285,9 +285,10 @@ function App() {
               </div>
             </div>
 
-            {/* News Cards Grid - 3 columns */}
-            <div className="relative">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* News Cards Grid - 2 columns, matching Featured News width exactly */}
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+              <div className="flex-1 lg:w-[75%] relative">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {newsData.slice(1).map((item) => (
                   <NewsCard
                     key={item.id}
@@ -299,82 +300,87 @@ function App() {
                     onCloseHighlight={handleCloseHighlight}
                   />
                 ))}
+                </div>
               </div>
-
-              {/* Expanded News Modal */}
-              {expandedNewsId &&
-                (() => {
-                  const expandedItem = newsData.find(
-                    (item) => String(item.id) === expandedNewsId
-                  );
-                  if (!expandedItem) return null;
-
-                  return (
-                    <div
-                      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
-                      onClick={(e) => {
-                        if (e.target === e.currentTarget) {
-                          setExpandedNewsId(null);
-                        }
-                      }}
-                    >
-                      <div
-                        className="expanded-news-modal bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl relative"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {/* Professional Close Button */}
-                        <button
-                          onClick={() => setExpandedNewsId(null)}
-                          className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-surface)] hover:bg-[var(--text-muted)]/10 border border-[var(--border-subtle)] hover:border-[var(--text-muted)] transition-all duration-200 group shadow-sm hover:shadow-md"
-                          aria-label="Close modal"
-                        >
-                          <svg
-                            className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-
-                        <NewsCard
-                          newsItem={expandedItem}
-                          isHighlighted={false}
-                          highlightedNewsId={null}
-                          isExpanded={true}
-                          onTitleClick={() => setExpandedNewsId(null)}
-                          onClose={() => setExpandedNewsId(null)}
-                        />
-                      </div>
-                    </div>
-                  );
-                })()}
+              {/* Empty spacer to match sidebar width */}
+              <div className="hidden lg:block lg:w-[25%]"></div>
             </div>
+
+            {/* Expanded News Modal */}
+            {expandedNewsId &&
+              (() => {
+                const expandedItem = newsData.find(
+                  (item) => String(item.id) === expandedNewsId
+                );
+                if (!expandedItem) return null;
+
+                return (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        setExpandedNewsId(null);
+                      }
+                    }}
+                  >
+                    <div
+                      className="expanded-news-modal bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Professional Close Button */}
+                      <button
+                        onClick={() => setExpandedNewsId(null)}
+                        className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-surface)] hover:bg-[var(--text-muted)]/10 border border-[var(--border-subtle)] hover:border-[var(--text-muted)] transition-all duration-200 group shadow-sm hover:shadow-md"
+                        aria-label="Close modal"
+                      >
+                        <svg
+                          className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+
+                      <NewsCard
+                        newsItem={expandedItem}
+                        isHighlighted={false}
+                        highlightedNewsId={null}
+                        isExpanded={true}
+                        onTitleClick={() => setExpandedNewsId(null)}
+                        onClose={() => setExpandedNewsId(null)}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
           </>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-[var(--text-secondary)]">
-              No news data available.
-            </p>
-            {error && (
-              <div className="mt-4 bg-[var(--bg-card)] border border-[var(--accent-negative)] rounded-lg p-4 max-w-md mx-auto">
-                <p className="text-[var(--accent-negative)] font-semibold">
-                  Error:
-                </p>
-                <p className="text-[var(--text-secondary)] text-sm">{error}</p>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center py-12">
+              <p className="text-[var(--text-secondary)]">
+                No news data available.
+              </p>
+              {error && (
+                <div className="mt-4 bg-[var(--bg-card)] border border-[var(--accent-negative)] rounded-lg p-4 max-w-md mx-auto">
+                  <p className="text-[var(--accent-negative)] font-semibold">
+                    Error:
+                  </p>
+                  <p className="text-[var(--text-secondary)] text-sm">{error}</p>
+                </div>
+              )}
+              <div className="mt-4 text-sm text-[var(--text-muted)] space-y-1">
+                <p>NewsData length: {newsData.length}</p>
+                <p>Loading: {loading ? "Yes" : "No"}</p>
+                <p>Using sample data: {usingSampleData ? "Yes" : "No"}</p>
+                <p>Supabase configured: {isSupabaseConfigured ? "Yes" : "No"}</p>
               </div>
-            )}
-            <div className="mt-4 text-sm text-[var(--text-muted)] space-y-1">
-              <p>NewsData length: {newsData.length}</p>
-              <p>Loading: {loading ? "Yes" : "No"}</p>
-              <p>Using sample data: {usingSampleData ? "Yes" : "No"}</p>
-              <p>Supabase configured: {isSupabaseConfigured ? "Yes" : "No"}</p>
             </div>
           </div>
         )}

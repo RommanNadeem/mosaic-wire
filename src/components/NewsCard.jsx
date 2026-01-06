@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import SentimentBar from "./SentimentBar";
 import SourceList from "./SourceList";
 import ShareButton from "./ShareButton";
+import SentimentTooltip from "./SentimentTooltip";
 import { formatTimeAgo } from "../utils/dataTransformers";
 import { getSignedImageUrl } from "../utils/imageUtils";
+import { capitalizeFirst, getCategoryColor } from "../utils/categoryUtils";
 
 function NewsCard({
   newsItem,
@@ -70,18 +72,18 @@ function NewsCard({
   }, [image]);
 
   // Truncate summary to 3 lines (approximately 225 characters) - only if not expanded
-  const truncatedSummary = summary
+  const truncatedSummary = summary 
     ? summary.length > 225 && !isExpanded
-      ? summary.substring(0, 225) + "..."
+      ? summary.substring(0, 225) + "..." 
       : summary
     : null;
-
+  
   const displaySummary = isExpanded ? summary : truncatedSummary;
 
   // Check if there's a highlighted news and this is not it (but don't blur if expanded)
   const shouldBlur =
     highlightedNewsId && highlightedNewsId !== String(id) && !isExpanded;
-
+  
   const handleCardClick = (e) => {
     // Prevent closing when clicking inside the highlighted card
     if (isHighlighted) {
@@ -94,12 +96,12 @@ function NewsCard({
   };
 
   return (
-    <article
+    <article 
       onClick={handleCardClick}
       className={`bg-[var(--bg-card)] border transition-all flex flex-col ${
         isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
       } hover:border-[var(--text-muted)] ${
-        isHighlighted
+        isHighlighted 
           ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
           : "border-[var(--border-subtle)]"
       } ${shouldBlur ? "blur-sm opacity-50 pointer-events-none" : ""}`}
@@ -220,14 +222,14 @@ function NewsCard({
         }`}
       >
         {/* Share Button */}
-        <ShareButton
+        <ShareButton 
           newsItem={newsItem}
           onShare={onShare}
           className="absolute top-3 right-3 z-10"
         />
-
+        
         {/* Topic Headline - Clickable */}
-        <h2
+        <h2 
           onClick={() => onTitleClick && onTitleClick(id)}
           className="text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 pr-8 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
         >
@@ -236,11 +238,20 @@ function NewsCard({
 
         {/* Metadata Row */}
         <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
-          {category && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-secondary)]">
-              {category}
-            </span>
-          )}
+          {category && (() => {
+            const categoryColor = getCategoryColor(category);
+            return (
+              <span 
+                className="px-2 py-0.5 text-xs font-medium rounded"
+                style={{
+                  backgroundColor: categoryColor.bg,
+                  color: categoryColor.text,
+                }}
+              >
+                {capitalizeFirst(category)}
+              </span>
+            );
+          })()}
           <span className="text-[var(--text-muted)] flex items-center gap-1">
             <svg
               className="w-3 h-3"
@@ -278,150 +289,6 @@ function NewsCard({
                   }
                 : { positive: 0, neutral: 0, negative: 0 };
 
-            const getTooltipContent = (segment) => {
-              if (!segment) return null;
-              const segmentData = {
-                negative: {
-                  label: "Negative",
-                  percentage: percentages.negative,
-                  color: "var(--accent-negative)",
-                  count: negative,
-                  description:
-                    "Stories emphasizing risk, conflict, decline, or concern.",
-                },
-                neutral: {
-                  label: "Neutral",
-                  percentage: percentages.neutral,
-                  color: "var(--accent-neutral)",
-                  count: neutral,
-                  description:
-                    "Informational or balanced coverage without strong emotional framing.",
-                },
-                positive: {
-                  label: "Positive",
-                  percentage: percentages.positive,
-                  color: "var(--accent-positive)",
-                  count: positive,
-                  description:
-                    "Stories framed with optimism, progress, opportunity, or growth.",
-                },
-              };
-              return segmentData[segment];
-            };
-
-            const tooltipData = getTooltipContent(hoveredSegment);
-
-            // Calculate and adjust tooltip position to stay within viewport
-            useEffect(() => {
-              if (
-                !hoveredSegment ||
-                !tooltipRef.current ||
-                !sentimentBarRef.current ||
-                !sentiment
-              ) {
-                setTooltipStyle({});
-                return;
-              }
-
-              const { positive, neutral, negative } = sentiment;
-              const total = positive + neutral + negative;
-              const percentages =
-                total > 0
-                  ? {
-                      positive: Math.round((positive / total) * 100),
-                      neutral: Math.round((neutral / total) * 100),
-                      negative: Math.round((negative / total) * 100),
-                    }
-                  : { positive: 0, neutral: 0, negative: 0 };
-
-              const updatePosition = () => {
-                const container = sentimentBarRef.current;
-                const tooltip = tooltipRef.current;
-                if (!container || !tooltip) return;
-
-                const containerRect = container.getBoundingClientRect();
-                const tooltipRect = tooltip.getBoundingClientRect();
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                const padding = 16; // Minimum distance from viewport edges
-
-                // Calculate initial position based on segment
-                let leftPercent = 0;
-                if (hoveredSegment === "negative") {
-                  leftPercent = percentages.negative / 2;
-                } else if (hoveredSegment === "neutral") {
-                  leftPercent = percentages.negative + percentages.neutral / 2;
-                } else if (hoveredSegment === "positive") {
-                  leftPercent =
-                    percentages.negative +
-                    percentages.neutral +
-                    percentages.positive / 2;
-                }
-
-                // Convert percentage to pixel position
-                const containerWidth = containerRect.width;
-                const tooltipWidth = tooltipRect.width || 320; // Approximate width
-                const leftPosition = (containerWidth * leftPercent) / 100;
-                const tooltipLeft =
-                  containerRect.left + leftPosition - tooltipWidth / 2;
-
-                // Adjust if tooltip would overflow left
-                let adjustedLeft = leftPercent;
-                if (tooltipLeft < padding) {
-                  const overflow = padding - tooltipLeft;
-                  adjustedLeft =
-                    leftPercent + (overflow / containerWidth) * 100;
-                }
-
-                // Adjust if tooltip would overflow right
-                const tooltipRight =
-                  containerRect.left +
-                  (containerWidth * adjustedLeft) / 100 +
-                  tooltipWidth / 2;
-                if (tooltipRight > viewportWidth - padding) {
-                  const overflow = tooltipRight - (viewportWidth - padding);
-                  adjustedLeft =
-                    adjustedLeft - (overflow / containerWidth) * 100;
-                }
-
-                // Check if there's enough space above, otherwise show below
-                const spaceAbove = containerRect.top;
-                const spaceBelow = viewportHeight - containerRect.bottom;
-                const tooltipHeight = tooltipRect.height || 200; // Approximate height
-                const showAbove =
-                  spaceAbove > tooltipHeight + padding ||
-                  spaceAbove > spaceBelow;
-
-                // Calculate arrow position to point to segment center
-                // Arrow should be positioned relative to tooltip to point at segment center
-                const tooltipCenterX =
-                  containerRect.left + (containerWidth * adjustedLeft) / 100;
-                const segmentCenterX =
-                  containerRect.left + (containerWidth * leftPercent) / 100;
-                const arrowOffset = segmentCenterX - tooltipCenterX;
-                const arrowPositionPercent = (arrowOffset / tooltipWidth) * 100;
-
-                setTooltipStyle({
-                  left: `${adjustedLeft}%`,
-                  transform: "translateX(-50%)",
-                  bottom: showAbove ? "100%" : "auto",
-                  top: showAbove ? "auto" : "100%",
-                  marginBottom: showAbove ? "0.5rem" : "0",
-                  marginTop: showAbove ? "0" : "0.5rem",
-                  arrowOffset: `${arrowPositionPercent}%`,
-                });
-              };
-
-              // Small delay to ensure tooltip is rendered
-              setTimeout(updatePosition, 10);
-              window.addEventListener("resize", updatePosition);
-              window.addEventListener("scroll", updatePosition, true);
-
-              return () => {
-                window.removeEventListener("resize", updatePosition);
-                window.removeEventListener("scroll", updatePosition, true);
-              };
-            }, [hoveredSegment, sentiment]);
 
             return (
               <div
@@ -473,126 +340,16 @@ function NewsCard({
                   )}
                 </div>
 
-                {/* Custom Design Tooltip - Shows only when hovering */}
-                {tooltipData && (
-                  <div
-                    ref={tooltipRef}
-                    className="absolute opacity-0 invisible transition-all duration-300 ease-out z-[100] pointer-events-none"
-                    style={{
-                      ...tooltipStyle,
-                      opacity: hoveredSegment ? 1 : 0,
-                      visibility: hoveredSegment ? "visible" : "hidden",
-                      transform: hoveredSegment
-                        ? tooltipStyle.transform ||
-                          "translateX(-50%) translateY(0)"
-                        : "translateX(-50%) translateY(8px)",
-                    }}
-                  >
-                    <div className="relative">
-                      {/* Main Tooltip Container */}
-                      <div className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl p-5 min-w-[280px] max-w-[320px] backdrop-blur-md">
-                        {/* Decorative top accent - matches hovered segment */}
-                        <div
-                          className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                          style={{ backgroundColor: tooltipData.color }}
-                        ></div>
-
-                        {/* Tooltip Header */}
-                        <div className="flex items-center gap-2 mb-4 mt-1">
-                          <div
-                            className="w-1.5 h-1.5 rounded-full animate-pulse"
-                            style={{ backgroundColor: tooltipData.color }}
-                          ></div>
-                          <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                            {tooltipData.label} Sentiment
-                          </span>
-                        </div>
-
-                        {/* Tooltip Content */}
-                        <div className="space-y-3">
-                          {/* Percentage Display */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="relative">
-                                <div
-                                  className="w-3 h-3 rounded-full shadow-lg"
-                                  style={{
-                                    backgroundColor: tooltipData.color,
-                                    boxShadow: `${tooltipData.color}30 0 0 8px`,
-                                  }}
-                                ></div>
-                                <div
-                                  className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
-                                  style={{ backgroundColor: tooltipData.color }}
-                                ></div>
-                              </div>
-                              <span className="text-sm font-medium text-[var(--text-secondary)]">
-                                {tooltipData.label}
-                              </span>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                              <span
-                                className="text-2xl font-bold"
-                                style={{ color: tooltipData.color }}
-                              >
-                                {tooltipData.percentage}
-                              </span>
-                              <span className="text-xs text-[var(--text-muted)]">
-                                %
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Description */}
-                          <div className="pt-2 border-t border-[var(--border-subtle)]">
-                            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                              <span className="font-semibold text-[var(--text-primary)]">
-                                {tooltipData.label}:
-                              </span>{" "}
-                              {tooltipData.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Custom Arrow - points to segment center */}
-                      <div
-                        className={`absolute -mt-px`}
-                        style={{
-                          left: tooltipStyle.arrowOffset
-                            ? `calc(50% + ${tooltipStyle.arrowOffset})`
-                            : "50%",
-                          transform: "translateX(-50%)",
-                          ...(tooltipStyle.bottom !== undefined
-                            ? { top: "100%" }
-                            : { bottom: "100%" }),
-                        }}
-                      >
-                        <svg
-                          width="20"
-                          height="10"
-                          viewBox="0 0 20 10"
-                          fill="none"
-                          className="drop-shadow-lg"
-                          style={{
-                            transform:
-                              tooltipStyle.bottom !== undefined
-                                ? "rotate(0deg)"
-                                : "rotate(180deg)",
-                          }}
-                        >
-                          <path
-                            d="M10 10L0 0L20 0L10 10Z"
-                            fill="var(--bg-card)"
-                            stroke="var(--border-subtle)"
-                            strokeWidth="1"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                {/* Sentiment Tooltip */}
+                <SentimentTooltip
+                  hoveredSegment={hoveredSegment}
+                  sentiment={sentiment}
+                  tooltipRef={tooltipRef}
+                  sentimentBarRef={sentimentBarRef}
+                  tooltipStyle={tooltipStyle}
+                  setTooltipStyle={setTooltipStyle}
+                />
+          </div>
             );
           })()}
 

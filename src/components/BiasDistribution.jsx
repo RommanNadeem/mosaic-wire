@@ -1,4 +1,12 @@
+import { useState, useRef } from "react";
+import SentimentTooltip from "./SentimentTooltip";
+
 function BiasDistribution({ newsData }) {
+  const [hoveredSegment, setHoveredSegment] = useState(null);
+  const [tooltipStyle, setTooltipStyle] = useState({});
+  const tooltipRef = useRef(null);
+  const sentimentBarRef = useRef(null);
+
   if (!newsData || newsData.length === 0) {
     return null;
   }
@@ -30,6 +38,13 @@ function BiasDistribution({ newsData }) {
     negative: Math.round((sentimentCounts.negative / total) * 100),
   };
 
+  // Create sentiment object for tooltip
+  const sentiment = {
+    positive: sentimentCounts.positive,
+    neutral: sentimentCounts.neutral,
+    negative: sentimentCounts.negative,
+  };
+
   return (
     <div>
       <div className="mb-2">
@@ -41,41 +56,59 @@ function BiasDistribution({ newsData }) {
         </p>
       </div>
 
-      {/* Horizontal Bar Chart */}
-      <div className="flex h-8 overflow-hidden bg-[var(--bg-surface)]">
-        {percentages.negative > 0 && (
-          <div
-            className="bg-[var(--accent-negative)] flex items-center justify-center"
-            style={{ width: `${percentages.negative}%` }}
-            title={`${percentages.negative}% Negative`}
-          >
-            <span className="text-xs font-medium text-white px-2">
-              {percentages.negative}%
-            </span>
-          </div>
-        )}
-        {percentages.neutral > 0 && (
-          <div
-            className="bg-[var(--accent-neutral)] flex items-center justify-center"
-            style={{ width: `${percentages.neutral}%` }}
-            title={`${percentages.neutral}% Neutral`}
-          >
-            <span className="text-xs font-medium text-white px-2">
-              {percentages.neutral}%
-            </span>
-          </div>
-        )}
-        {percentages.positive > 0 && (
-          <div
-            className="bg-[var(--accent-positive)] flex items-center justify-center"
-            style={{ width: `${percentages.positive}%` }}
-            title={`${percentages.positive}% Positive`}
-          >
-            <span className="text-xs font-medium text-white px-2">
-              {percentages.positive}%
-            </span>
-          </div>
-        )}
+      {/* Horizontal Bar Chart with Tooltip */}
+      <div
+        ref={sentimentBarRef}
+        className="relative overflow-visible"
+      >
+        <div className="flex h-8 overflow-hidden bg-[var(--bg-surface)] relative">
+          {percentages.negative > 0 && (
+            <div
+              className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+              style={{ width: `${percentages.negative}%` }}
+              onMouseEnter={() => setHoveredSegment("negative")}
+              onMouseLeave={() => setHoveredSegment(null)}
+            >
+              <span className="text-xs font-medium text-white px-2">
+                {percentages.negative}%
+              </span>
+            </div>
+          )}
+          {percentages.neutral > 0 && (
+            <div
+              className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+              style={{ width: `${percentages.neutral}%` }}
+              onMouseEnter={() => setHoveredSegment("neutral")}
+              onMouseLeave={() => setHoveredSegment(null)}
+            >
+              <span className="text-xs font-medium text-white px-2">
+                {percentages.neutral}%
+              </span>
+            </div>
+          )}
+          {percentages.positive > 0 && (
+            <div
+              className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+              style={{ width: `${percentages.positive}%` }}
+              onMouseEnter={() => setHoveredSegment("positive")}
+              onMouseLeave={() => setHoveredSegment(null)}
+            >
+              <span className="text-xs font-medium text-white px-2">
+                {percentages.positive}%
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Sentiment Tooltip */}
+        <SentimentTooltip
+          hoveredSegment={hoveredSegment}
+          sentiment={sentiment}
+          tooltipRef={tooltipRef}
+          sentimentBarRef={sentimentBarRef}
+          tooltipStyle={tooltipStyle}
+          setTooltipStyle={setTooltipStyle}
+        />
       </div>
     </div>
   );

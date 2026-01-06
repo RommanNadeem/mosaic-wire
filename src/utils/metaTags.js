@@ -10,7 +10,7 @@
 export function updateMetaTags(newsItem, shareUrl) {
   if (!newsItem) return;
 
-  const title = newsItem.title || 'MosaicBeat - News Aggregator';
+  const title = newsItem.title || 'MosaicBeat - A real-time digest of Pakistan\'s most consequential stories';
   const description = newsItem.summary || 'Read the latest news from Pakistan with AI-powered sentiment analysis.';
   const category = newsItem.category || null;
   // Use image if available, otherwise use default
@@ -73,7 +73,7 @@ export function updateMetaTags(newsItem, shareUrl) {
  * Resets meta tags to default values
  */
 export function resetMetaTags() {
-  const defaultTitle = 'MosaicBeat - News Aggregator';
+  const defaultTitle = 'MosaicBeat - A real-time digest of Pakistan\'s most consequential stories';
   const defaultDescription = 'Pakistan\'s news, unmasked. Get AI-powered sentiment analysis of the latest news from multiple sources.';
   const defaultImage = `${window.location.origin}/vite.svg`;
 
