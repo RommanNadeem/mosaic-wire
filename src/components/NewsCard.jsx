@@ -108,9 +108,7 @@ function NewsCard({
       {/* Image at the top */}
       {imageUrl && !imageError ? (
         <div
-          className={`w-full bg-[var(--bg-surface)] relative ${
-            isExpanded ? "h-auto overflow-visible" : "h-48 overflow-hidden"
-          }`}
+          className={`w-full bg-[var(--bg-surface)] relative h-48 overflow-hidden`}
         >
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
@@ -145,11 +143,7 @@ function NewsCard({
           <img
             src={imageUrl}
             alt={title || "News image"}
-            className={`w-full ${
-              isExpanded
-                ? "h-auto max-h-none object-contain"
-                : "h-full object-cover"
-            }`}
+            className="w-full h-full object-cover"
             style={
               isExpanded
                 ? { maxHeight: "none" }
