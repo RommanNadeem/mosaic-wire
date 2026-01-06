@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Moodline from "./Moodline";
+import SentimentBar from "./SentimentBar";
 import SourceList from "./SourceList";
 import ShareButton from "./ShareButton";
 import { formatTimeAgo } from "../utils/dataTransformers";
@@ -82,16 +82,16 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
   return (
     <article 
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] rounded-lg border overflow-hidden transition-all flex flex-row lg:flex-row ${(isExpanded || isHighlighted) ? 'flex-col lg:flex-row' : 'flex-row'} h-full hover:border-[var(--text-muted)] ${
+      className={`bg-[var(--bg-card)] border overflow-hidden transition-all flex flex-col h-full hover:border-[var(--text-muted)] ${
         isHighlighted 
           ? 'border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative' 
           : 'border-[var(--border-subtle)]'
       } ${shouldBlur ? 'blur-sm opacity-50 pointer-events-none' : ''}`}
       id={`news-${id}`}
     >
-      {/* Rounded Square Thumbnail */}
+      {/* Image at the top */}
       {imageUrl && !imageError ? (
-        <div className={`${(isExpanded || isHighlighted) ? 'w-full h-48 lg:w-28 lg:h-28 lg:m-3 m-0 rounded-t-lg lg:rounded' : 'w-28 h-28 m-3 rounded'} bg-[var(--bg-surface)] overflow-hidden flex-shrink-0 ${(isExpanded || isHighlighted) ? 'lg:self-start' : 'self-start'} relative`}>
+        <div className="w-full h-48 bg-[var(--bg-surface)] overflow-hidden relative">
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
             <button
@@ -116,6 +116,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
             src={imageUrl}
             alt={title || "News image"}
             className="w-full h-full object-cover"
+            style={{ objectPosition: 'center top' }}
             onError={() => {
               setImageError(true);
             }}
@@ -123,7 +124,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
           />
         </div>
       ) : (
-        <div className={`${(isExpanded || isHighlighted) ? 'w-full h-48 lg:w-28 lg:h-28 lg:m-3 m-0 rounded-t-lg lg:rounded' : 'w-28 h-28 m-3 rounded'} bg-[var(--bg-surface)] flex-shrink-0 ${(isExpanded || isHighlighted) ? 'lg:self-start' : 'self-start'} flex items-center justify-center relative`}>
+        <div className="w-full h-48 bg-[var(--bg-surface)] flex items-center justify-center relative">
           {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
           {(isExpanded || isHighlighted) && (
             <button
@@ -151,7 +152,7 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
       )}
 
       {/* Content Area - Reduced spacing */}
-      <div className={`flex flex-col flex-1 min-w-0 ${(isExpanded || isHighlighted) ? 'py-3 px-3 lg:py-3 lg:pr-3' : 'py-3 pr-3'} relative`}>
+      <div className="flex flex-col flex-1 min-w-0 py-3 px-3 relative">
         {/* Share Button */}
         <ShareButton 
           newsItem={newsItem}
@@ -166,6 +167,33 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
         >
           {title}
         </h2>
+
+        {/* Metadata Row */}
+        <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
+          {category && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-secondary)]">
+              {category}
+            </span>
+          )}
+          <span className="text-[var(--text-muted)] flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
+          {recentArticlesCount > 0 && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
+              {recentArticlesCount} new
+            </span>
+          )}
+        </div>
+
+        {/* Sentiment Bar Section - Above Summary */}
+        {sentiment && (
+          <div className="mb-3">
+            <SentimentBar sentiment={sentiment} height="h-[12px]" showPercentages={true} />
+          </div>
+        )}
 
         {/* Summary - Full if expanded, truncated otherwise - Clickable */}
         {displaySummary && (
@@ -183,62 +211,13 @@ function NewsCard({ newsItem, isHighlighted, highlightedNewsId, onShare, onTitle
           </p>
         )}
 
-        {/* Metadata Row */}
-        <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
-          {category && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-secondary)] rounded-full">
-              {category}
-            </span>
-          )}
-          <span className="text-[var(--text-muted)] flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
-          </span>
-          {recentArticlesCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)] rounded-full">
-              {recentArticlesCount} new
-            </span>
-          )}
-        </div>
-
-        {/* THE MOODLINE Section - aligned with image left edge */}
-        {sentiment && (
-          <div className={`mb-2 ${(isExpanded || isHighlighted) ? 'lg:-ml-[124px] lg:pl-3 pl-0' : '-ml-[124px] pl-3'}`}>
-            <Moodline
-              sentiment={sentiment}
-              onSentimentClick={setSelectedSentiment}
-              selectedSentiment={selectedSentiment}
-            />
-            {selectedSentiment && (
-              <div className="mt-1.5 text-xs text-[var(--text-muted)] flex items-center justify-between">
-                <span>
-                  Filtered by:{" "}
-                  <span className="font-medium capitalize">
-                    {selectedSentiment}
-                  </span>
-                </span>
-                <button
-                  onClick={() => setSelectedSentiment(null)}
-                  className="text-xs underline hover:no-underline text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                >
-                  Clear filter
-                </button>
-              </div>
-            )}
-            {/* Divider below Moodline */}
-            <div className="mt-2 border-t border-[var(--border-subtle)]"></div>
-          </div>
-        )}
-
-        {/* Source List - Flex-1 to push to bottom, aligned with image left edge */}
+        {/* Source List */}
         {filteredSources && filteredSources.length > 0 ? (
-          <div className={`flex-1 flex flex-col min-h-0 ${(isExpanded || isHighlighted) ? 'lg:-ml-[124px] lg:pl-3 pl-0' : '-ml-[124px] pl-3'}`}>
+          <div className="flex-1 flex flex-col min-h-0">
             <SourceList sources={filteredSources} />
           </div>
         ) : sources && sources.length > 0 ? (
-          <div className={`flex-1 flex flex-col ${(isExpanded || isHighlighted) ? 'lg:-ml-[124px] lg:pl-3 pl-0' : '-ml-[124px] pl-3'}`}>
+          <div className="flex-1 flex flex-col">
             <div className="text-sm text-[var(--text-muted)] py-4 text-left">
               No articles match the selected sentiment filter.
             </div>

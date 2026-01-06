@@ -19,7 +19,7 @@ function SignalBalance({ sentiment, onSentimentClick, selectedSentiment }) {
 
   const getLabelClasses = (sentimentType) => {
     const isSelected = selectedSentiment === sentimentType
-    const baseClasses = `cursor-pointer transition-all duration-200 rounded px-2 py-1 ${
+    const baseClasses = `cursor-pointer transition-all duration-200 px-2 py-1 ${
       isSelected 
         ? 'ring-2 ring-offset-1' 
         : 'hover:opacity-80'

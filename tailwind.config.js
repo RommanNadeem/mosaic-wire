@@ -27,6 +27,7 @@ export default {
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
+        serif: ['Georgia', 'Times New Roman', 'serif'],
       },
       gridTemplateColumns: {
         '20': 'repeat(20, minmax(0, 1fr))',

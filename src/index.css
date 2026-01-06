@@ -12,9 +12,9 @@
     --text-secondary: #4a4a4a;
     --text-muted: #8a8a8a;
     --border-subtle: #e5e5e5;
-    --accent-positive: #22c55e;
-    --accent-neutral: #94a3b8;
-    --accent-negative: #ef4444;
+    --accent-positive: #007C04;
+    --accent-neutral: #9D9D9D;
+    --accent-negative: #A50000;
   }
 
   [data-theme="dark"] {
@@ -26,9 +26,9 @@
     --text-secondary: #b0b0b0;
     --text-muted: #707070;
     --border-subtle: #3a3a3a;
-    --accent-positive: #4ade80;
-    --accent-neutral: #64748b;
-    --accent-negative: #f87171;
+    --accent-positive: #007C04;
+    --accent-neutral: #9D9D9D;
+    --accent-negative: #A50000;
   }
 
   body {
@@ -37,6 +37,12 @@
     background-color: var(--bg-primary);
     color: var(--text-primary);
     transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  /* Editorial font for headlines */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 

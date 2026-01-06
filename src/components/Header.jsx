@@ -5,11 +5,12 @@ function Header() {
 
   return (
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
         <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">MosaicBeat</h1>
-            <span className="text-xs sm:text-sm text-[var(--text-secondary)]">Pakistan's news, unmasked.</span>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">MosaicBeat</h1>
+            <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
+            <span className="text-sm sm:text-base text-[var(--text-secondary)] hidden sm:inline">Smarter News, From All Angles</span>
           </div>
           
           {/* Mobile navigation - Live and Theme toggle */}
@@ -23,7 +24,7 @@ function Header() {
             {/* Theme toggle */}
             <button
               onClick={() => toggleTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 rounded-lg hover:bg-[var(--bg-surface)] transition-colors"
+              className="p-2 hover:bg-[var(--bg-surface)] transition-colors"
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
@@ -40,24 +41,30 @@ function Header() {
           
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
-            {/* Live indicator - subtle */}
-            <div className="flex items-center space-x-2 text-[var(--text-secondary)]">
-              <span className="w-1.5 h-1.5 bg-[var(--accent-positive)] rounded-full"></span>
-              <span className="text-sm">Live</span>
-            </div>
-            
-            {/* Today's Top Signals pill */}
-            <a 
-              href="#" 
-              className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-full transition-colors"
+            {/* @ symbol icon */}
+            <button
+              className="p-2 hover:bg-[var(--bg-surface)] transition-colors"
+              aria-label="Notifications"
             >
-              Today's Top Signals
-            </a>
+              <svg className="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </button>
+            
+            {/* Arrow icon in circle */}
+            <button
+              className="p-2 border border-[var(--border-subtle)] hover:bg-[var(--bg-surface)] transition-colors"
+              aria-label="Share"
+            >
+              <svg className="w-5 h-5 text-[var(--text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
             
             {/* Theme toggle */}
             <button
               onClick={() => toggleTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 rounded-lg hover:bg-[var(--bg-surface)] transition-colors"
+              className="p-2 hover:bg-[var(--bg-surface)] transition-colors"
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (

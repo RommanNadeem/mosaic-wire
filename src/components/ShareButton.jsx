@@ -87,7 +87,7 @@ function ShareButton({
     <div className={className}>
       <button
         onClick={handleShare}
-        className="relative p-1.5 rounded-full hover:bg-[var(--bg-surface)] transition-colors"
+        className="relative p-1.5 hover:bg-[var(--bg-surface)] transition-colors"
         title={shareCopied ? "Copied!" : "Share this news"}
         aria-label="Share this news"
       >
@@ -102,7 +102,7 @@ function ShareButton({
         )}
         {/* Better copied state - show text tooltip below button to avoid overflow clipping */}
         {shareCopied && (
-          <span className="absolute top-full right-0 mt-1 bg-[var(--bg-card)] text-[var(--text-primary)] text-xs px-2 py-1 rounded shadow-lg border border-[var(--border-subtle)] whitespace-nowrap pointer-events-none z-[9999]">
+          <span className="absolute top-full right-0 mt-1 bg-[var(--bg-card)] text-[var(--text-primary)] text-xs px-2 py-1 shadow-lg border border-[var(--border-subtle)] whitespace-nowrap pointer-events-none z-[9999]">
             Copied!
           </span>
         )}

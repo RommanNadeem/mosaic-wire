@@ -37,7 +37,7 @@ function PakistanMood({ newsData }) {
   ]
 
   return (
-    <div className="mb-8 sm:mb-12 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)] p-4 sm:p-6">
+    <div className="mb-8 sm:mb-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] p-4 sm:p-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4">
         <div>

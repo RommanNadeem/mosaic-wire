@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { formatTimeAgo } from '../utils/dataTransformers'
 
-function SourceList({ sources }) {
+function SourceList({ sources, onMoreSourcesClick }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   if (!sources || sources.length === 0) {
@@ -105,7 +105,11 @@ function SourceList({ sources }) {
           type="button"
           onClick={(e) => {
             e.preventDefault()
-            setIsExpanded(true)
+            if (onMoreSourcesClick) {
+              onMoreSourcesClick()
+            } else {
+              setIsExpanded(true)
+            }
           }}
           className="w-full flex items-center gap-2 py-2 text-sm text-[var(--text-muted)] transition-colors cursor-pointer mt-2 hover:text-[var(--text-primary)] text-left"
         >
