@@ -5,6 +5,7 @@ import BiasDistribution from "./components/BiasDistribution";
 import NewsCard from "./components/NewsCard";
 import Footer from "./components/Footer";
 import HowToRead from "./components/HowToRead";
+import NewsDetailModal from "./components/NewsDetailModal";
 import { useTheme } from "./contexts/ThemeContext";
 import { getLatestTopics } from "./lib/supabaseQueries";
 import { transformSupabaseData } from "./utils/dataTransformers";
@@ -289,17 +290,17 @@ function App() {
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
               <div className="flex-1 lg:w-[75%] relative">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                {newsData.slice(1).map((item) => (
-                  <NewsCard
-                    key={item.id}
-                    newsItem={item}
-                    isHighlighted={highlightedNewsId === String(item.id)}
-                    highlightedNewsId={highlightedNewsId}
-                    isExpanded={expandedNewsId === String(item.id)}
-                    onTitleClick={handleTitleClick}
-                    onCloseHighlight={handleCloseHighlight}
-                  />
-                ))}
+                  {newsData.slice(1).map((item) => (
+                    <NewsCard
+                      key={item.id}
+                      newsItem={item}
+                      isHighlighted={highlightedNewsId === String(item.id)}
+                      highlightedNewsId={highlightedNewsId}
+                      isExpanded={expandedNewsId === String(item.id)}
+                      onTitleClick={handleTitleClick}
+                      onCloseHighlight={handleCloseHighlight}
+                    />
+                  ))}
                 </div>
               </div>
               {/* Empty spacer to match sidebar width */}
@@ -307,59 +308,11 @@ function App() {
             </div>
 
             {/* Expanded News Modal */}
-            {expandedNewsId &&
-              (() => {
-                const expandedItem = newsData.find(
-                  (item) => String(item.id) === expandedNewsId
-                );
-                if (!expandedItem) return null;
-
-                return (
-                  <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        setExpandedNewsId(null);
-                      }
-                    }}
-                  >
-                    <div
-                      className="expanded-news-modal bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Professional Close Button */}
-                      <button
-                        onClick={() => setExpandedNewsId(null)}
-                        className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-surface)] hover:bg-[var(--text-muted)]/10 border border-[var(--border-subtle)] hover:border-[var(--text-muted)] transition-all duration-200 group shadow-sm hover:shadow-md"
-                        aria-label="Close modal"
-                      >
-                        <svg
-                          className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-
-                      <NewsCard
-                        newsItem={expandedItem}
-                        isHighlighted={false}
-                        highlightedNewsId={null}
-                        isExpanded={true}
-                        onTitleClick={() => setExpandedNewsId(null)}
-                        onClose={() => setExpandedNewsId(null)}
-                      />
-                    </div>
-                  </div>
-                );
-              })()}
+            <NewsDetailModal
+              expandedNewsId={expandedNewsId}
+              newsData={newsData}
+              onClose={() => setExpandedNewsId(null)}
+            />
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">
@@ -372,14 +325,18 @@ function App() {
                   <p className="text-[var(--accent-negative)] font-semibold">
                     Error:
                   </p>
-                  <p className="text-[var(--text-secondary)] text-sm">{error}</p>
+                  <p className="text-[var(--text-secondary)] text-sm">
+                    {error}
+                  </p>
                 </div>
               )}
               <div className="mt-4 text-sm text-[var(--text-muted)] space-y-1">
                 <p>NewsData length: {newsData.length}</p>
                 <p>Loading: {loading ? "Yes" : "No"}</p>
                 <p>Using sample data: {usingSampleData ? "Yes" : "No"}</p>
-                <p>Supabase configured: {isSupabaseConfigured ? "Yes" : "No"}</p>
+                <p>
+                  Supabase configured: {isSupabaseConfigured ? "Yes" : "No"}
+                </p>
               </div>
             </div>
           </div>
