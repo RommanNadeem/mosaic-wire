@@ -8,6 +8,19 @@ function Header() {
   const mobileThemeButtonRef = useRef(null);
   const desktopThemeButtonRef = useRef(null);
 
+  // Local date (no time) formatted with ordinal day
+  const getOrdinal = (n) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+  const now = new Date();
+  const weekday = now.toLocaleString(undefined, { weekday: "long" });
+  const month = now.toLocaleString(undefined, { month: "long" });
+  const day = getOrdinal(now.getDate());
+  const year = now.getFullYear();
+  const formattedDate = `${weekday}, ${day} ${month}, ${year}`;
+
   return (
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
@@ -34,6 +47,10 @@ function Header() {
 
           {/* Mobile navigation - Today's Front Page, Live and Theme toggle */}
           <nav className="flex md:hidden items-center space-x-3">
+            {/* Local Date */}
+            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap">
+              {formattedDate}
+            </span>
             {/* Today's Front Page */}
             <a
               href="#"
@@ -103,6 +120,10 @@ function Header() {
 
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+            {/* Local Date */}
+            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap">
+              {formattedDate}
+            </span>
             {/* Today's Front Page */}
             <a
               href="#"

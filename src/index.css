@@ -12,9 +12,9 @@
     --text-secondary: #4a4a4a;
     --text-muted: #8a8a8a;
     --border-subtle: #e5e5e5;
-    --accent-positive: #007c04;
+    --accent-positive: #21862b;
     --accent-neutral: #9d9d9d;
-    --accent-negative: #a50000;
+    --accent-negative: #802828;
 
     /* shadcn/ui CSS variables */
     --background: 0 0% 100%;
@@ -48,9 +48,9 @@
     --text-secondary: #b0b0b0;
     --text-muted: #707070;
     --border-subtle: #3a3a3a;
-    --accent-positive: #007c04;
+    --accent-positive: #21862b;
     --accent-neutral: #9d9d9d;
-    --accent-negative: #a50000;
+    --accent-negative: #802828;
 
     /* shadcn/ui CSS variables - Dark mode */
     --background: 0 0% 3.9%;
