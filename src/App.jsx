@@ -78,10 +78,10 @@ function App() {
 
     const handleHashChange = () => {
       const hash = window.location.hash;
-      
+
       // Parse hash (supports both old #news-123 and new #news/slug-shortId formats)
       const { id, shortId, slug } = parseNewsHash(hash);
-      
+
       if (id || shortId) {
         // Find news item by ID or short ID
         const newsItem = findNewsItem(newsData, id, shortId);
@@ -143,7 +143,11 @@ function App() {
   // Helper function to remove hash without scrolling to top
   const clearHashWithoutScroll = () => {
     if (window.history && window.history.replaceState) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
     } else {
       // Fallback for older browsers
       const scrollY = window.scrollY;
@@ -175,27 +179,29 @@ function App() {
   const handleMainClick = (e) => {
     // Only handle clicks when there's a highlighted news
     if (!highlightedNewsId) return;
-    
+
     // Don't close if clicking on the highlighted card itself
-    const highlightedElement = document.getElementById(`news-${highlightedNewsId}`);
+    const highlightedElement = document.getElementById(
+      `news-${highlightedNewsId}`
+    );
     if (highlightedElement && highlightedElement.contains(e.target)) {
       return;
     }
-    
+
     // Don't close if clicking on Header or Footer
-    if (e.target.closest('header') || e.target.closest('footer')) {
+    if (e.target.closest("header") || e.target.closest("footer")) {
       return;
     }
-    
+
     // Close the highlight
     handleCloseHighlight();
   };
 
   // Mark body as loaded to prevent layout shift
   useEffect(() => {
-    document.body.classList.add('loaded');
+    document.body.classList.add("loaded");
     return () => {
-      document.body.classList.remove('loaded');
+      document.body.classList.remove("loaded");
     };
   }, []);
 
@@ -206,7 +212,9 @@ function App() {
         <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-[var(--border-subtle)] border-t-[var(--accent-positive)] rounded-full animate-spin"></div>
-            <p className="text-sm text-[var(--text-secondary)]">Loading news...</p>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Loading news...
+            </p>
           </div>
         </main>
         <Footer />
@@ -234,7 +242,7 @@ function App() {
     <div className="flex-1 bg-[var(--bg-primary)] flex flex-col min-h-screen">
       <Header />
 
-      <main 
+      <main
         className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8"
         onClick={handleMainClick}
       >
@@ -288,6 +296,14 @@ function App() {
           expandedNewsId={expandedNewsId}
           newsData={newsData}
           onClose={() => setExpandedNewsId(null)}
+          onShare={(url) => {
+            const expandedItem = newsData.find(
+              (item) => String(item.id) === expandedNewsId
+            );
+            if (expandedItem) {
+              updateMetaTags(expandedItem, url);
+            }
+          }}
         />
       </main>
 
