@@ -188,97 +188,58 @@ function App() {
     <div className="flex-1 bg-[var(--bg-primary)] flex flex-col min-h-screen">
       <Header />
 
-      <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        {newsData?.length > 0 ? (
-          <>
-            {/* Featured News and Sidebar - 75/25 split */}
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8 lg:items-stretch">
-              {/* Featured News - 75% width */}
-              <div className="flex-1 lg:w-[75%] order-2 lg:order-1 flex">
-                {newsData.length > 0 && (
-                  <FeaturedNews
-                    newsItem={newsData[0]}
-                    onTitleClick={handleTitleClick}
-                    onShare={(url) => {
-                      const shareUrl = `${window.location.origin}${window.location.pathname}#news-${newsData[0].id}`;
-                      updateMetaTags(newsData[0], shareUrl);
-                    }}
-                  />
-                )}
-              </div>
-
-              {/* Sidebar - 25% width, sticky on scroll */}
-              <div
-                className={`lg:w-[25%] lg:flex-shrink-0 order-1 lg:order-2 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:self-start ${
-                  highlightedNewsId || expandedNewsId
-                    ? "blur-sm opacity-60 pointer-events-none"
-                    : ""
-                }`}
-              >
-                <BiasDistribution newsData={newsData} />
-                <HowToRead
-                  newsData={newsData}
-                  isExpanded={sidebarExpanded}
-                  onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-                />
-              </div>
-            </div>
-
-            {/* News Cards Grid - 2 columns, matching Featured News width exactly */}
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-              <div className="flex-1 lg:w-[75%] relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                  {newsData.slice(1).map((item) => (
-                    <NewsCard
-                      key={item.id}
-                      newsItem={item}
-                      isHighlighted={highlightedNewsId === String(item.id)}
-                      highlightedNewsId={highlightedNewsId}
-                      isExpanded={expandedNewsId === String(item.id)}
-                      onTitleClick={handleTitleClick}
-                      onCloseHighlight={() => {}}
-                    />
-                  ))}
-                </div>
-              </div>
-              {/* Empty spacer to match sidebar width */}
-              <div className="hidden lg:block lg:w-[25%]"></div>
-            </div>
-
-            {/* Expanded News Modal */}
-            <NewsDetailModal
-              expandedNewsId={expandedNewsId}
-              newsData={newsData}
-              onClose={() => setExpandedNewsId(null)}
+      <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8">
+        {/* Left side - Featured News and News Cards (75% width) */}
+        <div className="flex-1 lg:w-[75%] flex flex-col gap-6 lg:gap-8">
+          {newsData.length > 0 && (
+            <FeaturedNews
+              newsItem={newsData[0]}
+              onTitleClick={handleTitleClick}
+              onShare={(url) => {
+                const shareUrl = `${window.location.origin}${window.location.pathname}#news-${newsData[0].id}`;
+                updateMetaTags(newsData[0], shareUrl);
+              }}
             />
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center py-12">
-              <p className="text-[var(--text-secondary)]">
-                No news data available.
-              </p>
-              {error && (
-                <div className="mt-4 bg-[var(--bg-card)] border border-[var(--accent-negative)] rounded-lg p-4 max-w-md mx-auto">
-                  <p className="text-[var(--accent-negative)] font-semibold">
-                    Error:
-                  </p>
-                  <p className="text-[var(--text-secondary)] text-sm">
-                    {error}
-                  </p>
-                </div>
-              )}
-              <div className="mt-4 text-sm text-[var(--text-muted)] space-y-1">
-                <p>NewsData length: {newsData.length}</p>
-                <p>Loading: {loading ? "Yes" : "No"}</p>
-                <p>Using sample data: {usingSampleData ? "Yes" : "No"}</p>
-                <p>
-                  Supabase configured: {isSupabaseConfigured ? "Yes" : "No"}
-                </p>
-              </div>
-            </div>
+          )}
+
+          {/* News Cards Grid - 2 columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            {newsData.slice(1).map((item) => (
+              <NewsCard
+                key={item.id}
+                newsItem={item}
+                isHighlighted={highlightedNewsId === String(item.id)}
+                highlightedNewsId={highlightedNewsId}
+                isExpanded={expandedNewsId === String(item.id)}
+                onTitleClick={handleTitleClick}
+                onCloseHighlight={() => {}}
+              />
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Right side - Sidebar (25% width, sticky on scroll) */}
+        <aside
+          className={`lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto ${
+            highlightedNewsId || expandedNewsId
+              ? "blur-sm opacity-60 pointer-events-none"
+              : ""
+          }`}
+        >
+          <BiasDistribution newsData={newsData} />
+          <HowToRead
+            newsData={newsData}
+            isExpanded={sidebarExpanded}
+            onToggle={() => setSidebarExpanded(!sidebarExpanded)}
+          />
+        </aside>
+
+        {/* Expanded News Modal */}
+        <NewsDetailModal
+          expandedNewsId={expandedNewsId}
+          newsData={newsData}
+          onClose={() => setExpandedNewsId(null)}
+        />
       </main>
 
       <Footer />
