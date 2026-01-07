@@ -1,18 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { getSignedImageUrl } from "../utils/imageUtils";
 import { formatTimeAgo } from "../utils/dataTransformers";
 import ShareButton from "./ShareButton";
 import SourceList from "./SourceList";
-import SentimentTooltip from "./SentimentTooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { capitalizeFirst, getCategoryColor } from "../utils/categoryUtils";
 
 function FeaturedNews({ newsItem, onTitleClick, onShare }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
-  const [hoveredSegment, setHoveredSegment] = useState(null);
-  const [tooltipStyle, setTooltipStyle] = useState({});
-  const tooltipRef = useRef(null);
-  const sentimentBarRef = useRef(null);
 
   if (!newsItem) return null;
 
@@ -108,59 +109,275 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
 
               return (
                 <div className="px-4 sm:px-6 py-3 flex-shrink-0">
-                  <div
-                    ref={sentimentBarRef}
-                    className="relative overflow-visible"
-                  >
-                    <div className="flex h-4 overflow-hidden bg-[var(--bg-surface)] relative">
-                      {percentages.negative > 0 && (
-                        <div
-                          className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
-                          style={{ width: `${percentages.negative}%` }}
-                          onMouseEnter={() => setHoveredSegment("negative")}
-                          onMouseLeave={() => setHoveredSegment(null)}
-                        >
-                          <span className="text-[10px] font-medium text-white px-1">
-                            {percentages.negative}%
-                          </span>
-                        </div>
-                      )}
-                      {percentages.neutral > 0 && (
-                        <div
-                          className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
-                          style={{ width: `${percentages.neutral}%` }}
-                          onMouseEnter={() => setHoveredSegment("neutral")}
-                          onMouseLeave={() => setHoveredSegment(null)}
-                        >
-                          <span className="text-[10px] font-medium text-white px-1">
-                            {percentages.neutral}%
-                          </span>
-                        </div>
-                      )}
-                      {percentages.positive > 0 && (
-                        <div
-                          className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
-                          style={{ width: `${percentages.positive}%` }}
-                          onMouseEnter={() => setHoveredSegment("positive")}
-                          onMouseLeave={() => setHoveredSegment(null)}
-                        >
-                          <span className="text-[10px] font-medium text-white px-1">
-                            {percentages.positive}%
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  <TooltipProvider delayDuration={200}>
+                    <div className="relative overflow-visible">
+                      <div className="flex h-4 overflow-hidden bg-[var(--bg-surface)] relative">
+                        {/* Negative Segment */}
+                        {percentages.negative > 0 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                style={{ width: `${percentages.negative}%` }}
+                              >
+                                <span className="text-[10px] font-medium text-white px-1">
+                                  {percentages.negative}%
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                              style={{
+                                borderTop: "4px solid var(--accent-negative)",
+                                borderTopLeftRadius: "0.75rem",
+                                borderTopRightRadius: "0.75rem",
+                              }}
+                            >
+                              <div className="relative">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <div
+                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
+                                    style={{
+                                      backgroundColor: "var(--accent-negative)",
+                                    }}
+                                  ></div>
+                                  <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
+                                    Negative Sentiment
+                                  </span>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative">
+                                        <div
+                                          className="w-3 h-3 rounded-full shadow-lg"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--accent-negative)",
+                                            boxShadow:
+                                              "var(--accent-negative)30 0 0 8px",
+                                          }}
+                                        ></div>
+                                        <div
+                                          className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--accent-negative)",
+                                          }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                        Negative
+                                      </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                      <span
+                                        className="text-2xl font-bold"
+                                        style={{
+                                          color: "var(--accent-negative)",
+                                        }}
+                                      >
+                                        {percentages.negative}
+                                      </span>
+                                      <span className="text-xs text-[var(--text-muted)]">
+                                        %
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="pt-2 border-t border-[var(--border-subtle)]">
+                                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                      <span className="font-semibold text-[var(--text-primary)]">
+                                        Negative:
+                                      </span>{" "}
+                                      Stories emphasizing risk, conflict, decline,
+                                      or concern.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
 
-                    {/* Sentiment Tooltip */}
-                    <SentimentTooltip
-                      hoveredSegment={hoveredSegment}
-                      sentiment={sentiment}
-                      tooltipRef={tooltipRef}
-                      sentimentBarRef={sentimentBarRef}
-                      tooltipStyle={tooltipStyle}
-                      setTooltipStyle={setTooltipStyle}
-                    />
-                  </div>
+                        {/* Neutral Segment */}
+                        {percentages.neutral > 0 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                style={{ width: `${percentages.neutral}%` }}
+                              >
+                                <span className="text-[10px] font-medium text-white px-1">
+                                  {percentages.neutral}%
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                              style={{
+                                borderTop: "4px solid var(--accent-neutral)",
+                                borderTopLeftRadius: "0.75rem",
+                                borderTopRightRadius: "0.75rem",
+                              }}
+                            >
+                              <div className="relative">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <div
+                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
+                                    style={{
+                                      backgroundColor: "var(--accent-neutral)",
+                                    }}
+                                  ></div>
+                                  <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
+                                    Neutral Sentiment
+                                  </span>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative">
+                                        <div
+                                          className="w-3 h-3 rounded-full shadow-lg"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--accent-neutral)",
+                                            boxShadow:
+                                              "var(--accent-neutral)30 0 0 8px",
+                                          }}
+                                        ></div>
+                                        <div
+                                          className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--accent-neutral)",
+                                          }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                        Neutral
+                                      </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                      <span
+                                        className="text-2xl font-bold"
+                                        style={{
+                                          color: "var(--accent-neutral)",
+                                        }}
+                                      >
+                                        {percentages.neutral}
+                                      </span>
+                                      <span className="text-xs text-[var(--text-muted)]">
+                                        %
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="pt-2 border-t border-[var(--border-subtle)]">
+                                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                      <span className="font-semibold text-[var(--text-primary)]">
+                                        Neutral:
+                                      </span>{" "}
+                                      Informational or balanced coverage without
+                                      strong emotional framing.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Positive Segment */}
+                        {percentages.positive > 0 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                style={{ width: `${percentages.positive}%` }}
+                              >
+                                <span className="text-[10px] font-medium text-white px-1">
+                                  {percentages.positive}%
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                              style={{
+                                borderTop: "4px solid var(--accent-positive)",
+                                borderTopLeftRadius: "0.75rem",
+                                borderTopRightRadius: "0.75rem",
+                              }}
+                            >
+                              <div className="relative">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <div
+                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
+                                    style={{
+                                      backgroundColor: "var(--accent-positive)",
+                                    }}
+                                  ></div>
+                                  <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
+                                    Positive Sentiment
+                                  </span>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="relative">
+                                        <div
+                                          className="w-3 h-3 rounded-full shadow-lg"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--accent-positive)",
+                                            boxShadow:
+                                              "var(--accent-positive)30 0 0 8px",
+                                          }}
+                                        ></div>
+                                        <div
+                                          className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--accent-positive)",
+                                          }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                        Positive
+                                      </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                      <span
+                                        className="text-2xl font-bold"
+                                        style={{
+                                          color: "var(--accent-positive)",
+                                        }}
+                                      >
+                                        {percentages.positive}
+                                      </span>
+                                      <span className="text-xs text-[var(--text-muted)]">
+                                        %
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="pt-2 border-t border-[var(--border-subtle)]">
+                                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                      <span className="font-semibold text-[var(--text-primary)]">
+                                        Positive:
+                                      </span>{" "}
+                                      Stories framed with optimism, progress,
+                                      opportunity, or growth.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </div>
+                  </TooltipProvider>
                 </div>
               );
             })()}
