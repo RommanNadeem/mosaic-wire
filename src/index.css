@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  /* UniversalSans font family */
+  * {
+    font-family: "UniversalSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  }
   :root {
     /* Light Theme (Primary) - Editorial, Clean */
     --bg-primary: #ffffff;
@@ -85,7 +90,7 @@
     min-height: 100%;
     margin: 0;
     @apply antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    font-family: "UniversalSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
     background-color: var(--bg-primary, #ffffff);
     color: var(--text-primary, #1a1a1a);

@@ -63,6 +63,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          "UniversalSans",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
