@@ -25,7 +25,8 @@ function Header() {
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          {/* Left side - Logo and Date (mobile: stacked, desktop: inline) */}
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
               <a
                 href="/"
@@ -39,31 +40,18 @@ function Header() {
                 MosaicBeat
               </a>
             </h1>
+            {/* Date - Below heading on mobile, inline on desktop */}
+            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap md:hidden">
+              {formattedDate}
+            </span>
             <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
             <span className="text-sm sm:text-base text-[var(--text-secondary)] hidden sm:inline">
               Pakistan's news, unmasked.
             </span>
           </div>
 
-          {/* Mobile navigation - Today's Front Page, Live and Theme toggle */}
+          {/* Mobile navigation - Theme toggle only */}
           <nav className="flex md:hidden items-center space-x-3">
-            {/* Local Date */}
-            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap">
-              {formattedDate}
-            </span>
-            {/* Today's Front Page */}
-            <a
-              href="#"
-              className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
-            >
-              Today's Front Page
-            </a>
-            {/* Live indicator */}
-            <div className="flex items-center space-x-1.5 text-[var(--text-secondary)]">
-              <span className="w-1.5 h-1.5 bg-[var(--accent-positive)] rounded-full"></span>
-              <span className="text-xs">Live</span>
-            </div>
-
             {/* Theme toggle */}
             <button
               ref={mobileThemeButtonRef}
@@ -131,6 +119,11 @@ function Header() {
             >
               Today's Front Page
             </a>
+            {/* Live indicator */}
+            <div className="flex items-center space-x-1.5 text-[var(--text-secondary)]">
+              <span className="w-1.5 h-1.5 bg-[var(--accent-positive)] rounded-full"></span>
+              <span className="text-xs">Live</span>
+            </div>
             {/* Theme toggle */}
             <button
               ref={desktopThemeButtonRef}
