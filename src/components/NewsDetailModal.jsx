@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import NewsCard from "./NewsCard";
 
 function NewsDetailModal({ expandedNewsId, newsData, onClose }) {
@@ -21,6 +21,9 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose }) {
         className="max-w-4xl w-full h-[90vh] max-h-[90vh] p-0 flex flex-col overflow-hidden bg-[var(--bg-card)] border-[var(--border-subtle)]"
         onClick={(e) => e.stopPropagation()}
       >
+        <DialogTitle className="sr-only">
+          {expandedItem.title || "News Details"}
+        </DialogTitle>
         <div className="flex-1 overflow-y-auto">
           <NewsCard
             newsItem={expandedItem}

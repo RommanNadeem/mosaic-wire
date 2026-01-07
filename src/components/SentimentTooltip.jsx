@@ -8,6 +8,8 @@ function SentimentTooltip({
   tooltipStyle,
   setTooltipStyle,
 }) {
+  const previousStyleRef = useRef(null);
+
   useEffect(() => {
     if (
       !hoveredSegment ||
@@ -15,7 +17,11 @@ function SentimentTooltip({
       !sentimentBarRef.current ||
       !sentiment
     ) {
-      setTooltipStyle({});
+      // Only clear tooltip style if it was previously set
+      if (previousStyleRef.current !== null) {
+        setTooltipStyle({});
+        previousStyleRef.current = null;
+      }
       return;
     }
 
@@ -48,22 +54,18 @@ function SentimentTooltip({
         leftPercent = percentages.negative + percentages.neutral / 2;
       } else if (hoveredSegment === "positive") {
         leftPercent =
-          percentages.negative +
-          percentages.neutral +
-          percentages.positive / 2;
+          percentages.negative + percentages.neutral + percentages.positive / 2;
       }
 
       const containerWidth = containerRect.width;
       const tooltipWidth = tooltipRect.width || 320;
       const leftPosition = (containerWidth * leftPercent) / 100;
-      const tooltipLeft =
-        containerRect.left + leftPosition - tooltipWidth / 2;
+      const tooltipLeft = containerRect.left + leftPosition - tooltipWidth / 2;
 
       let adjustedLeft = leftPercent;
       if (tooltipLeft < padding) {
         const overflow = padding - tooltipLeft;
-        adjustedLeft =
-          leftPercent + (overflow / containerWidth) * 100;
+        adjustedLeft = leftPercent + (overflow / containerWidth) * 100;
       }
 
       const tooltipRight =
@@ -72,16 +74,14 @@ function SentimentTooltip({
         tooltipWidth / 2;
       if (tooltipRight > viewportWidth - padding) {
         const overflow = tooltipRight - (viewportWidth - padding);
-        adjustedLeft =
-          adjustedLeft - (overflow / containerWidth) * 100;
+        adjustedLeft = adjustedLeft - (overflow / containerWidth) * 100;
       }
 
       const spaceAbove = containerRect.top;
       const spaceBelow = viewportHeight - containerRect.bottom;
       const tooltipHeight = tooltipRect.height || 200;
       const showAbove =
-        spaceAbove > tooltipHeight + padding ||
-        spaceAbove > spaceBelow;
+        spaceAbove > tooltipHeight + padding || spaceAbove > spaceBelow;
 
       const tooltipCenterX =
         containerRect.left + (containerWidth * adjustedLeft) / 100;
@@ -90,7 +90,7 @@ function SentimentTooltip({
       const arrowOffset = segmentCenterX - tooltipCenterX;
       const arrowPositionPercent = (arrowOffset / tooltipWidth) * 100;
 
-      setTooltipStyle({
+      const newStyle = {
         left: `${adjustedLeft}%`,
         transform: "translateX(-50%)",
         bottom: showAbove ? "100%" : "auto",
@@ -98,22 +98,31 @@ function SentimentTooltip({
         marginBottom: showAbove ? "0.5rem" : "0",
         marginTop: showAbove ? "0" : "0.5rem",
         arrowOffset: `${arrowPositionPercent}%`,
-      });
+      };
+
+      // Only update if style actually changed
+      const styleString = JSON.stringify(newStyle);
+      if (previousStyleRef.current !== styleString) {
+        setTooltipStyle(newStyle);
+        previousStyleRef.current = styleString;
+      }
     };
 
-    setTimeout(updatePosition, 10);
+    const timeoutId = setTimeout(updatePosition, 10);
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [hoveredSegment, sentiment, tooltipRef, sentimentBarRef, setTooltipStyle]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredSegment, sentiment]);
 
   const getTooltipContent = (segment) => {
     if (!segment || !sentiment) return null;
-    
+
     const { positive, neutral, negative } = sentiment;
     const total = positive + neutral + negative;
     const percentages =
@@ -131,8 +140,7 @@ function SentimentTooltip({
         percentage: percentages.negative,
         color: "var(--accent-negative)",
         count: negative,
-        description:
-          "Stories emphasizing risk, conflict, decline, or concern.",
+        description: "Stories emphasizing risk, conflict, decline, or concern.",
       },
       neutral: {
         label: "Neutral",
@@ -167,8 +175,7 @@ function SentimentTooltip({
         opacity: hoveredSegment ? 1 : 0,
         visibility: hoveredSegment ? "visible" : "hidden",
         transform: hoveredSegment
-          ? tooltipStyle.transform ||
-            "translateX(-50%) translateY(0)"
+          ? tooltipStyle.transform || "translateX(-50%) translateY(0)"
           : "translateX(-50%) translateY(8px)",
       }}
     >
@@ -205,9 +212,7 @@ function SentimentTooltip({
                 >
                   {tooltipData.percentage}
                 </span>
-                <span className="text-xs text-[var(--text-muted)]">
-                  %
-                </span>
+                <span className="text-xs text-[var(--text-muted)]">%</span>
               </div>
             </div>
             <div className="pt-2 border-t border-[var(--border-subtle)]">
@@ -235,9 +240,10 @@ function SentimentTooltip({
           <div
             className="w-3 h-3 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border-l border-b border-[var(--border-subtle)]"
             style={{
-              transform: tooltipStyle.bottom !== undefined
-                ? "rotate(45deg)"
-                : "rotate(-135deg)",
+              transform:
+                tooltipStyle.bottom !== undefined
+                  ? "rotate(45deg)"
+                  : "rotate(-135deg)",
             }}
           ></div>
         </div>
@@ -247,4 +253,3 @@ function SentimentTooltip({
 }
 
 export default SentimentTooltip;
-

@@ -123,32 +123,6 @@ function App() {
     };
   }, [newsData, loading]);
 
-  // Handle clicking outside to close highlight
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!highlightedNewsId && !expandedNewsId) return;
-
-      // Check if click is outside any news card
-      const clickedElement = event.target;
-      const newsCard = clickedElement.closest('article[id^="news-"]');
-      const modalCard = clickedElement.closest(".expanded-news-modal");
-
-      if (!newsCard && !modalCard) {
-        // Clicked outside, clear highlight and expanded view
-        window.location.hash = "";
-        setHighlightedNewsId(null);
-        setExpandedNewsId(null);
-      }
-    };
-
-    if (highlightedNewsId || expandedNewsId) {
-      document.addEventListener("click", handleClickOutside);
-      return () => {
-        document.removeEventListener("click", handleClickOutside);
-      };
-    }
-  }, [highlightedNewsId, expandedNewsId]);
-
   // Handle ESC key to close expanded view
   useEffect(() => {
     const handleEsc = (event) => {
@@ -165,27 +139,6 @@ function App() {
     }
   }, [expandedNewsId]);
 
-  // Prevent body scroll when card is expanded
-  useEffect(() => {
-    if (expandedNewsId) {
-      // Save current scroll position
-      const scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-      document.body.style.overflow = "hidden";
-
-      return () => {
-        // Restore scroll position
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        document.body.style.overflow = "";
-        window.scrollTo(0, scrollY);
-      };
-    }
-  }, [expandedNewsId]);
-
   const handleTitleClick = (newsId) => {
     // If card is highlighted (from shared link), clear highlight first
     if (highlightedNewsId === String(newsId)) {
@@ -198,11 +151,6 @@ function App() {
     } else {
       setExpandedNewsId(String(newsId));
     }
-  };
-
-  const handleCloseHighlight = () => {
-    window.location.hash = "";
-    setHighlightedNewsId(null);
   };
 
   if (loading) {
@@ -237,21 +185,11 @@ function App() {
   }
 
   return (
-    <div className="flex-1 bg-[var(--bg-primary)] flex flex-col">
+    <div className="flex-1 bg-[var(--bg-primary)] flex flex-col min-h-screen">
       <Header />
 
-      {usingSampleData && (
-        <div className="bg-[var(--bg-surface)] border-b border-[var(--border-subtle)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <p className="text-sm text-[var(--text-secondary)]">
-              ⚠️ Using sample data. Configure Supabase to use real data.
-            </p>
-          </div>
-        </div>
-      )}
-
       <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        {newsData.length > 0 ? (
+        {newsData?.length > 0 ? (
           <>
             {/* Featured News and Sidebar - 75/25 split */}
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8 lg:items-stretch">
@@ -298,7 +236,7 @@ function App() {
                       highlightedNewsId={highlightedNewsId}
                       isExpanded={expandedNewsId === String(item.id)}
                       onTitleClick={handleTitleClick}
-                      onCloseHighlight={handleCloseHighlight}
+                      onCloseHighlight={() => {}}
                     />
                   ))}
                 </div>

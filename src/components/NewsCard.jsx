@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import SentimentBar from "./SentimentBar";
 import SourceList from "./SourceList";
 import ShareButton from "./ShareButton";
 import { formatTimeAgo } from "../utils/dataTransformers";
@@ -10,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { capitalizeFirst, getCategoryColor } from "@/utils/categoryUtils";
 
 function NewsCard({
   newsItem,

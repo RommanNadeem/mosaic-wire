@@ -57,10 +57,7 @@ function BiasDistribution({ newsData }) {
       </div>
 
       {/* Horizontal Bar Chart with Tooltip */}
-      <div
-        ref={sentimentBarRef}
-        className="relative overflow-visible"
-      >
+      <div ref={sentimentBarRef} className="relative overflow-visible">
         <div className="flex h-8 overflow-hidden bg-[var(--bg-surface)] relative">
           {percentages.negative > 0 && (
             <div
