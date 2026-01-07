@@ -135,17 +135,6 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                               }}
                             >
                               <div className="relative">
-                                <div className="flex items-center gap-2 mb-4">
-                                  <div
-                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                                    style={{
-                                      backgroundColor: "var(--accent-negative)",
-                                    }}
-                                  ></div>
-                                  <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                                    Negative Sentiment
-                                  </span>
-                                </div>
                                 <div className="space-y-3">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -223,17 +212,6 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                               }}
                             >
                               <div className="relative">
-                                <div className="flex items-center gap-2 mb-4">
-                                  <div
-                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                                    style={{
-                                      backgroundColor: "var(--accent-neutral)",
-                                    }}
-                                  ></div>
-                                  <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                                    Neutral Sentiment
-                                  </span>
-                                </div>
                                 <div className="space-y-3">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -311,17 +289,6 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                               }}
                             >
                               <div className="relative">
-                                <div className="flex items-center gap-2 mb-4">
-                                  <div
-                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                                    style={{
-                                      backgroundColor: "var(--accent-positive)",
-                                    }}
-                                  ></div>
-                                  <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                                    Positive Sentiment
-                                  </span>
-                                </div>
                                 <div className="space-y-3">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">

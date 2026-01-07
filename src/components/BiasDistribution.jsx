@@ -47,10 +47,10 @@ function BiasDistribution({ newsData }) {
   return (
     <div>
       <div className="mb-2">
-        <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
-          Bias Distribution
-        </h3>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
+        <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
+          Pakistan's Mood Today
+        </h2>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Based on today's news coverage across Pakistani sources
         </p>
       </div>
@@ -74,25 +74,16 @@ function BiasDistribution({ newsData }) {
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
-                  className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                  className="!bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] overflow-hidden z-[9999]"
                   style={{
+                    backgroundColor: "var(--bg-card)",
+                    opacity: 1,
                     borderTop: "4px solid var(--accent-negative)",
                     borderTopLeftRadius: "0.75rem",
                     borderTopRightRadius: "0.75rem",
                   }}
                 >
                   <div className="relative">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div
-                        className="w-1.5 h-1.5 rounded-full animate-pulse"
-                        style={{
-                          backgroundColor: "var(--accent-negative)",
-                        }}
-                      ></div>
-                      <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                        Negative Sentiment
-                      </span>
-                    </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -159,25 +150,16 @@ function BiasDistribution({ newsData }) {
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
-                  className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                  className="!bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] overflow-hidden z-[9999]"
                   style={{
+                    backgroundColor: "var(--bg-card)",
+                    opacity: 1,
                     borderTop: "4px solid var(--accent-neutral)",
                     borderTopLeftRadius: "0.75rem",
                     borderTopRightRadius: "0.75rem",
                   }}
                 >
                   <div className="relative">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div
-                        className="w-1.5 h-1.5 rounded-full animate-pulse"
-                        style={{
-                          backgroundColor: "var(--accent-neutral)",
-                        }}
-                      ></div>
-                      <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                        Neutral Sentiment
-                      </span>
-                    </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -244,25 +226,16 @@ function BiasDistribution({ newsData }) {
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
-                  className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                  className="!bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] overflow-hidden z-[9999]"
                   style={{
+                    backgroundColor: "var(--bg-card)",
+                    opacity: 1,
                     borderTop: "4px solid var(--accent-positive)",
                     borderTopLeftRadius: "0.75rem",
                     borderTopRightRadius: "0.75rem",
                   }}
                 >
                   <div className="relative">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div
-                        className="w-1.5 h-1.5 rounded-full animate-pulse"
-                        style={{
-                          backgroundColor: "var(--accent-positive)",
-                        }}
-                      ></div>
-                      <span className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
-                        Positive Sentiment
-                      </span>
-                    </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -316,6 +289,13 @@ function BiasDistribution({ newsData }) {
           </div>
         </div>
       </TooltipProvider>
+
+      {/* How To Read Mosaicbeat Heading - Hidden on mobile, visible on desktop */}
+      <div className="mt-4 hidden lg:block">
+        <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
+          How To Read Mosaicbeat
+        </h3>
+      </div>
     </div>
   );
 }

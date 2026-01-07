@@ -81,17 +81,26 @@ function HowToRead({ newsData, isExpanded, onToggle }) {
       </button>
 
       {/* Content - Hidden on mobile unless expanded */}
-      <div className={`${isExpanded ? "block" : "hidden"} lg:block space-y-4 flex-1`}>
+      <div
+        className={`${
+          isExpanded ? "block" : "hidden"
+        } lg:block space-y-4 flex-1`}
+      >
         {/* What is Mosaic? */}
         <div className="py-4 sm:py-6">
           <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3">
-            What is Mosaic?
+            What is Mosaic
           </h3>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
             MosaicBeat analyzes how news is being told, not just what happened.
             We compare coverage across sources to surface the signal behind the
             noise.
           </p>
+
+          {/* What We Analyze Today Heading */}
+          <h4 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3">
+            What We Analyze Today
+          </h4>
 
           {/* Stats */}
           <div className="space-y-2">
@@ -181,10 +190,10 @@ function HowToRead({ newsData, isExpanded, onToggle }) {
             </div>
           </div>
 
-          {/* How the Sentiment Is Calculated */}
+          {/* How the Mood Is Calculated */}
           <div className="mt-4">
             <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3">
-              How the Sentiment Is Calculated?
+              How the Mood Is Calculated
             </h3>
             <ol className="space-y-2 text-sm text-[var(--text-secondary)] leading-relaxed list-decimal list-inside">
               <li>Similar headlines are grouped into topics</li>

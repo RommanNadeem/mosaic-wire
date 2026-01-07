@@ -239,16 +239,16 @@ function App() {
   }
 
   return (
-    <div className="flex-1 bg-[var(--bg-primary)] flex flex-col min-h-screen overflow-x-hidden">
+    <div className="flex-1 bg-[var(--bg-primary)] flex flex-col overflow-x-hidden">
       <Header />
 
       <main
-        className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8"
+        className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8 w-full"
         onClick={handleMainClick}
       >
         {/* Right side - Sidebar (25% width, sticky on scroll) - Top on mobile, right on desktop */}
         <aside
-          className={`order-1 lg:order-2 lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto ${
+          className={`order-1 lg:order-2 lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto ${
             highlightedNewsId || expandedNewsId
               ? "blur-sm opacity-60 pointer-events-none"
               : ""

@@ -41,7 +41,7 @@ function PakistanMood({ newsData }) {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] mb-1">Pakistan's Mood Today</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-1">Pakistan's Mood Today</h2>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
             Based on today's news coverage across Pakistani sources
           </p>
