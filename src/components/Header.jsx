@@ -41,7 +41,7 @@ function Header() {
             </h1>
             <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
             <span className="text-sm sm:text-base text-[var(--text-secondary)] hidden sm:inline">
-              Smarter News, From All Angles
+              Pakistan's news, unmasked.
             </span>
           </div>
 
