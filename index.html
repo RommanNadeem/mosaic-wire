@@ -16,6 +16,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MosaicBeat - A real-time digest of Pakistan's most consequential stories</title>
     
+    <!-- Critical CSS - Inline for faster initial render -->
+    <style>
+      /* Critical CSS variables and base styles */
+      :root {
+        --bg-primary: #ffffff;
+        --bg-surface: #fafafa;
+        --bg-card: #ffffff;
+        --text-primary: #1a1a1a;
+        --text-secondary: #4a4a4a;
+        --text-muted: #8a8a8a;
+        --border-subtle: #e5e5e5;
+        --accent-positive: #007c04;
+        --accent-neutral: #9d9d9d;
+        --accent-negative: #a50000;
+      }
+      [data-theme="dark"] {
+        --bg-primary: #1e1e1e;
+        --bg-surface: #252525;
+        --bg-card: #2a2a2a;
+        --text-primary: #f5f5f5;
+        --text-secondary: #b0b0b0;
+        --text-muted: #707070;
+        --border-subtle: #3a3a3a;
+        --accent-positive: #007c04;
+        --accent-neutral: #9d9d9d;
+        --accent-negative: #a50000;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      /* Prevent layout shift during load */
+      body {
+        visibility: hidden;
+      }
+      body.loaded {
+        visibility: visible;
+      }
+    </style>
+    
     <!-- Default meta tags (will be updated dynamically for shared links) -->
     <meta name="description" content="Pakistan's news, unmasked. Get AI-powered sentiment analysis of the latest news from multiple sources." />
     <meta name="keywords" content="Pakistan news, news aggregator, sentiment analysis" />
@@ -35,13 +84,18 @@
     <meta name="twitter:description" content="Pakistan's news, unmasked. Get AI-powered sentiment analysis of the latest news from multiple sources." />
     <meta name="twitter:image" content="" />
     
-    <!-- Microsoft Clarity -->
+    <!-- Microsoft Clarity - Delayed initialization for better performance -->
     <script type="text/javascript">
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "uw2ww3u2kd");
+        // Delay Clarity initialization until after page load
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                (function(c,l,a,r,i,t,y){
+                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "uw2ww3u2kd");
+            }, 1000); // Delay by 1 second to prioritize content rendering
+        });
     </script>
   </head>
   <body>

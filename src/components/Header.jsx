@@ -14,7 +14,17 @@ function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
-              MosaicBeat
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.hash = "";
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="hover:text-[var(--accent-positive)] transition-colors cursor-pointer"
+              >
+                MosaicBeat
+              </a>
             </h1>
             <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
             <span className="text-sm sm:text-base text-[var(--text-secondary)] hidden sm:inline">

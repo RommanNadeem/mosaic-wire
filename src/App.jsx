@@ -12,6 +12,7 @@ import { transformSupabaseData } from "./utils/dataTransformers";
 import { sampleNewsData } from "./data/sampleData";
 import { isSupabaseConfigured } from "./lib/supabase";
 import { updateMetaTags, resetMetaTags } from "./utils/metaTags";
+import { parseNewsHash, findNewsItem } from "./utils/slugUtils";
 
 function App() {
   const { theme } = useTheme();
@@ -77,21 +78,21 @@ function App() {
 
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash.startsWith("#news-")) {
-        const newsId = hash.replace("#news-", "");
+      
+      // Parse hash (supports both old #news-123 and new #news/slug-shortId formats)
+      const { id, shortId, slug } = parseNewsHash(hash);
+      
+      if (id || shortId) {
+        // Find news item by ID or short ID
+        const newsItem = findNewsItem(newsData, id, shortId);
 
-        // Check if the news item exists in the current data
-        const newsExists = newsData.some((item) => String(item.id) === newsId);
-
-        if (newsExists) {
+        if (newsItem) {
+          const newsId = String(newsItem.id);
           setHighlightedNewsId(newsId);
 
           // Update meta tags for the shared news item
-          const newsItem = newsData.find((item) => String(item.id) === newsId);
-          if (newsItem) {
-            const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
-            updateMetaTags(newsItem, shareUrl);
-          }
+          const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
+          updateMetaTags(newsItem, shareUrl);
 
           // Scroll to the highlighted news after a delay to ensure it's rendered
           setTimeout(() => {
@@ -102,7 +103,7 @@ function App() {
           }, 300);
         } else {
           // News item doesn't exist - redirect to main page by clearing the hash
-          window.location.hash = "";
+          clearHashWithoutScroll();
           setHighlightedNewsId(null);
           resetMetaTags();
         }
@@ -139,10 +140,22 @@ function App() {
     }
   }, [expandedNewsId]);
 
+  // Helper function to remove hash without scrolling to top
+  const clearHashWithoutScroll = () => {
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    } else {
+      // Fallback for older browsers
+      const scrollY = window.scrollY;
+      window.location.hash = "";
+      window.scrollTo(0, scrollY);
+    }
+  };
+
   const handleTitleClick = (newsId) => {
     // If card is highlighted (from shared link), clear highlight first
     if (highlightedNewsId === String(newsId)) {
-      window.location.hash = "";
+      clearHashWithoutScroll();
       setHighlightedNewsId(null);
       // Small delay to allow highlight to clear before opening expanded view
       setTimeout(() => {
@@ -153,14 +166,47 @@ function App() {
     }
   };
 
+  const handleCloseHighlight = () => {
+    clearHashWithoutScroll();
+    setHighlightedNewsId(null);
+    resetMetaTags();
+  };
+
+  const handleMainClick = (e) => {
+    // Only handle clicks when there's a highlighted news
+    if (!highlightedNewsId) return;
+    
+    // Don't close if clicking on the highlighted card itself
+    const highlightedElement = document.getElementById(`news-${highlightedNewsId}`);
+    if (highlightedElement && highlightedElement.contains(e.target)) {
+      return;
+    }
+    
+    // Don't close if clicking on Header or Footer
+    if (e.target.closest('header') || e.target.closest('footer')) {
+      return;
+    }
+    
+    // Close the highlight
+    handleCloseHighlight();
+  };
+
+  // Mark body as loaded to prevent layout shift
+  useEffect(() => {
+    document.body.classList.add('loaded');
+    return () => {
+      document.body.classList.remove('loaded');
+    };
+  }, []);
+
   if (loading) {
     return (
       <div className="flex-1 bg-[var(--bg-primary)] flex flex-col">
         <Header />
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--text-primary)]"></div>
-            <p className="mt-4 text-[var(--text-secondary)]">Loading news...</p>
+        <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-[var(--border-subtle)] border-t-[var(--accent-positive)] rounded-full animate-spin"></div>
+            <p className="text-sm text-[var(--text-secondary)]">Loading news...</p>
           </div>
         </main>
         <Footer />
@@ -188,7 +234,10 @@ function App() {
     <div className="flex-1 bg-[var(--bg-primary)] flex flex-col min-h-screen">
       <Header />
 
-      <main className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8">
+      <main 
+        className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8"
+        onClick={handleMainClick}
+      >
         {/* Left side - Featured News and News Cards (75% width) */}
         <div className="flex-1 lg:w-[75%] flex flex-col gap-6 lg:gap-8">
           {newsData.length > 0 && (
@@ -196,8 +245,8 @@ function App() {
               newsItem={newsData[0]}
               onTitleClick={handleTitleClick}
               onShare={(url) => {
-                const shareUrl = `${window.location.origin}${window.location.pathname}#news-${newsData[0].id}`;
-                updateMetaTags(newsData[0], shareUrl);
+                // Use the URL from ShareButton (already includes slug with last 6 chars of ID)
+                updateMetaTags(newsData[0], url);
               }}
             />
           )}
@@ -212,7 +261,7 @@ function App() {
                 highlightedNewsId={highlightedNewsId}
                 isExpanded={expandedNewsId === String(item.id)}
                 onTitleClick={handleTitleClick}
-                onCloseHighlight={() => {}}
+                onCloseHighlight={handleCloseHighlight}
               />
             ))}
           </div>

@@ -147,6 +147,8 @@ function NewsCard({
           <img
             src={imageUrl}
             alt={title || "News image"}
+            width="800"
+            height="600"
             className="w-full h-full object-cover"
             style={
               isExpanded

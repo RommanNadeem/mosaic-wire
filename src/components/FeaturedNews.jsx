@@ -67,6 +67,8 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                 alt={title || "News image"}
                 className="w-full h-full object-cover"
                 style={{ objectPosition: "center top" }}
+                width="800"
+                height="600"
                 onError={() => {
                   setImageError(true);
                 }}

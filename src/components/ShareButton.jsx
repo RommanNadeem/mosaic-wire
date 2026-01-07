@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createSlug } from '../utils/slugUtils';
 
 function ShareButton({ 
   newsItem, 
@@ -25,7 +26,9 @@ function ShareButton({
     e.preventDefault();
     e.stopPropagation();
     
-    const shareUrl = `${window.location.origin}${window.location.pathname}#news-${id}`;
+    // Create slug-based URL with last 6 characters of ID
+    const slug = createSlug(title, id);
+    const shareUrl = `${window.location.origin}${window.location.pathname}#news/${slug}`;
     const shareTitle = title || 'Check out this news on MosaicBeat';
     
     // Build share text in format: Title, Summary, Link (only for mobile/tablet)
