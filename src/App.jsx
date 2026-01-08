@@ -108,7 +108,27 @@ function App() {
         (item) => String(item.id) === String(modalId)
       );
       if (newsItem) {
-        setExpandedNewsId(String(newsItem.id));
+        // Check if device is mobile (screen width < 640px or has touch screen)
+        const isMobile = window.innerWidth < 640 || ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+        // On mobile: only highlight and scroll, don't open modal
+        // On desktop: open modal
+        if (!isMobile) {
+          setExpandedNewsId(String(newsItem.id));
+        } else {
+          // On mobile, highlight the news card instead of opening modal
+          setHighlightedNewsId(String(newsItem.id));
+          setExpandedNewsId(null);
+          updateQueryParam("modal", null);
+          
+          // Scroll to the highlighted news after a delay
+          setTimeout(() => {
+            const element = document.getElementById(`news-${String(newsItem.id)}`);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 300);
+        }
         hasInitializedFromQuery.current = true;
       } else {
         // Invalid modal ID, remove from URL
