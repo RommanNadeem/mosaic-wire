@@ -153,10 +153,21 @@ function App() {
           const newsId = String(newsItem.id);
           setHighlightedNewsId(newsId);
 
-          // Open modal when coming from share link and add query param for persistence
-          setExpandedNewsId(newsId);
+          // Check if device is mobile (screen width < 640px or has touch screen)
+          const isMobile = window.innerWidth < 640 || ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+          // On mobile: only highlight and scroll, don't open modal
+          // On desktop: open modal when coming from share link
+          if (!isMobile) {
+            setExpandedNewsId(newsId);
+            updateQueryParam("modal", newsId);
+          } else {
+            // On mobile, clear any existing modal
+            setExpandedNewsId(null);
+            updateQueryParam("modal", null);
+          }
+
           hasInitializedFromQuery.current = true;
-          updateQueryParam("modal", newsId);
 
           // Update meta tags for the shared news item
           const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
