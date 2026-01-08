@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function ShareButton({ 
   newsItem, 
@@ -7,6 +7,14 @@ function ShareButton({
   iconSize = "w-4 h-4"
 }) {
   const [shareCopied, setShareCopied] = useState(false);
+  const buttonRef = useRef(null);
+
+  // Blur the button on mount if it has focus (prevents highlighting when shared link is opened)
+  useEffect(() => {
+    if (buttonRef.current && document.activeElement === buttonRef.current) {
+      buttonRef.current.blur();
+    }
+  }, []);
 
   if (!newsItem) return null;
 
@@ -89,8 +97,9 @@ function ShareButton({
   return (
     <div className={className}>
       <button
+        ref={buttonRef}
         onClick={handleShare}
-        className="relative p-1.5 hover:bg-[var(--bg-surface)] transition-colors"
+        className="relative p-1.5 hover:bg-[var(--bg-surface)] transition-colors focus:outline-none focus:ring-0"
         title={shareCopied ? "Copied!" : "Share this news"}
         aria-label="Share this news"
       >
