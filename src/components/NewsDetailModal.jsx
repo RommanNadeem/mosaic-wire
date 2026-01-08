@@ -86,7 +86,7 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
       }}
     >
       <DialogContent
-        className="max-w-4xl w-full h-[95vh] sm:h-[90vh] max-h-[95vh] sm:max-h-[90vh] p-4 sm:p-6 lg:p-10 flex flex-col overflow-y-auto bg-[var(--bg-card)] border-[var(--border-subtle)]"
+        className="max-w-4xl w-[calc(100%-2rem)] sm:w-full h-[calc(100vh-2rem)] sm:h-[90vh] max-h-[calc(100vh-2rem)] sm:max-h-[90vh] p-4 sm:p-6 lg:p-10 flex flex-col overflow-y-auto bg-[var(--bg-card)] border-[var(--border-subtle)] rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <DialogTitle className="sr-only">{title || "News Details"}</DialogTitle>
