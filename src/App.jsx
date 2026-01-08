@@ -90,6 +90,16 @@ function App() {
           const newsId = String(newsItem.id);
           setHighlightedNewsId(newsId);
 
+          // Check if device is mobile (screen width < 640px or has touch screen)
+          const isMobile = window.innerWidth < 640 || ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+          // On mobile: only highlight and scroll, don't open modal
+          // On desktop: could open modal if needed (currently not opening on dev branch)
+          if (isMobile) {
+            // On mobile, ensure modal is not opened
+            setExpandedNewsId(null);
+          }
+
           // Update meta tags for the shared news item
           const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
           updateMetaTags(newsItem, shareUrl);
