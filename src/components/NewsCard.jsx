@@ -219,59 +219,56 @@ function NewsCard({
           isExpanded ? "overflow-y-auto z-10" : "overflow-visible"
         }`}
       >
-        {/* Share Button */}
-        <ShareButton
-          newsItem={newsItem}
-          onShare={onShare}
-          className="absolute top-3 right-3 z-10"
-        />
-
         {/* Topic Headline - Clickable */}
         <h2
           onClick={() => onTitleClick && onTitleClick(id)}
-          className="text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 pr-8 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
+          className="text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
         >
           {title}
         </h2>
 
         {/* Metadata Row */}
-        <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
-          {category &&
-            (() => {
-              const categoryColor = getCategoryColor(category);
-              return (
-                <span
-                  className="px-2 py-0.5 text-xs font-medium rounded"
-                  style={{
-                    backgroundColor: categoryColor.bg,
-                    color: categoryColor.text,
-                  }}
-                >
-                  {capitalizeFirst(category)}
-                </span>
-              );
-            })()}
-          <span className="text-[var(--text-muted)] flex items-center gap-1">
-            <svg
-              className="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
-          </span>
-          {recentArticlesCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
-              {recentArticlesCount} new
+        <div className="flex items-center justify-between gap-2 mb-2 text-xs flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {category &&
+              (() => {
+                const categoryColor = getCategoryColor(category);
+                return (
+                  <span
+                    className="px-2 py-0.5 text-xs font-medium rounded"
+                    style={{
+                      backgroundColor: categoryColor.bg,
+                      color: categoryColor.text,
+                    }}
+                  >
+                    {capitalizeFirst(category)}
+                  </span>
+                );
+              })()}
+            <span className="text-[var(--text-muted)] flex items-center gap-1">
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
             </span>
-          )}
+            {recentArticlesCount > 0 && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
+                {recentArticlesCount} new
+              </span>
+            )}
+          </div>
+          {/* Share Button - Parallel to tag and time */}
+          <ShareButton newsItem={newsItem} onShare={onShare} className="" />
         </div>
 
         {/* Sentiment Bar Section - Above Summary */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import FeaturedNews from "./components/FeaturedNews";
 import BiasDistribution from "./components/BiasDistribution";
@@ -23,6 +23,7 @@ function App() {
   const [highlightedNewsId, setHighlightedNewsId] = useState(null);
   const [expandedNewsId, setExpandedNewsId] = useState(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const hasInitializedFromQuery = useRef(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -71,6 +72,68 @@ function App() {
     fetchData();
   }, []);
 
+  // Helper function to update query parameters
+  const updateQueryParam = (key, value) => {
+    const url = new URL(window.location);
+    if (value) {
+      url.searchParams.set(key, value);
+    } else {
+      url.searchParams.delete(key);
+    }
+    window.history.replaceState({}, "", url);
+  };
+
+  // Helper function to get query parameter
+  const getQueryParam = (key) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(key);
+  };
+
+  // Handle query params for modal on initial load
+  useEffect(() => {
+    // Only process query params if we have data loaded
+    if (loading || newsData.length === 0) return;
+
+    // Don't process query params if there's a hash (hash takes precedence for share links)
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#news")) {
+      hasInitializedFromQuery.current = true;
+      return; // Let hash handler take care of it
+    }
+
+    const modalId = getQueryParam("modal");
+    if (modalId) {
+      // Find news item by ID
+      const newsItem = newsData.find(
+        (item) => String(item.id) === String(modalId)
+      );
+      if (newsItem) {
+        setExpandedNewsId(String(newsItem.id));
+        hasInitializedFromQuery.current = true;
+      } else {
+        // Invalid modal ID, remove from URL
+        updateQueryParam("modal", null);
+        hasInitializedFromQuery.current = true;
+      }
+    } else {
+      hasInitializedFromQuery.current = true;
+    }
+  }, [newsData, loading]);
+
+  // Update URL when modal opens/closes (but skip until we've initialized from query params)
+  useEffect(() => {
+    // Don't update URL until we've processed initial query params
+    if (!hasInitializedFromQuery.current) {
+      return;
+    }
+
+    if (expandedNewsId) {
+      updateQueryParam("modal", expandedNewsId);
+    } else {
+      updateQueryParam("modal", null);
+    }
+  }, [expandedNewsId]);
+
   // Handle hash-based routing for shared news
   useEffect(() => {
     // Only process hash if we have data loaded
@@ -90,6 +153,11 @@ function App() {
           const newsId = String(newsItem.id);
           setHighlightedNewsId(newsId);
 
+          // Open modal when coming from share link and add query param for persistence
+          setExpandedNewsId(newsId);
+          hasInitializedFromQuery.current = true;
+          updateQueryParam("modal", newsId);
+
           // Update meta tags for the shared news item
           const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
           updateMetaTags(newsItem, shareUrl);
@@ -106,10 +174,12 @@ function App() {
           clearHashWithoutScroll();
           setHighlightedNewsId(null);
           resetMetaTags();
+          hasInitializedFromQuery.current = true;
         }
       } else {
         setHighlightedNewsId(null);
         resetMetaTags();
+        hasInitializedFromQuery.current = true;
       }
     };
 
