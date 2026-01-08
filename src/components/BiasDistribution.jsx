@@ -31,10 +31,11 @@ function BiasDistribution({ newsData }) {
   const total = allArticles.length;
   if (total === 0) return null;
 
+  // Calculate percentages with one decimal place
   const percentages = {
-    positive: Math.round((sentimentCounts.positive / total) * 100),
-    neutral: Math.round((sentimentCounts.neutral / total) * 100),
-    negative: Math.round((sentimentCounts.negative / total) * 100),
+    positive: Math.round((sentimentCounts.positive / total) * 1000) / 10,
+    neutral: Math.round((sentimentCounts.neutral / total) * 1000) / 10,
+    negative: Math.round((sentimentCounts.negative / total) * 1000) / 10,
   };
 
   // Create sentiment object for tooltip
@@ -68,7 +69,7 @@ function BiasDistribution({ newsData }) {
                     style={{ width: `${percentages.negative}%` }}
                   >
                     <span className="text-xs font-medium text-white px-2">
-                      {percentages.negative}%
+                      {percentages.negative.toFixed(1)}%
                     </span>
                   </div>
                 </TooltipTrigger>
@@ -113,7 +114,7 @@ function BiasDistribution({ newsData }) {
                               color: "var(--accent-negative)",
                             }}
                           >
-                            {percentages.negative}
+                            {percentages.negative.toFixed(1)}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
                             %
@@ -144,7 +145,7 @@ function BiasDistribution({ newsData }) {
                     style={{ width: `${percentages.neutral}%` }}
                   >
                     <span className="text-xs font-medium text-white px-2">
-                      {percentages.neutral}%
+                      {percentages.neutral.toFixed(1)}%
                     </span>
                   </div>
                 </TooltipTrigger>
@@ -189,7 +190,7 @@ function BiasDistribution({ newsData }) {
                               color: "var(--accent-neutral)",
                             }}
                           >
-                            {percentages.neutral}
+                            {percentages.neutral.toFixed(1)}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
                             %
@@ -220,7 +221,7 @@ function BiasDistribution({ newsData }) {
                     style={{ width: `${percentages.positive}%` }}
                   >
                     <span className="text-xs font-medium text-white px-2">
-                      {percentages.positive}%
+                      {percentages.positive.toFixed(1)}%
                     </span>
                   </div>
                 </TooltipTrigger>
@@ -265,7 +266,7 @@ function BiasDistribution({ newsData }) {
                               color: "var(--accent-positive)",
                             }}
                           >
-                            {percentages.positive}
+                            {percentages.positive.toFixed(1)}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
                             %
