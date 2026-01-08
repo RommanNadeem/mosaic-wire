@@ -31,12 +31,36 @@ function BiasDistribution({ newsData }) {
   const total = allArticles.length;
   if (total === 0) return null;
 
-  // Calculate percentages with one decimal place
-  const percentages = {
-    positive: Math.round((sentimentCounts.positive / total) * 1000) / 10,
-    neutral: Math.round((sentimentCounts.neutral / total) * 1000) / 10,
-    negative: Math.round((sentimentCounts.negative / total) * 1000) / 10,
+  // Calculate raw percentages
+  const rawPercentages = {
+    positive: (sentimentCounts.positive / total) * 100,
+    neutral: (sentimentCounts.neutral / total) * 100,
+    negative: (sentimentCounts.negative / total) * 100,
   };
+
+  // Round each to one decimal place
+  let percentages = {
+    positive: Math.round(rawPercentages.positive * 10) / 10,
+    neutral: Math.round(rawPercentages.neutral * 10) / 10,
+    negative: Math.round(rawPercentages.negative * 10) / 10,
+  };
+
+  // Ensure the sum equals exactly 100.0%
+  const sum = percentages.positive + percentages.neutral + percentages.negative;
+  const difference = 100.0 - sum;
+
+  // Adjust the category with the largest raw percentage to make sum exactly 100.0%
+  if (Math.abs(difference) > 0.01) { // Only adjust if difference is significant
+    const adjustments = [
+      { key: 'positive', value: rawPercentages.positive },
+      { key: 'neutral', value: rawPercentages.neutral },
+      { key: 'negative', value: rawPercentages.negative },
+    ];
+    adjustments.sort((a, b) => b.value - a.value);
+    
+    // Add the difference to the largest category
+    percentages[adjustments[0].key] = Math.round((percentages[adjustments[0].key] + difference) * 10) / 10;
+  }
 
   // Create sentiment object for tooltip
   const sentiment = {
