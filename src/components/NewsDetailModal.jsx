@@ -86,27 +86,20 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
       }}
     >
       <DialogContent
-        className="max-w-4xl w-full h-[90vh] max-h-[90vh] p-10 flex flex-col overflow-visible bg-[var(--bg-card)] border-[var(--border-subtle)]"
+        className="max-w-4xl w-full h-[95vh] sm:h-[90vh] max-h-[95vh] sm:max-h-[90vh] p-4 sm:p-6 lg:p-10 flex flex-col overflow-y-auto bg-[var(--bg-card)] border-[var(--border-subtle)]"
         onClick={(e) => e.stopPropagation()}
       >
         <DialogTitle className="sr-only">{title || "News Details"}</DialogTitle>
         <article
           onClick={handleCardClick}
-          className="bg-[var(--bg-card)] transition-all flex flex-col h-full overflow-visible relative"
+          className="bg-[var(--bg-card)] transition-all flex flex-col overflow-visible relative"
           id={`news-${id}`}
         >
-          {/* Share Button - Positioned at top right of article */}
-          <ShareButton
-            newsItem={expandedItem}
-            onShare={onShare}
-            className="absolute top-3 right-3 z-20"
-          />
-
           {/* Top Section: Image (left) + Content (right) */}
-          <div className="flex flex-row flex-shrink-0">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-0">
             {/* Square Image on the left */}
             {imageUrl && !imageError ? (
-              <div className="w-[200px] h-[200px] bg-[var(--bg-surface)] relative overflow-hidden z-0 flex-shrink-0 rounded-lg">
+              <div className="w-full h-[200px] sm:h-[250px] lg:w-[200px] lg:h-[200px] bg-[var(--bg-surface)] relative overflow-hidden z-0 flex-shrink-0 rounded-lg">
                 <img
                   src={imageUrl}
                   alt={title || "News image"}
@@ -120,7 +113,7 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                 />
               </div>
             ) : (
-              <div className="w-[200px] h-[200px] bg-[var(--bg-surface)] flex items-center justify-center relative flex-shrink-0 rounded-lg">
+              <div className="w-full h-[200px] sm:h-[250px] lg:w-[200px] lg:h-[200px] bg-[var(--bg-surface)] flex items-center justify-center relative flex-shrink-0 rounded-lg">
                 <svg
                   className="w-8 h-8 text-[var(--text-muted)]"
                   fill="none"
@@ -138,52 +131,60 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
             )}
 
             {/* Content Area on the right */}
-            <div className="flex flex-col flex-1 min-w-0 py-3 px-3 relative overflow-visible">
+            <div className="flex flex-col flex-1 min-w-0 py-0 lg:py-3 px-0 lg:px-3 relative overflow-visible">
               {/* Topic Headline */}
-              <h2 className="text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 pr-8">
+              <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2">
                 {title}
               </h2>
 
               {/* Metadata Row */}
-              <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
-                {category &&
-                  (() => {
-                    const categoryColor = getCategoryColor(category);
-                    return (
-                      <span
-                        className="px-2 py-0.5 text-xs font-medium rounded"
-                        style={{
-                          backgroundColor: categoryColor.bg,
-                          color: categoryColor.text,
-                        }}
-                      >
-                        {capitalizeFirst(category)}
-                      </span>
-                    );
-                  })()}
-                <span className="text-[var(--text-muted)] flex items-center gap-1">
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {typeof timeAgo === "string"
-                    ? timeAgo
-                    : formatTimeAgo(timeAgo)}
-                </span>
-                {recentArticlesCount > 0 && (
-                  <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
-                    {recentArticlesCount} new
+              <div className="flex items-center justify-between gap-2 mb-2 text-xs flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                  {category &&
+                    (() => {
+                      const categoryColor = getCategoryColor(category);
+                      return (
+                        <span
+                          className="px-2 py-0.5 text-xs font-medium rounded"
+                          style={{
+                            backgroundColor: categoryColor.bg,
+                            color: categoryColor.text,
+                          }}
+                        >
+                          {capitalizeFirst(category)}
+                        </span>
+                      );
+                    })()}
+                  <span className="text-[var(--text-muted)] flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {typeof timeAgo === "string"
+                      ? timeAgo
+                      : formatTimeAgo(timeAgo)}
                   </span>
-                )}
+                  {recentArticlesCount > 0 && (
+                    <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
+                      {recentArticlesCount} new
+                    </span>
+                  )}
+                </div>
+                {/* Share Button - Parallel to tag and time */}
+                <ShareButton
+                  newsItem={expandedItem}
+                  onShare={onShare}
+                  className=""
+                />
               </div>
 
               {/* Sentiment Bar Section */}
@@ -208,7 +209,7 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                   return (
                     <TooltipProvider delayDuration={200}>
                       <div className="mb-2 relative overflow-visible z-[60]">
-                        <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
+                        <div className="flex h-3 sm:h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
                           {/* Negative Segment */}
                           {percentages.negative > 0 && (
                             <Tooltip>
@@ -455,18 +456,18 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
           </div>
 
           {/* Bottom Section: Articles */}
-          <div className="flex flex-col flex-1 min-w-0 px-0 pb-3 overflow-hidden">
+          <div className="flex flex-col min-w-0 px-0 pb-2 sm:pb-3 mt-2 sm:mt-0">
             {/* Divider above articles */}
-            <div className="border-t border-[var(--border-subtle)] mb-4"></div>
+            <div className="border-t border-[var(--border-subtle)] mb-3 sm:mb-4"></div>
 
-            {/* Articles Section - Scrollable */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+            {/* Articles Section */}
+            <div className="flex flex-col">
               {filteredSources && filteredSources.length > 0 ? (
-                <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex flex-col">
                   <SourceList sources={filteredSources} showAll={true} />
                 </div>
               ) : sources && sources.length > 0 ? (
-                <div className="flex-1 flex flex-col">
+                <div className="flex flex-col">
                   <div className="text-sm text-[var(--text-muted)] py-4 text-left">
                     No articles match the selected sentiment filter.
                   </div>
