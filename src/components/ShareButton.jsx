@@ -21,7 +21,6 @@ function ShareButton({
   const {
     id,
     title,
-    summary,
   } = newsItem;
 
   // Check if device is mobile or tablet (has touch screen)
@@ -37,11 +36,8 @@ function ShareButton({
     const shareUrl = `${window.location.origin}${window.location.pathname}?modal=${id}`;
     const shareTitle = title || 'Check out this news on MosaicBeat';
     
-    // Build share text in format: Title, Summary (URL is passed separately to avoid duplication)
-    let shareText = shareTitle;
-    if (summary) {
-      shareText += `\n\n${summary}`;
-    }
+    // Build share text (URL is passed separately to avoid duplication)
+    const shareText = shareTitle;
     
     // Build full text with URL for clipboard fallback
     const shareTextWithUrl = `${shareText}\n\n${shareUrl}`;
