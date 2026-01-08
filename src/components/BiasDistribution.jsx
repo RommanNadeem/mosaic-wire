@@ -289,13 +289,6 @@ function BiasDistribution({ newsData }) {
           </div>
         </div>
       </TooltipProvider>
-
-      {/* How To Read Mosaicbeat Heading - Hidden on mobile, visible on desktop */}
-      <div className="mt-4 hidden lg:block">
-        <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)]">
-          How To Read Mosaicbeat
-        </h3>
-      </div>
     </div>
   );
 }

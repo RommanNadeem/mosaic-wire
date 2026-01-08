@@ -207,7 +207,7 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
 
                   return (
                     <TooltipProvider delayDuration={200}>
-                      <div className="mb-3 relative overflow-visible z-[60]">
+                      <div className="mb-2 relative overflow-visible z-[60]">
                         <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
                           {/* Negative Segment */}
                           {percentages.negative > 0 && (
@@ -444,25 +444,20 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                     </TooltipProvider>
                   );
                 })()}
-            </div>
-          </div>
 
-          {/* Bottom Section: Summary and Articles */}
-          <div className="flex flex-col flex-1 min-w-0 px-0 pb-3 overflow-hidden">
-            {/* Summary Section - Static */}
-            <div className="flex-shrink-0">
-              {/* Divider above summary */}
+              {/* Summary - Below sentiment bar */}
               {summary && (
-                <div className="border-t border-[var(--border-subtle)] mt-7 mb-4"></div>
-              )}
-
-              {/* Summary - Full in modal */}
-              {summary && (
-                <p className="text-sm text-[var(--text-secondary)] mb-4 leading-relaxed">
+                <p className="text-sm text-[var(--text-secondary)] mt-2 mb-4 leading-relaxed">
                   {summary}
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Bottom Section: Articles */}
+          <div className="flex flex-col flex-1 min-w-0 px-0 pb-3 overflow-hidden">
+            {/* Divider above articles */}
+            <div className="border-t border-[var(--border-subtle)] mb-4"></div>
 
             {/* Articles Section - Scrollable */}
             <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
