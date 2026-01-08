@@ -29,12 +29,14 @@ function ShareButton({
     const shareUrl = `${window.location.origin}${window.location.pathname}?modal=${id}`;
     const shareTitle = title || 'Check out this news on MosaicBeat';
     
-    // Build share text in format: Title, Summary, Link (only for mobile/tablet)
+    // Build share text in format: Title, Summary (URL is passed separately to avoid duplication)
     let shareText = shareTitle;
     if (summary) {
       shareText += `\n\n${summary}`;
     }
-    shareText += `\n\n${shareUrl}`;
+    
+    // Build full text with URL for clipboard fallback
+    const shareTextWithUrl = `${shareText}\n\n${shareUrl}`;
     
     // Only use native share on mobile/tablet devices
     if (navigator.share && isMobileOrTablet()) {
@@ -59,8 +61,8 @@ function ShareButton({
     }
     
     // Desktop: Copy only the link to clipboard
-    // Mobile/Tablet (if native share failed): Copy full formatted text
-    const textToCopy = isMobileOrTablet() ? shareText : shareUrl;
+    // Mobile/Tablet (if native share failed): Copy full formatted text with URL
+    const textToCopy = isMobileOrTablet() ? shareTextWithUrl : shareUrl;
     
     try {
       await navigator.clipboard.writeText(textToCopy);
