@@ -14,6 +14,8 @@ import { capitalizeFirst, getCategoryColor } from "../utils/categoryUtils";
 function FeaturedNews({ newsItem, onTitleClick, onShare }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [openTooltip, setOpenTooltip] = useState(null);
 
   if (!newsItem) return null;
 
@@ -28,6 +30,47 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
     sources,
     recentArticlesCount,
   } = newsItem;
+
+  // Detect touch device
+  useEffect(() => {
+    const checkTouchDevice = () => {
+      setIsTouchDevice(
+        "ontouchstart" in window ||
+          navigator.maxTouchPoints > 0 ||
+          window.matchMedia("(pointer: coarse)").matches
+      );
+    };
+    checkTouchDevice();
+    window.addEventListener("resize", checkTouchDevice);
+    return () => window.removeEventListener("resize", checkTouchDevice);
+  }, []);
+
+  // Close tooltip when clicking outside on mobile
+  useEffect(() => {
+    if (!isTouchDevice || !openTooltip) return;
+
+    const handleClickOutside = (e) => {
+      // Use a small delay to allow Radix UI's internal handlers to run first
+      setTimeout(() => {
+        const target = e.target;
+        const isTooltipContent = target.closest('[role="tooltip"]');
+        const isTooltipTrigger = target.closest('[data-radix-tooltip-trigger]');
+        const isSentimentBar = target.closest('.sentiment-bar-container');
+        
+        // Only close if clicking outside the tooltip, trigger, and sentiment bar
+        if (!isTooltipContent && !isTooltipTrigger && !isSentimentBar) {
+          setOpenTooltip(null);
+        }
+      }, 10);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isTouchDevice, openTooltip]);
 
   // Get signed URL for images that need authentication
   useEffect(() => {
@@ -147,16 +190,35 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
 
               return (
                 <div className="px-4 sm:px-6 py-2 flex-shrink-0 pt-0">
-                  <TooltipProvider delayDuration={200}>
+                  <TooltipProvider delayDuration={isTouchDevice ? 0 : 200}>
                     <div className="relative overflow-visible">
-                      <div className="flex h-4 overflow-hidden bg-[var(--bg-surface)] relative">
+                      <div className="flex h-4 overflow-hidden bg-[var(--bg-surface)] relative sentiment-bar-container">
                         {/* Negative Segment */}
                         {percentages.negative > 0 && (
-                          <Tooltip>
+                          <Tooltip
+                            open={
+                              isTouchDevice
+                                ? openTooltip === "negative"
+                                : undefined
+                            }
+                            onOpenChange={(open) => {
+                              if (isTouchDevice) {
+                                setOpenTooltip(open ? "negative" : null);
+                              }
+                            }}
+                          >
                             <TooltipTrigger asChild>
                               <div
-                                className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                                 style={{ width: `${percentages.negative}%` }}
+                                onClick={(e) => {
+                                  if (isTouchDevice) {
+                                    e.stopPropagation();
+                                    setOpenTooltip(
+                                      openTooltip === "negative" ? null : "negative"
+                                    );
+                                  }
+                                }}
                               >
                                 <span className="text-[10px] font-medium text-white px-1">
                                   {percentages.negative}%
@@ -229,11 +291,28 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
 
                         {/* Neutral Segment */}
                         {percentages.neutral > 0 && (
-                          <Tooltip>
+                          <Tooltip
+                            open={
+                              isTouchDevice ? openTooltip === "neutral" : undefined
+                            }
+                            onOpenChange={(open) => {
+                              if (isTouchDevice) {
+                                setOpenTooltip(open ? "neutral" : null);
+                              }
+                            }}
+                          >
                             <TooltipTrigger asChild>
                               <div
-                                className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                                 style={{ width: `${percentages.neutral}%` }}
+                                onClick={(e) => {
+                                  if (isTouchDevice) {
+                                    e.stopPropagation();
+                                    setOpenTooltip(
+                                      openTooltip === "neutral" ? null : "neutral"
+                                    );
+                                  }
+                                }}
                               >
                                 <span className="text-[10px] font-medium text-white px-1">
                                   {percentages.neutral}%
@@ -306,11 +385,30 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
 
                         {/* Positive Segment */}
                         {percentages.positive > 0 && (
-                          <Tooltip>
+                          <Tooltip
+                            open={
+                              isTouchDevice
+                                ? openTooltip === "positive"
+                                : undefined
+                            }
+                            onOpenChange={(open) => {
+                              if (isTouchDevice) {
+                                setOpenTooltip(open ? "positive" : null);
+                              }
+                            }}
+                          >
                             <TooltipTrigger asChild>
                               <div
-                                className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                                 style={{ width: `${percentages.positive}%` }}
+                                onClick={(e) => {
+                                  if (isTouchDevice) {
+                                    e.stopPropagation();
+                                    setOpenTooltip(
+                                      openTooltip === "positive" ? null : "positive"
+                                    );
+                                  }
+                                }}
                               >
                                 <span className="text-[10px] font-medium text-white px-1">
                                   {percentages.positive}%
@@ -394,7 +492,7 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                 onTitleClick(id);
               }
             }}
-            className="px-2 sm:px-6 py-0 flex-shrink-0 text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors line-clamp-3"
+            className="px-4 sm:px-6 py-0 flex-shrink-0 text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors line-clamp-3"
           >
             {title}
           </h2>

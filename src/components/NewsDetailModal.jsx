@@ -16,11 +16,54 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [openTooltip, setOpenTooltip] = useState(null);
 
   // Find the expanded item - do this before hooks to use in useEffect
   const expandedItem = expandedNewsId
     ? newsData.find((item) => String(item.id) === expandedNewsId)
     : null;
+
+  // Detect touch device
+  useEffect(() => {
+    const checkTouchDevice = () => {
+      setIsTouchDevice(
+        "ontouchstart" in window ||
+          navigator.maxTouchPoints > 0 ||
+          window.matchMedia("(pointer: coarse)").matches
+      );
+    };
+    checkTouchDevice();
+    window.addEventListener("resize", checkTouchDevice);
+    return () => window.removeEventListener("resize", checkTouchDevice);
+  }, []);
+
+  // Close tooltip when clicking outside on mobile
+  useEffect(() => {
+    if (!isTouchDevice || !openTooltip) return;
+
+    const handleClickOutside = (e) => {
+      // Use a small delay to allow Radix UI's internal handlers to run first
+      setTimeout(() => {
+        const target = e.target;
+        const isTooltipContent = target.closest('[role="tooltip"]');
+        const isTooltipTrigger = target.closest('[data-radix-tooltip-trigger]');
+        const isSentimentBar = target.closest('.sentiment-bar-container');
+        
+        // Only close if clicking outside the tooltip, trigger, and sentiment bar
+        if (!isTooltipContent && !isTooltipTrigger && !isSentimentBar) {
+          setOpenTooltip(null);
+        }
+      }, 10);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isTouchDevice, openTooltip]);
 
   // Get signed URL for images that need authentication
   // This hook must be called before any conditional returns
@@ -207,16 +250,33 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                       : { positive: 0, neutral: 0, negative: 0 };
 
                   return (
-                    <TooltipProvider delayDuration={200}>
+                    <TooltipProvider delayDuration={isTouchDevice ? 0 : 200}>
                       <div className="mb-2 relative overflow-visible z-[60]">
-                        <div className="flex h-3 sm:h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
+                        <div className="flex h-3 sm:h-[12px] overflow-hidden bg-[var(--bg-surface)] relative sentiment-bar-container">
                           {/* Negative Segment */}
                           {percentages.negative > 0 && (
-                            <Tooltip>
+                            <Tooltip
+                              open={
+                                isTouchDevice ? openTooltip === "negative" : undefined
+                              }
+                              onOpenChange={(open) => {
+                                if (isTouchDevice) {
+                                  setOpenTooltip(open ? "negative" : null);
+                                }
+                              }}
+                            >
                               <TooltipTrigger asChild>
                                 <div
-                                  className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                  className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                                   style={{ width: `${percentages.negative}%` }}
+                                  onClick={(e) => {
+                                    if (isTouchDevice) {
+                                      e.stopPropagation();
+                                      setOpenTooltip(
+                                        openTooltip === "negative" ? null : "negative"
+                                      );
+                                    }
+                                  }}
                                 >
                                   <span className="text-[10px] font-medium text-white px-1">
                                     {percentages.negative}%
@@ -225,7 +285,9 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                               </TooltipTrigger>
                               <TooltipContent
                                 side="bottom"
-                                className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                                sideOffset={4}
+                                collisionPadding={8}
+                                className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-3 pb-3 pt-2 sm:px-5 sm:pb-5 sm:pt-3 w-[calc(100vw-4rem)] max-w-[220px] sm:min-w-[280px] sm:max-w-[320px] sm:w-auto backdrop-blur-md overflow-hidden z-[9999]"
                                 style={{
                                   borderTop: "4px solid var(--accent-negative)",
                                   borderTopLeftRadius: "0.75rem",
@@ -233,12 +295,12 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                                 }}
                               >
                                 <div className="relative">
-                                  <div className="space-y-3">
+                                  <div className="space-y-2 sm:space-y-3">
                                     <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
+                                      <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="relative">
                                           <div
-                                            className="w-3 h-3 rounded-full shadow-lg"
+                                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-lg"
                                             style={{
                                               backgroundColor:
                                                 "var(--accent-negative)",
@@ -247,33 +309,33 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                                             }}
                                           ></div>
                                           <div
-                                            className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                            className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-20"
                                             style={{
                                               backgroundColor:
                                                 "var(--accent-negative)",
                                             }}
                                           ></div>
                                         </div>
-                                        <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                        <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
                                           Negative
                                         </span>
                                       </div>
                                       <div className="flex items-baseline gap-1">
                                         <span
-                                          className="text-2xl font-bold"
+                                          className="text-xl sm:text-2xl font-bold"
                                           style={{
                                             color: "var(--accent-negative)",
                                           }}
                                         >
                                           {percentages.negative}
                                         </span>
-                                        <span className="text-xs text-[var(--text-muted)]">
+                                        <span className="text-[10px] sm:text-xs text-[var(--text-muted)]">
                                           %
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="pt-2 border-t border-[var(--border-subtle)]">
-                                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                    <div className="pt-1.5 sm:pt-2 border-t border-[var(--border-subtle)]">
+                                      <p className="text-[10px] sm:text-xs text-[var(--text-secondary)] leading-relaxed">
                                         <span className="font-semibold text-[var(--text-primary)]">
                                           Negative:
                                         </span>{" "}
@@ -289,11 +351,28 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
 
                           {/* Neutral Segment */}
                           {percentages.neutral > 0 && (
-                            <Tooltip>
+                            <Tooltip
+                              open={
+                                isTouchDevice ? openTooltip === "neutral" : undefined
+                              }
+                              onOpenChange={(open) => {
+                                if (isTouchDevice) {
+                                  setOpenTooltip(open ? "neutral" : null);
+                                }
+                              }}
+                            >
                               <TooltipTrigger asChild>
                                 <div
-                                  className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                  className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                                   style={{ width: `${percentages.neutral}%` }}
+                                  onClick={(e) => {
+                                    if (isTouchDevice) {
+                                      e.stopPropagation();
+                                      setOpenTooltip(
+                                        openTooltip === "neutral" ? null : "neutral"
+                                      );
+                                    }
+                                  }}
                                 >
                                   <span className="text-[10px] font-medium text-white px-1">
                                     {percentages.neutral}%
@@ -302,7 +381,9 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                               </TooltipTrigger>
                               <TooltipContent
                                 side="bottom"
-                                className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                                sideOffset={4}
+                                collisionPadding={8}
+                                className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-3 pb-3 pt-2 sm:px-5 sm:pb-5 sm:pt-3 w-[calc(100vw-4rem)] max-w-[220px] sm:min-w-[280px] sm:max-w-[320px] sm:w-auto backdrop-blur-md overflow-hidden z-[9999]"
                                 style={{
                                   borderTop: "4px solid var(--accent-neutral)",
                                   borderTopLeftRadius: "0.75rem",
@@ -310,12 +391,12 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                                 }}
                               >
                                 <div className="relative">
-                                  <div className="space-y-3">
+                                  <div className="space-y-2 sm:space-y-3">
                                     <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
+                                      <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="relative">
                                           <div
-                                            className="w-3 h-3 rounded-full shadow-lg"
+                                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-lg"
                                             style={{
                                               backgroundColor:
                                                 "var(--accent-neutral)",
@@ -324,33 +405,33 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                                             }}
                                           ></div>
                                           <div
-                                            className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                            className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-20"
                                             style={{
                                               backgroundColor:
                                                 "var(--accent-neutral)",
                                             }}
                                           ></div>
                                         </div>
-                                        <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                        <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
                                           Neutral
                                         </span>
                                       </div>
                                       <div className="flex items-baseline gap-1">
                                         <span
-                                          className="text-2xl font-bold"
+                                          className="text-xl sm:text-2xl font-bold"
                                           style={{
                                             color: "var(--accent-neutral)",
                                           }}
                                         >
                                           {percentages.neutral}
                                         </span>
-                                        <span className="text-xs text-[var(--text-muted)]">
+                                        <span className="text-[10px] sm:text-xs text-[var(--text-muted)]">
                                           %
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="pt-2 border-t border-[var(--border-subtle)]">
-                                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                    <div className="pt-1.5 sm:pt-2 border-t border-[var(--border-subtle)]">
+                                      <p className="text-[10px] sm:text-xs text-[var(--text-secondary)] leading-relaxed">
                                         <span className="font-semibold text-[var(--text-primary)]">
                                           Neutral:
                                         </span>{" "}
@@ -366,11 +447,28 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
 
                           {/* Positive Segment */}
                           {percentages.positive > 0 && (
-                            <Tooltip>
+                            <Tooltip
+                              open={
+                                isTouchDevice ? openTooltip === "positive" : undefined
+                              }
+                              onOpenChange={(open) => {
+                                if (isTouchDevice) {
+                                  setOpenTooltip(open ? "positive" : null);
+                                }
+                              }}
+                            >
                               <TooltipTrigger asChild>
                                 <div
-                                  className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                                  className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                                   style={{ width: `${percentages.positive}%` }}
+                                  onClick={(e) => {
+                                    if (isTouchDevice) {
+                                      e.stopPropagation();
+                                      setOpenTooltip(
+                                        openTooltip === "positive" ? null : "positive"
+                                      );
+                                    }
+                                  }}
                                 >
                                   <span className="text-[10px] font-medium text-white px-1">
                                     {percentages.positive}%
@@ -379,7 +477,9 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                               </TooltipTrigger>
                               <TooltipContent
                                 side="bottom"
-                                className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden z-[9999]"
+                                sideOffset={4}
+                                collisionPadding={8}
+                                className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-3 pb-3 pt-2 sm:px-5 sm:pb-5 sm:pt-3 w-[calc(100vw-4rem)] max-w-[220px] sm:min-w-[280px] sm:max-w-[320px] sm:w-auto backdrop-blur-md overflow-hidden z-[9999]"
                                 style={{
                                   borderTop: "4px solid var(--accent-positive)",
                                   borderTopLeftRadius: "0.75rem",
@@ -387,12 +487,12 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                                 }}
                               >
                                 <div className="relative">
-                                  <div className="space-y-3">
+                                  <div className="space-y-2 sm:space-y-3">
                                     <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
+                                      <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="relative">
                                           <div
-                                            className="w-3 h-3 rounded-full shadow-lg"
+                                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-lg"
                                             style={{
                                               backgroundColor:
                                                 "var(--accent-positive)",
@@ -401,33 +501,33 @@ function NewsDetailModal({ expandedNewsId, newsData, onClose, onShare }) {
                                             }}
                                           ></div>
                                           <div
-                                            className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                            className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-20"
                                             style={{
                                               backgroundColor:
                                                 "var(--accent-positive)",
                                             }}
                                           ></div>
                                         </div>
-                                        <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                        <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)]">
                                           Positive
                                         </span>
                                       </div>
                                       <div className="flex items-baseline gap-1">
                                         <span
-                                          className="text-2xl font-bold"
+                                          className="text-xl sm:text-2xl font-bold"
                                           style={{
                                             color: "var(--accent-positive)",
                                           }}
                                         >
                                           {percentages.positive}
                                         </span>
-                                        <span className="text-xs text-[var(--text-muted)]">
+                                        <span className="text-[10px] sm:text-xs text-[var(--text-muted)]">
                                           %
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="pt-2 border-t border-[var(--border-subtle)]">
-                                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                    <div className="pt-1.5 sm:pt-2 border-t border-[var(--border-subtle)]">
+                                      <p className="text-[10px] sm:text-xs text-[var(--text-secondary)] leading-relaxed">
                                         <span className="font-semibold text-[var(--text-primary)]">
                                           Positive:
                                         </span>{" "}
