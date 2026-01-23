@@ -43,9 +43,9 @@ function NewsCard({
   // Filter sources based on selected sentiment
   const filteredSources = selectedSentiment
     ? sources.filter((source) => {
-        const sourceSentiment = source.sentiment?.toLowerCase() || "neutral";
-        return sourceSentiment === selectedSentiment;
-      })
+      const sourceSentiment = source.sentiment?.toLowerCase() || "neutral";
+      return sourceSentiment === selectedSentiment;
+    })
     : sources;
 
   // Get signed URL for images that need authentication
@@ -98,127 +98,48 @@ function NewsCard({
   return (
     <article
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] border transition-all flex flex-col ${
-        isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
-      } hover:border-[var(--text-muted)] ${
-        isHighlighted
+      className={`bg-[var(--bg-card)] border transition-all flex flex-row gap-3 ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
+        } hover:border-[var(--text-muted)] ${isHighlighted
           ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
           : "border-[var(--border-subtle)]"
-      } ${shouldBlur ? "blur-sm opacity-50 pointer-events-none" : ""}`}
+        } ${shouldBlur ? "blur-sm opacity-50 pointer-events-none" : ""}`}
       id={`news-${id}`}
     >
-      {/* Image at the top */}
-      {imageUrl && !imageError ? (
-        <div
-          className={`w-full bg-[var(--bg-surface)] relative h-48 overflow-hidden ${
-            isExpanded ? "z-0" : ""
-          }`}
-        >
-          {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
-          {(isExpanded || isHighlighted) && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isExpanded && onClose) {
-                  onClose();
-                } else if (isHighlighted && onCloseHighlight) {
-                  onCloseHighlight();
-                }
-              }}
-              className="lg:hidden absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
-              aria-label="Close"
-            >
-              <svg
-                className="w-5 h-5 text-black"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-          <img
-            src={imageUrl}
-            alt={title || "News image"}
-            width="800"
-            height="600"
-            className="w-full h-full object-cover"
-            style={
-              isExpanded
-                ? { maxHeight: "none" }
-                : { objectPosition: "center top" }
-            }
-            onError={() => {
-              setImageError(true);
-            }}
-            loading="lazy"
-          />
-        </div>
-      ) : (
-        <div
-          className={`w-full bg-[var(--bg-surface)] flex items-center justify-center relative ${
-            isExpanded ? "h-auto min-h-[200px]" : "h-48"
-          }`}
-        >
-          {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
-          {(isExpanded || isHighlighted) && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isExpanded && onClose) {
-                  onClose();
-                } else if (isHighlighted && onCloseHighlight) {
-                  onCloseHighlight();
-                }
-              }}
-              className="lg:hidden absolute top-2 left-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
-              aria-label="Close"
-            >
-              <svg
-                className="w-5 h-5 text-black"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-          <svg
-            className="w-8 h-8 text-[var(--text-muted)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
-      )}
-
-      {/* Content Area - Reduced spacing */}
+      {/* Content Area - Left side */}
       <div
-        className={`flex flex-col flex-1 min-w-0 py-3 px-3 relative ${
-          isExpanded ? "overflow-y-auto z-10" : "overflow-visible"
-        }`}
+        className={`flex flex-col flex-1 min-w-0 py-3 px-3 relative ${isExpanded ? "overflow-y-auto z-10" : "overflow-visible"
+          }`}
       >
+        {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
+        {(isExpanded || isHighlighted) && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (isExpanded && onClose) {
+                onClose();
+              } else if (isHighlighted && onCloseHighlight) {
+                onCloseHighlight();
+              }
+            }}
+            className="lg:hidden absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg z-20 hover:bg-gray-100 transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-5 h-5 text-black"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
         {/* Topic Headline - Clickable */}
         <h2
           onClick={() => onTitleClick && onTitleClick(id)}
@@ -279,18 +200,17 @@ function NewsCard({
             const percentages =
               total > 0
                 ? {
-                    positive: Math.round(((positive || 0) / total) * 100),
-                    neutral: Math.round(((neutral || 0) / total) * 100),
-                    negative: Math.round(((negative || 0) / total) * 100),
-                  }
+                  positive: Math.round(((positive || 0) / total) * 100),
+                  neutral: Math.round(((neutral || 0) / total) * 100),
+                  negative: Math.round(((negative || 0) / total) * 100),
+                }
                 : { positive: 0, neutral: 0, negative: 0 };
 
             return (
               <TooltipProvider delayDuration={200}>
                 <div
-                  className={`mb-3 relative overflow-visible ${
-                    isExpanded ? "z-[60]" : ""
-                  }`}
+                  className={`mb-3 relative overflow-visible ${isExpanded ? "z-[60]" : ""
+                    }`}
                 >
                   <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
                     {/* Negative Segment */}
@@ -533,9 +453,8 @@ function NewsCard({
                 onTitleClick(id);
               }
             }}
-            className={`text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${
-              isExpanded ? "" : "line-clamp-3"
-            } cursor-pointer hover:text-[var(--text-primary)] transition-colors`}
+            className={`text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${isExpanded ? "" : "line-clamp-3"
+              } cursor-pointer hover:text-[var(--text-primary)] transition-colors`}
           >
             {displaySummary}
           </p>
@@ -544,9 +463,8 @@ function NewsCard({
         {/* Source List */}
         {filteredSources && filteredSources.length > 0 ? (
           <div
-            className={`flex-1 flex flex-col ${
-              isExpanded ? "min-h-0 overflow-y-auto" : "min-h-0"
-            }`}
+            className={`flex-1 flex flex-col ${isExpanded ? "min-h-0 overflow-y-auto" : "min-h-0"
+              }`}
           >
             <SourceList
               sources={filteredSources}
@@ -561,6 +479,45 @@ function NewsCard({
             </div>
           </div>
         ) : null}
+      </div>
+
+      {/* Image on the right side */}
+      <div className="flex-shrink-0 py-3 pr-3">
+        {imageUrl && !imageError ? (
+          <div
+            className="bg-[var(--bg-surface)] relative overflow-hidden rounded"
+            style={{ width: "98.6px", height: "98.6px" }}
+          >
+            <img
+              src={imageUrl}
+              alt={title || "News image"}
+              className="w-full h-full object-cover"
+              onError={() => {
+                setImageError(true);
+              }}
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div
+            className="bg-[var(--bg-surface)] flex items-center justify-center rounded"
+            style={{ width: "98.6px", height: "98.6px" }}
+          >
+            <svg
+              className="w-6 h-6 text-[var(--text-muted)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+        )}
       </div>
     </article>
   );
