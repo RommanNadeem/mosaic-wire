@@ -26,6 +26,26 @@ function NewsCard({
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
   const [brokenFavicons, setBrokenFavicons] = useState(new Set());
+  const [googleFavicons, setGoogleFavicons] = useState(new Map());
+
+  // Helper function to extract domain from URL
+  const getDomainFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch (e) {
+      // If URL parsing fails, try to extract domain manually
+      const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+      return match ? match[1] : null;
+    }
+  };
+
+  // Helper function to get Google favicon URL
+  const getGoogleFaviconUrl = (domain) => {
+    if (!domain) return null;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  };
 
   if (!newsItem) return null;
 
@@ -118,7 +138,7 @@ function NewsCard({
   return (
     <article
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] border transition-all flex flex-row gap-[104px] cursor-pointer ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
+      className={`bg-[var(--bg-card)] border transition-all flex flex-row gap-6 cursor-pointer ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
         } hover:border-[var(--text-muted)] ${isHighlighted
           ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
           : "border-[var(--border-subtle)]"
@@ -231,9 +251,9 @@ function NewsCard({
 
             return (
               <TooltipProvider delayDuration={200}>
-                <div className="mb-3">
+                <div className="mb-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="flex-1 flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative rounded">
+                    <div className="flex-1 flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative" style={{ maxWidth: "240px" }}>
                       {/* Negative Segment */}
                       {percentages.negative > 0 && (
                         <Tooltip>
@@ -457,6 +477,22 @@ function NewsCard({
             );
           })()}
 
+        {/* Summary - Below Sentiment Bar */}
+        {displaySummary && !isExpanded && (
+          <p
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onTitleClick) {
+                onTitleClick(id);
+              }
+            }}
+            className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed line-clamp-3 cursor-pointer hover:text-[var(--text-primary)] transition-colors"
+          >
+            {displaySummary}
+          </p>
+        )}
+
         {/* Source Count with Favicon Avatars */}
         {sources && sources.length > 0 && (
           <div className="flex items-center gap-2">
@@ -489,10 +525,21 @@ function NewsCard({
                 }
 
                 return sourcesToShow.map((source, index) => {
-                  const hasFavicon =
+                  const hasDirectFavicon =
                     source.favicon &&
                     source.favicon.trim() !== "" &&
                     !brokenFavicons.has(source.id);
+
+                  // Get Google favicon URL if direct favicon is not available or failed
+                  const domain = !hasDirectFavicon ? getDomainFromUrl(source.url) : null;
+                  const googleFaviconUrl = domain ? getGoogleFaviconUrl(domain) : null;
+                  const googleFaviconFailed = brokenFavicons.has(`google-${source.id}`);
+                  const shouldUseGoogleFavicon = !hasDirectFavicon && googleFaviconUrl && !googleFaviconFailed;
+
+                  // Determine which favicon to use: direct favicon > Google favicon > placeholder
+                  const faviconUrl = hasDirectFavicon
+                    ? source.favicon
+                    : (shouldUseGoogleFavicon ? googleFaviconUrl : null);
 
                   return (
                     <Avatar
@@ -505,31 +552,45 @@ function NewsCard({
                         zIndex: 3 - index,
                       }}
                     >
-                      {hasFavicon ? (
+                      {faviconUrl ? (
                         <AvatarImage
-                          src={source.favicon}
+                          src={faviconUrl}
                           alt={`${source.source} favicon`}
                           onError={() => {
-                            setBrokenFavicons((prev) =>
-                              new Set(prev).add(source.id)
-                            );
+                            if (hasDirectFavicon) {
+                              // Direct favicon failed, mark it as broken so we try Google favicon next
+                              setBrokenFavicons((prev) =>
+                                new Set(prev).add(source.id)
+                              );
+                            } else if (shouldUseGoogleFavicon) {
+                              // Google favicon also failed, mark it and show placeholder
+                              setBrokenFavicons((prev) =>
+                                new Set(prev).add(`google-${source.id}`)
+                              );
+                            }
                           }}
                         />
                       ) : null}
-                      <AvatarFallback className="bg-[var(--bg-surface)]">
-                        <svg
-                          className="w-3 h-3 text-[var(--text-muted)]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                          />
-                        </svg>
+                      <AvatarFallback className="bg-[var(--bg-surface)] text-[var(--text-muted)]">
+                        {source.source && source.source.length > 0 ? (
+                          <span className="text-[10px] font-semibold uppercase">
+                            {source.source.charAt(0)}
+                          </span>
+                        ) : (
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                            />
+                          </svg>
+                        )}
                       </AvatarFallback>
                     </Avatar>
                   );
@@ -614,7 +675,7 @@ function NewsCard({
         {imageUrl && !imageError ? (
           <div
             className="bg-[var(--bg-surface)] relative overflow-hidden rounded"
-            style={{ width: "98.6px", height: "98.6px" }}
+            style={{ width: "198.6px", height: "198.6px" }}
           >
             <img
               src={imageUrl}
@@ -629,7 +690,7 @@ function NewsCard({
         ) : (
           <div
             className="bg-[var(--bg-surface)] flex items-center justify-center rounded"
-            style={{ width: "98.6px", height: "98.6px" }}
+            style={{ width: "198.6px", height: "198.6px" }}
           >
             <svg
               className="w-6 h-6 text-[var(--text-muted)]"
