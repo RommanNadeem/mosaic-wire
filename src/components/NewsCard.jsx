@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { capitalizeFirst, getCategoryColor } from "@/utils/categoryUtils";
 
 function NewsCard({
@@ -24,6 +25,7 @@ function NewsCard({
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
+  const [brokenFavicons, setBrokenFavicons] = useState(new Set());
 
   if (!newsItem) return null;
 
@@ -85,12 +87,30 @@ function NewsCard({
     highlightedNewsId && highlightedNewsId !== String(id) && !isExpanded;
 
   const handleCardClick = (e) => {
+    // Don't open modal if already expanded
+    if (isExpanded) {
+      e.stopPropagation();
+      return;
+    }
+
+    // Don't open modal if clicking on interactive elements (buttons, links, etc.)
+    const target = e.target;
+    if (
+      target.closest("button") ||
+      target.closest("a") ||
+      target.closest('[role="button"]') ||
+      target.closest('[data-radix-tooltip-trigger]')
+    ) {
+      return;
+    }
+
+    // Open modal when clicking anywhere on the card
+    if (onTitleClick) {
+      onTitleClick(id);
+    }
+
     // Prevent closing when clicking inside the highlighted card
     if (isHighlighted) {
-      e.stopPropagation();
-    }
-    // Prevent closing when clicking inside expanded modal
-    if (isExpanded) {
       e.stopPropagation();
     }
   };
@@ -98,7 +118,7 @@ function NewsCard({
   return (
     <article
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] border transition-all flex flex-row gap-3 ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
+      className={`bg-[var(--bg-card)] border transition-all flex flex-row gap-[104px] cursor-pointer ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
         } hover:border-[var(--text-muted)] ${isHighlighted
           ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
           : "border-[var(--border-subtle)]"
@@ -143,56 +163,49 @@ function NewsCard({
         {/* Topic Headline - Clickable */}
         <h2
           onClick={() => onTitleClick && onTitleClick(id)}
-          className="text-lg font-bold text-[var(--text-primary)] mb-1.5 leading-snug line-clamp-2 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
+          className="text-lg font-bold text-[var(--text-primary)] mb-2 leading-snug line-clamp-2 cursor-pointer hover:text-[var(--accent-positive)] transition-colors"
         >
           {title}
         </h2>
 
-        {/* Metadata Row */}
-        <div className="flex items-center justify-between gap-2 mb-2 text-xs flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            {category &&
-              (() => {
-                const categoryColor = getCategoryColor(category);
-                return (
-                  <span
-                    className="px-2 py-0.5 text-xs font-medium rounded"
-                    style={{
-                      backgroundColor: categoryColor.bg,
-                      color: categoryColor.text,
-                    }}
-                  >
-                    {capitalizeFirst(category)}
-                  </span>
-                );
-              })()}
-            <span className="text-[var(--text-muted)] flex items-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
-            </span>
-            {recentArticlesCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
-                {recentArticlesCount} new
-              </span>
-            )}
-          </div>
-          {/* Share Button - Parallel to tag and time */}
-          <ShareButton newsItem={newsItem} onShare={onShare} className="" />
+        {/* Category Tag and Time */}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {/* Category Tag */}
+          {category &&
+            (() => {
+              const categoryColor = getCategoryColor(category);
+              return (
+                <span
+                  className="px-2 py-1 text-xs font-medium rounded-full"
+                  style={{
+                    backgroundColor: categoryColor.bg || "var(--bg-surface)",
+                    color: categoryColor.text || "var(--text-muted)",
+                  }}
+                >
+                  {capitalizeFirst(category)}
+                </span>
+              );
+            })()}
+          {/* Time Ago */}
+          <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
         </div>
 
-        {/* Sentiment Bar Section - Above Summary */}
+        {/* Sentiment Bar Section */}
         {sentiment &&
           (() => {
             const { positive = 0, neutral = 0, negative = 0 } = sentiment || {};
@@ -206,279 +219,394 @@ function NewsCard({
                 }
                 : { positive: 0, neutral: 0, negative: 0 };
 
+            // Determine dominant sentiment
+            const dominantSentiment =
+              percentages.negative > percentages.positive &&
+                percentages.negative > percentages.neutral
+                ? "negative"
+                : percentages.positive > percentages.neutral
+                  ? "positive"
+                  : "neutral";
+            const dominantPercentage = percentages[dominantSentiment];
+
             return (
               <TooltipProvider delayDuration={200}>
-                <div
-                  className={`mb-3 relative overflow-visible ${isExpanded ? "z-[60]" : ""
-                    }`}
-                >
-                  <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
-                    {/* Negative Segment */}
-                    {percentages.negative > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
-                            style={{ width: `${percentages.negative}%` }}
+                <div className="mb-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative rounded">
+                      {/* Negative Segment */}
+                      {percentages.negative > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="bg-[var(--accent-negative)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                              style={{ width: `${percentages.negative}%` }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden"
+                            style={{
+                              borderTop: "4px solid var(--accent-negative)",
+                              borderTopLeftRadius: "0.75rem",
+                              borderTopRightRadius: "0.75rem",
+                            }}
                           >
-                            <span className="text-[10px] font-medium text-white px-1">
-                              {percentages.negative}%
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden"
-                          style={{
-                            borderTop: "4px solid var(--accent-negative)",
-                            borderTopLeftRadius: "0.75rem",
-                            borderTopRightRadius: "0.75rem",
-                          }}
-                        >
-                          <div className="relative">
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <div
-                                      className="w-3 h-3 rounded-full shadow-lg"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--accent-negative)",
-                                        boxShadow:
-                                          "var(--accent-negative)30 0 0 8px",
-                                      }}
-                                    ></div>
-                                    <div
-                                      className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--accent-negative)",
-                                      }}
-                                    ></div>
+                            <div className="relative">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                      <div
+                                        className="w-3 h-3 rounded-full shadow-lg"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--accent-negative)",
+                                          boxShadow:
+                                            "var(--accent-negative)30 0 0 8px",
+                                        }}
+                                      ></div>
+                                      <div
+                                        className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--accent-negative)",
+                                        }}
+                                      ></div>
+                                    </div>
+                                    <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                      Negative
+                                    </span>
                                   </div>
-                                  <span className="text-sm font-medium text-[var(--text-secondary)]">
-                                    Negative
-                                  </span>
+                                  <div className="flex items-baseline gap-1">
+                                    <span
+                                      className="text-2xl font-bold"
+                                      style={{ color: "var(--accent-negative)" }}
+                                    >
+                                      {percentages.negative}
+                                    </span>
+                                    <span className="text-xs text-[var(--text-muted)]">
+                                      %
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-baseline gap-1">
-                                  <span
-                                    className="text-2xl font-bold"
-                                    style={{ color: "var(--accent-negative)" }}
-                                  >
-                                    {percentages.negative}
-                                  </span>
-                                  <span className="text-xs text-[var(--text-muted)]">
-                                    %
-                                  </span>
+                                <div className="pt-2 border-t border-[var(--border-subtle)]">
+                                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                    <span className="font-semibold text-[var(--text-primary)]">
+                                      Negative:
+                                    </span>{" "}
+                                    Stories emphasizing risk, conflict, decline,
+                                    or concern.
+                                  </p>
                                 </div>
-                              </div>
-                              <div className="pt-2 border-t border-[var(--border-subtle)]">
-                                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                                  <span className="font-semibold text-[var(--text-primary)]">
-                                    Negative:
-                                  </span>{" "}
-                                  Stories emphasizing risk, conflict, decline,
-                                  or concern.
-                                </p>
                               </div>
                             </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
 
-                    {/* Neutral Segment */}
-                    {percentages.neutral > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
-                            style={{ width: `${percentages.neutral}%` }}
+                      {/* Neutral Segment */}
+                      {percentages.neutral > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="bg-[var(--accent-neutral)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                              style={{ width: `${percentages.neutral}%` }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden"
+                            style={{
+                              borderTop: "4px solid var(--accent-neutral)",
+                              borderTopLeftRadius: "0.75rem",
+                              borderTopRightRadius: "0.75rem",
+                            }}
                           >
-                            <span className="text-[10px] font-medium text-white px-1">
-                              {percentages.neutral}%
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden"
-                          style={{
-                            borderTop: "4px solid var(--accent-neutral)",
-                            borderTopLeftRadius: "0.75rem",
-                            borderTopRightRadius: "0.75rem",
-                          }}
-                        >
-                          <div className="relative">
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <div
-                                      className="w-3 h-3 rounded-full shadow-lg"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--accent-neutral)",
-                                        boxShadow:
-                                          "var(--accent-neutral)30 0 0 8px",
-                                      }}
-                                    ></div>
-                                    <div
-                                      className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--accent-neutral)",
-                                      }}
-                                    ></div>
+                            <div className="relative">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                      <div
+                                        className="w-3 h-3 rounded-full shadow-lg"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--accent-neutral)",
+                                          boxShadow:
+                                            "var(--accent-neutral)30 0 0 8px",
+                                        }}
+                                      ></div>
+                                      <div
+                                        className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--accent-neutral)",
+                                        }}
+                                      ></div>
+                                    </div>
+                                    <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                      Neutral
+                                    </span>
                                   </div>
-                                  <span className="text-sm font-medium text-[var(--text-secondary)]">
-                                    Neutral
-                                  </span>
+                                  <div className="flex items-baseline gap-1">
+                                    <span
+                                      className="text-2xl font-bold"
+                                      style={{ color: "var(--accent-neutral)" }}
+                                    >
+                                      {percentages.neutral}
+                                    </span>
+                                    <span className="text-xs text-[var(--text-muted)]">
+                                      %
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-baseline gap-1">
-                                  <span
-                                    className="text-2xl font-bold"
-                                    style={{ color: "var(--accent-neutral)" }}
-                                  >
-                                    {percentages.neutral}
-                                  </span>
-                                  <span className="text-xs text-[var(--text-muted)]">
-                                    %
-                                  </span>
+                                <div className="pt-2 border-t border-[var(--border-subtle)]">
+                                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                    <span className="font-semibold text-[var(--text-primary)]">
+                                      Neutral:
+                                    </span>{" "}
+                                    Informational or balanced coverage without
+                                    strong emotional framing.
+                                  </p>
                                 </div>
-                              </div>
-                              <div className="pt-2 border-t border-[var(--border-subtle)]">
-                                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                                  <span className="font-semibold text-[var(--text-primary)]">
-                                    Neutral:
-                                  </span>{" "}
-                                  Informational or balanced coverage without
-                                  strong emotional framing.
-                                </p>
                               </div>
                             </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
 
-                    {/* Positive Segment */}
-                    {percentages.positive > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
-                            style={{ width: `${percentages.positive}%` }}
+                      {/* Positive Segment */}
+                      {percentages.positive > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="bg-[var(--accent-positive)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                              style={{ width: `${percentages.positive}%` }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden"
+                            style={{
+                              borderTop: "4px solid var(--accent-positive)",
+                              borderTopLeftRadius: "0.75rem",
+                              borderTopRightRadius: "0.75rem",
+                            }}
                           >
-                            <span className="text-[10px] font-medium text-white px-1">
-                              {percentages.positive}%
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          className="bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-2xl px-5 pb-5 pt-3 min-w-[280px] max-w-[320px] backdrop-blur-md overflow-hidden"
-                          style={{
-                            borderTop: "4px solid var(--accent-positive)",
-                            borderTopLeftRadius: "0.75rem",
-                            borderTopRightRadius: "0.75rem",
-                          }}
-                        >
-                          <div className="relative">
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <div
-                                      className="w-3 h-3 rounded-full shadow-lg"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--accent-positive)",
-                                        boxShadow:
-                                          "var(--accent-positive)30 0 0 8px",
-                                      }}
-                                    ></div>
-                                    <div
-                                      className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--accent-positive)",
-                                      }}
-                                    ></div>
+                            <div className="relative">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                      <div
+                                        className="w-3 h-3 rounded-full shadow-lg"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--accent-positive)",
+                                          boxShadow:
+                                            "var(--accent-positive)30 0 0 8px",
+                                        }}
+                                      ></div>
+                                      <div
+                                        className="absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-20"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--accent-positive)",
+                                        }}
+                                      ></div>
+                                    </div>
+                                    <span className="text-sm font-medium text-[var(--text-secondary)]">
+                                      Positive
+                                    </span>
                                   </div>
-                                  <span className="text-sm font-medium text-[var(--text-secondary)]">
-                                    Positive
-                                  </span>
+                                  <div className="flex items-baseline gap-1">
+                                    <span
+                                      className="text-2xl font-bold"
+                                      style={{ color: "var(--accent-positive)" }}
+                                    >
+                                      {percentages.positive}
+                                    </span>
+                                    <span className="text-xs text-[var(--text-muted)]">
+                                      %
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-baseline gap-1">
-                                  <span
-                                    className="text-2xl font-bold"
-                                    style={{ color: "var(--accent-positive)" }}
-                                  >
-                                    {percentages.positive}
-                                  </span>
-                                  <span className="text-xs text-[var(--text-muted)]">
-                                    %
-                                  </span>
+                                <div className="pt-2 border-t border-[var(--border-subtle)]">
+                                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                    <span className="font-semibold text-[var(--text-primary)]">
+                                      Positive:
+                                    </span>{" "}
+                                    Stories framed with optimism, progress,
+                                    opportunity, or growth.
+                                  </p>
                                 </div>
-                              </div>
-                              <div className="pt-2 border-t border-[var(--border-subtle)]">
-                                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                                  <span className="font-semibold text-[var(--text-primary)]">
-                                    Positive:
-                                  </span>{" "}
-                                  Stories framed with optimism, progress,
-                                  opportunity, or growth.
-                                </p>
                               </div>
                             </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    {/* Sentiment Percentage Text */}
+                    <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">
+                      {dominantPercentage}% {dominantSentiment}
+                    </span>
                   </div>
                 </div>
               </TooltipProvider>
             );
           })()}
 
-        {/* Summary - Full if expanded, truncated otherwise - Clickable */}
-        {displaySummary && (
-          <p
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (onTitleClick) {
-                onTitleClick(id);
-              }
-            }}
-            className={`text-sm text-[var(--text-secondary)] mb-2 leading-relaxed ${isExpanded ? "" : "line-clamp-3"
-              } cursor-pointer hover:text-[var(--text-primary)] transition-colors`}
-          >
-            {displaySummary}
-          </p>
+        {/* Source Count with Favicon Avatars */}
+        {sources && sources.length > 0 && (
+          <div className="flex items-center gap-2">
+            {/* Overlapping Favicon Avatars */}
+            <div className="flex items-center" style={{ marginLeft: "-4px" }}>
+              {(() => {
+                // Get sources to display: prefer unique sources by name, but show at least 3 if available
+                const sourcesToShow = [];
+                const seenSourceNames = new Set();
+                const maxAvatars = Math.min(3, sources.length);
+
+                // First pass: get unique sources by name
+                for (const source of sources) {
+                  if (sourcesToShow.length >= maxAvatars) break;
+                  const sourceName = source.source || "Unknown";
+                  if (!seenSourceNames.has(sourceName)) {
+                    seenSourceNames.add(sourceName);
+                    sourcesToShow.push(source);
+                  }
+                }
+
+                // Second pass: if we don't have 3 yet, fill with remaining sources (even if same name)
+                if (sourcesToShow.length < maxAvatars) {
+                  for (const source of sources) {
+                    if (sourcesToShow.length >= maxAvatars) break;
+                    if (!sourcesToShow.some(s => s.id === source.id)) {
+                      sourcesToShow.push(source);
+                    }
+                  }
+                }
+
+                return sourcesToShow.map((source, index) => {
+                  const hasFavicon =
+                    source.favicon &&
+                    source.favicon.trim() !== "" &&
+                    !brokenFavicons.has(source.id);
+
+                  return (
+                    <Avatar
+                      key={source.id}
+                      className="border-2 border-[var(--bg-card)]"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        marginLeft: index > 0 ? "-4px" : "0",
+                        zIndex: 3 - index,
+                      }}
+                    >
+                      {hasFavicon ? (
+                        <AvatarImage
+                          src={source.favicon}
+                          alt={`${source.source} favicon`}
+                          onError={() => {
+                            setBrokenFavicons((prev) =>
+                              new Set(prev).add(source.id)
+                            );
+                          }}
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-[var(--bg-surface)]">
+                        <svg
+                          className="w-3 h-3 text-[var(--text-muted)]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                          />
+                        </svg>
+                      </AvatarFallback>
+                    </Avatar>
+                  );
+                });
+              })()}
+            </div>
+            <span className="text-xs text-[var(--text-muted)]">
+              {sources.length} source{sources.length !== 1 ? "s" : ""}
+            </span>
+          </div>
         )}
 
-        {/* Source List */}
-        {filteredSources && filteredSources.length > 0 ? (
-          <div
-            className={`flex-1 flex flex-col ${isExpanded ? "min-h-0 overflow-y-auto" : "min-h-0"
-              }`}
-          >
-            <SourceList
-              sources={filteredSources}
-              onMoreSourcesClick={() => onTitleClick && onTitleClick(id)}
-              showAll={isExpanded}
-            />
-          </div>
-        ) : sources && sources.length > 0 ? (
-          <div className="flex-1 flex flex-col">
-            <div className="text-sm text-[var(--text-muted)] py-4 text-left">
-              No articles match the selected sentiment filter.
+        {/* Expanded Content - Only show when expanded */}
+        {isExpanded && (
+          <>
+            {/* Metadata Row - Only in expanded view */}
+            <div className="flex items-center justify-between gap-2 mt-4 mb-2 text-xs flex-wrap border-t border-[var(--border-subtle)] pt-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[var(--text-muted)] flex items-center gap-1">
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
+                </span>
+                {recentArticlesCount > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-[var(--accent-positive)]/10 text-[var(--accent-positive)]">
+                    {recentArticlesCount} new
+                  </span>
+                )}
+              </div>
+              <ShareButton newsItem={newsItem} onShare={onShare} className="" />
             </div>
-          </div>
-        ) : null}
+
+            {/* Summary - Full if expanded */}
+            {displaySummary && (
+              <p
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (onTitleClick) {
+                    onTitleClick(id);
+                  }
+                }}
+                className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed cursor-pointer hover:text-[var(--text-primary)] transition-colors"
+              >
+                {displaySummary}
+              </p>
+            )}
+
+            {/* Source List - Only in expanded view */}
+            {filteredSources && filteredSources.length > 0 ? (
+              <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                <SourceList
+                  sources={filteredSources}
+                  onMoreSourcesClick={() => onTitleClick && onTitleClick(id)}
+                  showAll={isExpanded}
+                />
+              </div>
+            ) : sources && sources.length > 0 ? (
+              <div className="flex-1 flex flex-col">
+                <div className="text-sm text-[var(--text-muted)] py-4 text-left">
+                  No articles match the selected sentiment filter.
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
 
       {/* Image on the right side */}
