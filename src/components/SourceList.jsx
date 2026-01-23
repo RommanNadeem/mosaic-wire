@@ -3,6 +3,7 @@ import { formatTimeAgo } from "../utils/dataTransformers";
 
 function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [brokenFavicons, setBrokenFavicons] = useState(new Set());
 
   if (!sources || sources.length === 0) {
     return (
@@ -70,48 +71,68 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
     negative: hiddenSentiments.filter((s) => s === "negative").length,
   };
 
-  const renderSource = (source, index = 0) => (
-    <div
-      key={source.id}
-      className={`flex items-start gap-2 py-1.5 ${
-        index > 0 ? "border-t border-[var(--border-subtle)]" : ""
-      }`}
-    >
+  const handleFaviconError = (sourceId) => {
+    setBrokenFavicons((prev) => new Set(prev).add(sourceId));
+  };
+
+  const renderSource = (source, index = 0) => {
+    const hasFavicon = 
+      source.favicon && 
+      source.favicon.trim() !== "" && 
+      !brokenFavicons.has(source.id);
+    
+    return (
       <div
-        className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getSentimentColor(
-          source.sentiment
-        )}`}
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap text-left">
-          <span className="text-sm font-medium text-[var(--text-primary)]">
-            {source.source}
-          </span>
-          {source.author && (
-            <span className="text-xs text-[var(--text-muted)]">•</span>
-          )}
-          {source.author && (
-            <span className="text-xs text-[var(--text-muted)]">
-              {source.author}
+        key={source.id}
+        className={`flex items-start gap-2 py-1.5 ${
+          index > 0 ? "border-t border-[var(--border-subtle)]" : ""
+        }`}
+      >
+        <div
+          className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${getSentimentColor(
+            source.sentiment
+          )}`}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap text-left">
+            {hasFavicon && (
+              <img
+                src={source.favicon}
+                alt={`${source.source} favicon`}
+                className="w-4 h-4 rounded flex-shrink-0"
+                onError={() => handleFaviconError(source.id)}
+                loading="lazy"
+              />
+            )}
+            <span className="text-sm font-medium text-[var(--text-primary)]">
+              {source.source}
             </span>
-          )}
-          <span className="text-xs text-[var(--text-muted)]">
-            {typeof source.timeAgo === "string"
-              ? source.timeAgo
-              : formatTimeAgo(source.timeAgo)}
-          </span>
+            {source.author && (
+              <span className="text-xs text-[var(--text-muted)]">•</span>
+            )}
+            {source.author && (
+              <span className="text-xs text-[var(--text-muted)]">
+                {source.author}
+              </span>
+            )}
+            <span className="text-xs text-[var(--text-muted)]">
+              {typeof source.timeAgo === "string"
+                ? source.timeAgo
+                : formatTimeAgo(source.timeAgo)}
+            </span>
+          </div>
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline transition-colors leading-relaxed text-left block"
+          >
+            {source.headline}
+          </a>
         </div>
-        <a
-          href={source.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline transition-colors leading-relaxed text-left block"
-        >
-          {source.headline}
-        </a>
       </div>
-    </div>
-  );
+    );
+  };
 
   // If showAll is true, show all sources without expansion
   const allSources = showAll ? sources : visibleSources;

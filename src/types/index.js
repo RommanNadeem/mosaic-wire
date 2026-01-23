@@ -18,6 +18,7 @@
  * @property {string} source - Source name (e.g., "Dawn")
  * @property {"positive"|"negative"|"neutral"} sentiment - Article sentiment
  * @property {string} published_at - ISO timestamp: "2025-01-15T10:00:00Z"
+ * @property {string} [favicon] - Optional favicon URL from news_sources.logo_url or external_sources.source_favicon
  */
 
 /**
