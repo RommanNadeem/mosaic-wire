@@ -138,16 +138,55 @@ function NewsCard({
   return (
     <article
       onClick={handleCardClick}
-      className={`bg-[var(--bg-card)] border transition-all flex flex-row gap-6 cursor-pointer ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
+      className={`bg-[var(--bg-card)] border transition-all flex flex-col md:flex-row gap-0 md:gap-6 cursor-pointer ${isExpanded ? "h-full overflow-y-auto" : "h-full overflow-visible"
         } hover:border-[var(--text-muted)] ${isHighlighted
           ? "border-[var(--accent-positive)] ring-2 ring-[var(--accent-positive)] ring-opacity-50 shadow-lg z-10 relative"
           : "border-[var(--border-subtle)]"
         } ${shouldBlur ? "blur-sm opacity-50 pointer-events-none" : ""}`}
       id={`news-${id}`}
     >
-      {/* Content Area - Left side */}
+      {/* Image on mobile (top), right side on desktop */}
+      <div className="flex-shrink-0 py-3 px-0 md:px-3 md:py-3 md:pr-3 order-1 md:order-2">
+        {imageUrl && !imageError ? (
+          <div
+            className="bg-[var(--bg-surface)] relative overflow-hidden rounded w-full md:w-[198.6px]"
+            style={{ height: "198.6px" }}
+          >
+            <img
+              src={imageUrl}
+              alt={title || "News image"}
+              className="w-full h-full object-contain md:object-cover"
+              onError={() => {
+                setImageError(true);
+              }}
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div
+            className="bg-[var(--bg-surface)] flex items-center justify-center rounded w-full md:w-[198.6px]"
+            style={{ height: "198.6px" }}
+          >
+            <svg
+              className="w-6 h-6 text-[var(--text-muted)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Content Area - Below image on mobile, left side on desktop */}
       <div
-        className={`flex flex-col flex-1 min-w-0 py-3 px-3 relative ${isExpanded ? "overflow-y-auto z-10" : "overflow-visible"
+        className={`flex flex-col flex-1 min-w-0 py-3 px-3 relative order-2 md:order-1 ${isExpanded ? "overflow-y-auto z-10" : "overflow-visible"
           }`}
       >
         {/* Mobile Close Button - Shown when expanded or highlighted on mobile */}
@@ -667,45 +706,6 @@ function NewsCard({
               </div>
             ) : null}
           </>
-        )}
-      </div>
-
-      {/* Image on the right side */}
-      <div className="flex-shrink-0 py-3 pr-3">
-        {imageUrl && !imageError ? (
-          <div
-            className="bg-[var(--bg-surface)] relative overflow-hidden rounded"
-            style={{ width: "198.6px", height: "198.6px" }}
-          >
-            <img
-              src={imageUrl}
-              alt={title || "News image"}
-              className="w-full h-full object-cover"
-              onError={() => {
-                setImageError(true);
-              }}
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <div
-            className="bg-[var(--bg-surface)] flex items-center justify-center rounded"
-            style={{ width: "198.6px", height: "198.6px" }}
-          >
-            <svg
-              className="w-6 h-6 text-[var(--text-muted)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
         )}
       </div>
     </article>

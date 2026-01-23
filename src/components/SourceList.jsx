@@ -71,15 +71,49 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
     negative: hiddenSentiments.filter((s) => s === "negative").length,
   };
 
-  const handleFaviconError = (sourceId) => {
-    setBrokenFavicons((prev) => new Set(prev).add(sourceId));
+  // Helper function to extract domain from URL
+  const getDomainFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch (e) {
+      // If URL parsing fails, try to extract domain manually
+      const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+      return match ? match[1] : null;
+    }
+  };
+
+  // Helper function to get Google favicon URL
+  const getGoogleFaviconUrl = (domain) => {
+    if (!domain) return null;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  };
+
+  const handleFaviconError = (sourceId, isGoogleFavicon = false) => {
+    if (isGoogleFavicon) {
+      setBrokenFavicons((prev) => new Set(prev).add(`google-${sourceId}`));
+    } else {
+      setBrokenFavicons((prev) => new Set(prev).add(sourceId));
+    }
   };
 
   const renderSource = (source, index = 0) => {
-    const hasFavicon = 
-      source.favicon && 
-      source.favicon.trim() !== "" && 
+    const hasDirectFavicon =
+      source.favicon &&
+      source.favicon.trim() !== "" &&
       !brokenFavicons.has(source.id);
+
+    // Get Google favicon URL if direct favicon is not available or failed
+    const domain = !hasDirectFavicon ? getDomainFromUrl(source.url) : null;
+    const googleFaviconUrl = domain ? getGoogleFaviconUrl(domain) : null;
+    const googleFaviconFailed = brokenFavicons.has(`google-${source.id}`);
+    const shouldUseGoogleFavicon = !hasDirectFavicon && googleFaviconUrl && !googleFaviconFailed;
+
+    // Determine which favicon to use: direct favicon > Google favicon > placeholder
+    const faviconUrl = hasDirectFavicon
+      ? source.favicon
+      : (shouldUseGoogleFavicon ? googleFaviconUrl : null);
     
     return (
       <div
@@ -95,14 +129,31 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap text-left">
-            {hasFavicon && (
+            {faviconUrl ? (
               <img
-                src={source.favicon}
+                src={faviconUrl}
                 alt={`${source.source} favicon`}
                 className="w-4 h-4 rounded flex-shrink-0"
-                onError={() => handleFaviconError(source.id)}
+                onError={() => {
+                  if (hasDirectFavicon) {
+                    // Direct favicon failed, mark it as broken so we try Google favicon next
+                    handleFaviconError(source.id, false);
+                  } else if (shouldUseGoogleFavicon) {
+                    // Google favicon also failed, mark it and show placeholder
+                    handleFaviconError(source.id, true);
+                  }
+                }}
                 loading="lazy"
               />
+            ) : (
+              // Placeholder: first letter of source name
+              source.source && source.source.length > 0 ? (
+                <div className="w-4 h-4 rounded flex-shrink-0 bg-[var(--bg-surface)] flex items-center justify-center border border-[var(--border-subtle)]">
+                  <span className="text-[8px] font-semibold uppercase text-[var(--text-muted)]">
+                    {source.source.charAt(0)}
+                  </span>
+                </div>
+              ) : null
             )}
             <span className="text-sm font-medium text-[var(--text-primary)]">
               {source.source}
