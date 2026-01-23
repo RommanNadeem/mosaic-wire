@@ -1,0 +1,15 @@
+name: Deploy to Staging (Vercel)
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Vercel Staging Deploy Hook
+        run: |
+          curl -X POST https://api.vercel.com/v1/integrations/deploy/prj_9Ob5uZYuJ1lASXnX8k3C1swt8Oer/pvXDuQvpC6
