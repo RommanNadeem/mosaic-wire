@@ -93,14 +93,9 @@ function NewsCard({
     }
   }, [image]);
 
-  // Truncate summary to 3 lines (approximately 225 characters) - only if not expanded
-  const truncatedSummary = summary
-    ? summary.length > 225 && !isExpanded
-      ? summary.substring(0, 225) + "..."
-      : summary
-    : null;
-
-  const displaySummary = isExpanded ? summary : truncatedSummary;
+  // Truncate summary to 3 lines - only if not expanded
+  // Let CSS line-clamp handle the truncation with ellipses
+  const displaySummary = isExpanded ? summary : summary;
 
   // Check if there's a highlighted news and this is not it (but don't blur if expanded)
   const shouldBlur =
@@ -526,7 +521,14 @@ function NewsCard({
                 onTitleClick(id);
               }
             }}
-            className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed line-clamp-3 cursor-pointer hover:text-[var(--text-primary)] transition-colors"
+            className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed cursor-pointer hover:text-[var(--text-primary)] transition-colors"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
           >
             {displaySummary}
           </p>
