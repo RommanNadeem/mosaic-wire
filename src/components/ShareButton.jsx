@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { createSlug } from '../utils/slugUtils';
+import { useState, useEffect, useRef } from 'react';
 
 function ShareButton({ 
   newsItem, 
@@ -8,13 +7,20 @@ function ShareButton({
   iconSize = "w-4 h-4"
 }) {
   const [shareCopied, setShareCopied] = useState(false);
+  const buttonRef = useRef(null);
+
+  // Blur the button on mount if it has focus (prevents highlighting when shared link is opened)
+  useEffect(() => {
+    if (buttonRef.current && document.activeElement === buttonRef.current) {
+      buttonRef.current.blur();
+    }
+  }, []);
 
   if (!newsItem) return null;
 
   const {
     id,
     title,
-    summary,
   } = newsItem;
 
   // Check if device is mobile or tablet (has touch screen)
@@ -26,17 +32,15 @@ function ShareButton({
     e.preventDefault();
     e.stopPropagation();
     
-    // Create slug-based URL with last 6 characters of ID
-    const slug = createSlug(title, id);
-    const shareUrl = `${window.location.origin}${window.location.pathname}#news/${slug}`;
+    // Create URL with query parameter using the news ID
+    const shareUrl = `${window.location.origin}${window.location.pathname}?modal=${id}`;
     const shareTitle = title || 'Check out this news on MosaicBeat';
     
-    // Build share text in format: Title, Summary, Link (only for mobile/tablet)
-    let shareText = shareTitle;
-    if (summary) {
-      shareText += `\n\n${summary}`;
-    }
-    shareText += `\n\n${shareUrl}`;
+    // Build share text (URL is passed separately to avoid duplication)
+    const shareText = shareTitle;
+    
+    // Build full text with URL for clipboard fallback
+    const shareTextWithUrl = `${shareText}\n\n${shareUrl}`;
     
     // Only use native share on mobile/tablet devices
     if (navigator.share && isMobileOrTablet()) {
@@ -61,8 +65,8 @@ function ShareButton({
     }
     
     // Desktop: Copy only the link to clipboard
-    // Mobile/Tablet (if native share failed): Copy full formatted text
-    const textToCopy = isMobileOrTablet() ? shareText : shareUrl;
+    // Mobile/Tablet (if native share failed): Copy full formatted text with URL
+    const textToCopy = isMobileOrTablet() ? shareTextWithUrl : shareUrl;
     
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -89,8 +93,9 @@ function ShareButton({
   return (
     <div className={className}>
       <button
+        ref={buttonRef}
         onClick={handleShare}
-        className="relative p-1.5 hover:bg-[var(--bg-surface)] transition-colors"
+        className="relative p-1.5 hover:bg-[var(--bg-surface)] transition-colors focus:outline-none focus:ring-0"
         title={shareCopied ? "Copied!" : "Share this news"}
         aria-label="Share this news"
       >

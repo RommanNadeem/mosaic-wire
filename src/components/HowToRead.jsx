@@ -54,11 +54,11 @@ function HowToRead({ newsData, isExpanded, onToggle }) {
   }
 
   return (
-    <div className="space-y-4 flex-1 flex flex-col">
+    <div className="space-y-0 flex-1 flex flex-col">
       {/* Mobile Toggle Button */}
       <button
         onClick={onToggle}
-        className="lg:hidden w-full py-4 flex items-center justify-between transition-colors"
+        className="lg:hidden w-full py-1 flex items-center justify-between transition-colors"
       >
         <span className="text-base font-bold text-[var(--text-primary)]">
           How to Read MosaicBeat
@@ -87,7 +87,7 @@ function HowToRead({ newsData, isExpanded, onToggle }) {
         } lg:block space-y-4 flex-1`}
       >
         {/* What is Mosaic? */}
-        <div className="py-4 sm:py-6">
+        <div className="pt-3 pb-4 sm:pb-6">
           <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3">
             What is Mosaic
           </h3>
@@ -202,6 +202,17 @@ function HowToRead({ newsData, isExpanded, onToggle }) {
             </ol>
             <p className="text-sm text-[var(--text-muted)] italic mt-3">
               This is probabilistic analysis, not opinion.
+            </p>
+          </div>
+
+          {/* Why This Exists */}
+          <div className="mt-4">
+            <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3">
+              Why This Exists
+            </h3>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              News shapes perception. MosaicBeat exists to make that process
+              visible.
             </p>
           </div>
         </div>

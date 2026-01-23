@@ -31,11 +31,36 @@ function BiasDistribution({ newsData }) {
   const total = allArticles.length;
   if (total === 0) return null;
 
-  const percentages = {
-    positive: Math.round((sentimentCounts.positive / total) * 100),
-    neutral: Math.round((sentimentCounts.neutral / total) * 100),
-    negative: Math.round((sentimentCounts.negative / total) * 100),
+  // Calculate raw percentages
+  const rawPercentages = {
+    positive: (sentimentCounts.positive / total) * 100,
+    neutral: (sentimentCounts.neutral / total) * 100,
+    negative: (sentimentCounts.negative / total) * 100,
   };
+
+  // Round each to one decimal place
+  let percentages = {
+    positive: Math.round(rawPercentages.positive * 10) / 10,
+    neutral: Math.round(rawPercentages.neutral * 10) / 10,
+    negative: Math.round(rawPercentages.negative * 10) / 10,
+  };
+
+  // Ensure the sum equals exactly 100.0%
+  const sum = percentages.positive + percentages.neutral + percentages.negative;
+  const difference = 100.0 - sum;
+
+  // Adjust the category with the largest raw percentage to make sum exactly 100.0%
+  if (Math.abs(difference) > 0.01) { // Only adjust if difference is significant
+    const adjustments = [
+      { key: 'positive', value: rawPercentages.positive },
+      { key: 'neutral', value: rawPercentages.neutral },
+      { key: 'negative', value: rawPercentages.negative },
+    ];
+    adjustments.sort((a, b) => b.value - a.value);
+    
+    // Add the difference to the largest category
+    percentages[adjustments[0].key] = Math.round((percentages[adjustments[0].key] + difference) * 10) / 10;
+  }
 
   // Create sentiment object for tooltip
   const sentiment = {
@@ -68,7 +93,7 @@ function BiasDistribution({ newsData }) {
                     style={{ width: `${percentages.negative}%` }}
                   >
                     <span className="text-xs font-medium text-white px-2">
-                      {percentages.negative}%
+                      {percentages.negative.toFixed(1)}%
                     </span>
                   </div>
                 </TooltipTrigger>
@@ -113,7 +138,7 @@ function BiasDistribution({ newsData }) {
                               color: "var(--accent-negative)",
                             }}
                           >
-                            {percentages.negative}
+                            {percentages.negative.toFixed(1)}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
                             %
@@ -144,7 +169,7 @@ function BiasDistribution({ newsData }) {
                     style={{ width: `${percentages.neutral}%` }}
                   >
                     <span className="text-xs font-medium text-white px-2">
-                      {percentages.neutral}%
+                      {percentages.neutral.toFixed(1)}%
                     </span>
                   </div>
                 </TooltipTrigger>
@@ -189,7 +214,7 @@ function BiasDistribution({ newsData }) {
                               color: "var(--accent-neutral)",
                             }}
                           >
-                            {percentages.neutral}
+                            {percentages.neutral.toFixed(1)}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
                             %
@@ -220,7 +245,7 @@ function BiasDistribution({ newsData }) {
                     style={{ width: `${percentages.positive}%` }}
                   >
                     <span className="text-xs font-medium text-white px-2">
-                      {percentages.positive}%
+                      {percentages.positive.toFixed(1)}%
                     </span>
                   </div>
                 </TooltipTrigger>
@@ -265,7 +290,7 @@ function BiasDistribution({ newsData }) {
                               color: "var(--accent-positive)",
                             }}
                           >
-                            {percentages.positive}
+                            {percentages.positive.toFixed(1)}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">
                             %

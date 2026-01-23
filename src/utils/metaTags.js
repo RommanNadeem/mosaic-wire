@@ -13,12 +13,21 @@ export function updateMetaTags(newsItem, shareUrl) {
   const title = newsItem.title || 'MosaicBeat - A real-time digest of Pakistan\'s most consequential stories';
   const description = newsItem.summary || 'Read the latest news from Pakistan with AI-powered sentiment analysis.';
   const category = newsItem.category || null;
+  
   // Use image if available, otherwise use default
   const image = newsItem.image || `${window.location.origin}/vite.svg`;
   const url = shareUrl || window.location.href;
   
-  // Ensure image URL is absolute
-  const imageUrl = image.startsWith('http') ? image : `${window.location.origin}${image}`;
+  // Ensure image URL is absolute and properly formatted
+  // If it's already a full URL (http/https), use it as-is
+  // If it's a Supabase public URL, it should already be absolute
+  let imageUrl;
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    imageUrl = image; // Already absolute
+  } else {
+    // Relative path, make it absolute
+    imageUrl = `${window.location.origin}${image.startsWith('/') ? image : '/' + image}`;
+  }
 
   // Helper function to set or update meta tag
   const setMetaTag = (property, content) => {
@@ -27,7 +36,10 @@ export function updateMetaTags(newsItem, shareUrl) {
     
     if (!meta) {
       meta = document.createElement('meta');
-      if (property.startsWith('og:') || property.startsWith('twitter:')) {
+      // Twitter uses 'name', Open Graph uses 'property'
+      if (property.startsWith('twitter:')) {
+        meta.setAttribute('name', property);
+      } else if (property.startsWith('og:')) {
         meta.setAttribute('property', property);
       } else {
         meta.setAttribute('name', property);
@@ -40,10 +52,14 @@ export function updateMetaTags(newsItem, shareUrl) {
   // Update title
   document.title = `${title} | MosaicBeat`;
 
-  // Open Graph meta tags
+  // Open Graph meta tags (Facebook, LinkedIn, etc.)
   setMetaTag('og:title', title);
   setMetaTag('og:description', description);
   setMetaTag('og:image', imageUrl);
+  setMetaTag('og:image:url', imageUrl); // Some platforms prefer this
+  setMetaTag('og:image:type', 'image/jpeg'); // Adjust based on your image format
+  setMetaTag('og:image:width', '1200'); // Recommended dimensions
+  setMetaTag('og:image:height', '630');
   setMetaTag('og:url', url);
   setMetaTag('og:type', 'article');
   setMetaTag('og:site_name', 'MosaicBeat');

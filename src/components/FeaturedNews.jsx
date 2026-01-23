@@ -58,7 +58,7 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
       className="bg-[var(--bg-card)] border border-[var(--border-subtle)] overflow-visible h-full flex flex-col"
     >
       <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-0 flex-1">
-        {/* Column 1: Image, Sentiment Bar, Headline, Summary */}
+        {/* Column 1: Image, Tag and Time, Sentiment Bar, Headline, Summary */}
         <div className="sm:w-[70%] sm:flex-shrink-0 flex flex-col min-w-0">
           {/* Image */}
           <div className="w-full aspect-[4/3] sm:aspect-auto sm:h-64 sm:min-h-[280px] bg-[var(--bg-surface)] overflow-hidden flex items-center justify-center flex-shrink-0">
@@ -92,6 +92,45 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
             )}
           </div>
 
+          {/* Tag and Time with Share Button - Moved above sentiment bar */}
+          <div className="px-4 sm:px-6 pt-4 pb-1 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              {category &&
+                (() => {
+                  const categoryColor = getCategoryColor(category);
+                  return (
+                    <span
+                      className="px-3 py-1 text-xs font-medium rounded"
+                      style={{
+                        backgroundColor: categoryColor.bg,
+                        color: categoryColor.text,
+                      }}
+                    >
+                      {capitalizeFirst(category)}
+                    </span>
+                  );
+                })()}
+              <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
+              </span>
+            </div>
+            {/* Share Button */}
+            <ShareButton newsItem={newsItem} onShare={onShare} className="" />
+          </div>
+
           {/* Sentiment Bar with Tooltip */}
           {sentiment &&
             (() => {
@@ -106,9 +145,8 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                     }
                   : { positive: 0, neutral: 0, negative: 0 };
 
-
               return (
-                <div className="px-4 sm:px-6 py-3 flex-shrink-0">
+                <div className="px-4 sm:px-6 py-2 flex-shrink-0 pt-0">
                   <TooltipProvider delayDuration={200}>
                     <div className="relative overflow-visible">
                       <div className="flex h-4 overflow-hidden bg-[var(--bg-surface)] relative">
@@ -179,8 +217,8 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
                                       <span className="font-semibold text-[var(--text-primary)]">
                                         Negative:
                                       </span>{" "}
-                                      Stories emphasizing risk, conflict, decline,
-                                      or concern.
+                                      Stories emphasizing risk, conflict,
+                                      decline, or concern.
                                     </p>
                                   </div>
                                 </div>
@@ -350,13 +388,13 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
             })()}
 
           {/* Headline - Below Sentiment Bar */}
-          <h2 
+          <h2
             onClick={() => {
               if (onTitleClick) {
                 onTitleClick(id);
               }
             }}
-            className="px-4 sm:px-6 py-3 flex-shrink-0 text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors line-clamp-3"
+            className="px-2 sm:px-6 py-0 flex-shrink-0 text-xl sm:text-2xl font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors line-clamp-3"
           >
             {title}
           </h2>
@@ -380,46 +418,8 @@ function FeaturedNews({ newsItem, onTitleClick, onShare }) {
           )}
         </div>
 
-        {/* Column 2: Tag and Time, Sources */}
+        {/* Column 2: Sources */}
         <div className="sm:w-[30%] sm:flex-shrink-0 flex flex-col p-3 relative">
-          {/* Tag and Time with Share Button */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              {category && (() => {
-                const categoryColor = getCategoryColor(category);
-                return (
-                  <span 
-                    className="px-3 py-1 text-xs font-medium rounded"
-                    style={{
-                      backgroundColor: categoryColor.bg,
-                      color: categoryColor.text,
-                    }}
-                  >
-                    {capitalizeFirst(category)}
-                  </span>
-                );
-              })()}
-              <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
-              </span>
-            </div>
-            {/* Share Button */}
-            <ShareButton newsItem={newsItem} onShare={onShare} className="" />
-          </div>
-
           {/* Sources List - Using SourceList component to show descriptions */}
           {sources && sources.length > 0 ? (
             <div className="flex-1 flex flex-col min-h-0">

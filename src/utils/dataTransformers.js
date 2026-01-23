@@ -119,7 +119,7 @@ export function transformArticle(article) {
   }
 
   // Handle both formats:
-  // top_articles format: { id, title, url, source, sentiment, published_at }
+  // top_articles format: { id, title, url, source, sentiment, published_at, favicon }
   // article_snapshots format: { article_id, title, url, source_name, sentiment_label, published_at, snippet, topic_ids }
 
   let timeAgo;
@@ -154,6 +154,7 @@ export function transformArticle(article) {
     topicId: article.topic_ids?.[0] || article.topic_id,
     topicName: article.topic_name,
     author: article.author || article.author_name || null, // Add author support
+    favicon: article.favicon || null, // Extract favicon from article data
   };
 }
 
