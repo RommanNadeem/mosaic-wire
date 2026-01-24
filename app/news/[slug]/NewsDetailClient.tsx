@@ -117,13 +117,17 @@ export default function NewsDetailClient({
               >
                 &lt; BACK TO NEWSROOM
               </Link>
-              <div className="flex items-center gap-3 mb-4">
-                <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${getCategoryColor(category)}`}>
-                  {category || 'UNCATEGORIZED'}
-                </span>
-                <span className="text-sm text-[var(--text-muted)]">
-                  {date}
-                </span>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${getCategoryColor(category)}`}>
+                    {category || 'UNCATEGORIZED'}
+                  </span>
+                  <span className="text-sm text-[var(--text-muted)]">
+                    {date}
+                  </span>
+                </div>
+                {/* Share Button - Right side */}
+                <ShareButton newsItem={newsItem} onShare={() => {}} />
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
                 {title}
@@ -180,18 +184,12 @@ export default function NewsDetailClient({
             {/* Image */}
             <div className="w-full h-[250px] lg:h-[350px] mb-12 overflow-hidden relative">
               {imageUrl && !imageError ? (
-                <>
-                  <img
-                    src={imageUrl}
-                    alt={title || 'News image'}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  {/* Share Button - Top Right */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <ShareButton newsItem={newsItem} onShare={() => {}} className="bg-black/50 rounded backdrop-blur-sm" />
-                  </div>
-                </>
+                <img
+                  src={imageUrl}
+                  alt={title || 'News image'}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[var(--bg-surface)]">
                   <svg

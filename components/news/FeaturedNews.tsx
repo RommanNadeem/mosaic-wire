@@ -72,11 +72,6 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
     >
       {/* Image */}
       <div className="w-full h-64 sm:h-80 overflow-hidden relative">
-        {/* Share Button - Top Right */}
-        <div className="absolute top-4 right-4 z-10">
-          <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" />
-        </div>
-
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -105,35 +100,39 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
       </div>
 
       <div className="pr-4 sm:pr-6 py-4">
-        {/* Category and Date */}
-        <div className="flex items-center gap-3 mb-3 text-left">
-          {(() => {
-            const colorClass = getCategoryColor(category)
-            const displayText = category || 'UNCATEGORIZED'
-            const fullClassName = `px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/FeaturedNews.tsx:111',message:'rendering category badge',data:{category,displayText,colorClass,fullClassName,classNameLength:fullClassName.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
-            // #region agent log - verify DOM after render
-            if (typeof window !== 'undefined') {
-              setTimeout(() => {
-                const elements = document.querySelectorAll('[class*="bg-blue-600"], [class*="bg-purple-600"], [class*="bg-slate-600"], [class*="bg-green-600"]')
-                elements.forEach((el, idx) => {
-                  const computedStyle = window.getComputedStyle(el)
-                  fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/FeaturedNews.tsx:DOM',message:'DOM element check',data:{elementIndex:idx,className:el.className,bgColor:computedStyle.backgroundColor,color:computedStyle.color,hasBgClass:el.className.includes('bg-')},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-                })
-              }, 1000)
-            }
-            // #endregion
-            return (
-              <span className={fullClassName}>
-                {displayText}
-              </span>
-            )
-          })()}
-          <span className="text-xs text-[var(--text-muted)]">
-            {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
-          </span>
+        {/* Category, Date, and Share Button */}
+        <div className="flex items-center justify-between gap-3 mb-3 text-left">
+          <div className="flex items-center gap-3">
+            {(() => {
+              const colorClass = getCategoryColor(category)
+              const displayText = category || 'UNCATEGORIZED'
+              const fullClassName = `px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`
+              // #region agent log
+              fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/FeaturedNews.tsx:111',message:'rendering category badge',data:{category,displayText,colorClass,fullClassName,classNameLength:fullClassName.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'D'})}).catch(()=>{});
+              // #endregion
+              // #region agent log - verify DOM after render
+              if (typeof window !== 'undefined') {
+                setTimeout(() => {
+                  const elements = document.querySelectorAll('[class*="bg-blue-600"], [class*="bg-purple-600"], [class*="bg-slate-600"], [class*="bg-green-600"]')
+                  elements.forEach((el, idx) => {
+                    const computedStyle = window.getComputedStyle(el)
+                    fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/FeaturedNews.tsx:DOM',message:'DOM element check',data:{elementIndex:idx,className:el.className,bgColor:computedStyle.backgroundColor,color:computedStyle.color,hasBgClass:el.className.includes('bg-')},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+                  })
+                }, 1000)
+              }
+              // #endregion
+              return (
+                <span className={fullClassName}>
+                  {displayText}
+                </span>
+              )
+            })()}
+            <span className="text-xs text-[var(--text-muted)]">
+              {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+            </span>
+          </div>
+          {/* Share Button - Right side */}
+          <ShareButton newsItem={newsItem} onShare={onShare} />
         </div>
 
         {/* Headline */}
@@ -201,7 +200,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
         {sources && sources.length > 0 && (
           <div className="flex items-center gap-2 text-left">
             <div className="flex items-center -space-x-2">
-              {uniqueSources.slice(0, 5).map((source, index) => {
+              {uniqueSources.slice(0, 4).map((source, index) => {
                 const domain = source.url ? (() => {
                   try {
                     const urlObj = new URL(source.url)
@@ -217,7 +216,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
                   <Avatar
                     key={source.id || source.source}
                     className="w-6 h-6 ring-1 ring-[var(--bg-card)]"
-                    style={{ zIndex: 5 - index }}
+                    style={{ zIndex: 4 - index }}
                   >
                     {faviconUrl ? (
                       <AvatarImage
@@ -232,9 +231,11 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
                 )
               })}
             </div>
-            <span className="text-xs text-[var(--text-muted)] font-medium">
-              AGGREGATED FROM {totalSourcesCount} SOURCE{totalSourcesCount !== 1 ? 'S' : ''}
-            </span>
+            {uniqueSources.length > 4 && (
+              <span className="text-xs text-[var(--text-muted)] font-medium">
+                +{uniqueSources.length - 4} more
+              </span>
+            )}
           </div>
         )}
       </div>

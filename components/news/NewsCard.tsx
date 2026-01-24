@@ -72,23 +72,27 @@ export default function NewsCard({
         <div className="flex flex-row">
           {/* Content Section - Left */}
           <div className="flex-1 flex flex-col pr-5 pt-5 pb-5 min-w-0">
-            {/* Category and Date */}
-            <div className="flex items-center gap-3 mb-3">
-              {(() => {
-                const colorClass = getCategoryColor(category)
-                const displayText = category || 'UNCATEGORIZED'
-                // #region agent log
-                fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/NewsCard.tsx:85',message:'rendering category badge (horizontal)',data:{category,displayText,colorClass,layout:'horizontal'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
-                return (
-                  <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`}>
-                    {displayText}
-                  </span>
-                )
-              })()}
-              <span className="text-xs text-[var(--text-muted)]">
-                {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
-              </span>
+            {/* Category, Date, and Share Button */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                {(() => {
+                  const colorClass = getCategoryColor(category)
+                  const displayText = category || 'UNCATEGORIZED'
+                  // #region agent log
+                  fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/NewsCard.tsx:85',message:'rendering category badge (horizontal)',data:{category,displayText,colorClass,layout:'horizontal'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                  // #endregion
+                  return (
+                    <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`}>
+                      {displayText}
+                    </span>
+                  )
+                })()}
+                <span className="text-xs text-[var(--text-muted)]">
+                  {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+                </span>
+              </div>
+              {/* Share Button - Right side */}
+              <ShareButton newsItem={newsItem} onShare={onShare} />
             </div>
 
             {/* Title */}
@@ -177,10 +181,6 @@ export default function NewsCard({
 
           {/* Image Section - Right */}
           <div className="w-48 flex-shrink-0 h-48 overflow-hidden relative">
-            {/* Share Button - Top Right */}
-            <div className="absolute top-2 right-2 z-10">
-              <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" iconSize="w-3.5 h-3.5" />
-            </div>
             {imageUrl && !imageError ? (
               <img
                 src={imageUrl}
@@ -220,10 +220,6 @@ export default function NewsCard({
     >
       {/* Image */}
       <div className="w-full h-48 overflow-hidden relative">
-        {/* Share Button - Top Right */}
-        <div className="absolute top-2 right-2 z-10">
-          <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" iconSize="w-3.5 h-3.5" />
-        </div>
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -251,23 +247,27 @@ export default function NewsCard({
       </div>
 
       <div className="pr-4 pt-4 pb-4">
-        {/* Category and Date */}
-        <div className="flex items-center gap-3 mb-2">
-          {(() => {
-            const colorClass = getCategoryColor(category)
-            const displayText = category || 'UNCATEGORIZED'
-            // #region agent log
-            fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/NewsCard.tsx:250',message:'rendering category badge (vertical)',data:{category,displayText,colorClass,layout:'vertical'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
-            return (
-              <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`}>
-                {displayText}
-              </span>
-            )
-          })()}
-          <span className="text-xs text-[var(--text-muted)]">
-            {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
-          </span>
+        {/* Category, Date, and Share Button */}
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="flex items-center gap-3">
+            {(() => {
+              const colorClass = getCategoryColor(category)
+              const displayText = category || 'UNCATEGORIZED'
+              // #region agent log
+              fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/NewsCard.tsx:250',message:'rendering category badge (vertical)',data:{category,displayText,colorClass,layout:'vertical'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+              // #endregion
+              return (
+                <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`}>
+                  {displayText}
+                </span>
+              )
+            })()}
+            <span className="text-xs text-[var(--text-muted)]">
+              {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+            </span>
+          </div>
+          {/* Share Button - Right side */}
+          <ShareButton newsItem={newsItem} onShare={onShare} />
         </div>
 
         {/* Title */}
