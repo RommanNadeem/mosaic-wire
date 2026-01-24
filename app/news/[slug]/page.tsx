@@ -1,9 +1,19 @@
-import { getTopicBySlug } from '@/lib/supabase/queries'
-import { transformTopicToNewsItem } from '@/utils/data/transformers'
+import { getTopicBySlug, getLatestTopicsServer } from '@/lib/supabase/queries'
+import { getArticlesForTopicServer } from '@/lib/supabase/queries'
+import { transformTopicToNewsItem, transformSupabaseData } from '@/utils/data/transformers'
 import { generateNewsMetadata } from '@/utils/meta/generate'
 import { processImageForMetaTags } from '@/utils/images/meta-processing'
+import { getCategoryColor } from '@/utils/category/category'
+import { formatTimeAgo, calculateTimeAgo } from '@/utils/formatting/time'
+import { createSlug } from '@/utils/routing/navigation'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import NewsDetailClient from './NewsDetailClient'
+import BiasDistribution from '@/components/news/BiasDistribution'
+import LatestStories from '@/components/news/LatestStories'
+import WhatWeAnalyze from '@/components/news/WhatWeAnalyze'
+import type { NewsItem } from '@/types/news'
 
 interface PageProps {
   params: {
@@ -63,40 +73,50 @@ export default async function NewsPage({ params }: PageProps) {
     notFound()
   }
 
+  // Fetch all topics for sidebar statistics
+  const allTopics = await getLatestTopicsServer()
+  const allNewsData = transformSupabaseData(allTopics)
+
+  // Get articles for this topic
+  const articles = await getArticlesForTopicServer(String(newsItem.id))
+  
+  // Format date
+  const date = newsItem.updatedAt 
+    ? new Date(newsItem.updatedAt).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      }).replace(/\//g, '-')
+    : new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      }).replace(/\//g, '-')
+
+  // Calculate dominant sentiment for verdict
+  const { positive, neutral, negative } = newsItem.sentiment || { positive: 0, neutral: 0, negative: 0 }
+  let verdict = 'NEUTRAL'
+  if (positive > neutral && positive > negative) {
+    verdict = 'POSITIVE'
+  } else if (negative > positive && negative > neutral) {
+    verdict = 'NEGATIVE'
+  }
+
+  // Calculate data snapshot metrics
+  const primarySourcesCount = newsItem.sources?.length || 0
+  const keywordDensity = primarySourcesCount > 5 ? 'HIGH' : primarySourcesCount > 2 ? 'MEDIUM' : 'LOW'
+  const aggregationLatency = '14ms' // This would come from actual data if available
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <article>
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
-          {newsItem.title}
-        </h1>
-        {newsItem.summary && (
-          <p className="text-lg text-[var(--text-secondary)] mb-6">
-            {newsItem.summary}
-          </p>
-        )}
-        {newsItem.sources && newsItem.sources.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">
-              Sources
-            </h2>
-            <ul className="space-y-2">
-              {newsItem.sources.map((source) => (
-                <li key={source.id} className="text-sm text-[var(--text-secondary)]">
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-[var(--accent-positive)]"
-                  >
-                    {source.headline} - {source.source}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </article>
-    </div>
+    <NewsDetailClient 
+      newsItem={newsItem}
+      allNewsData={allNewsData}
+      articles={articles}
+      date={date}
+      verdict={verdict}
+      primarySourcesCount={primarySourcesCount}
+      keywordDensity={keywordDensity}
+      aggregationLatency={aggregationLatency}
+    />
   )
 }
-

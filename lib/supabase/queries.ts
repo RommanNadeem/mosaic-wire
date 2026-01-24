@@ -132,7 +132,35 @@ export async function getTopicByShortIdServer(shortId: string) {
 }
 
 /**
- * Fetch articles for a specific topic from article_snapshots table
+ * Fetch articles for a specific topic from article_snapshots table (server-side)
+ */
+export async function getArticlesForTopicServer(topicId: string) {
+  const supabaseClient = createServerClient()
+  if (!supabaseClient) {
+    return []
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('article_snapshots')
+      .select('*')
+      .contains('topic_ids', [topicId])
+      .order('published_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching articles for topic:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error in getArticlesForTopicServer:', error)
+    return []
+  }
+}
+
+/**
+ * Fetch articles for a specific topic from article_snapshots table (client-side)
  */
 export async function getArticlesForTopic(topicId: string) {
   if (!isSupabaseConfigured || !supabase) {

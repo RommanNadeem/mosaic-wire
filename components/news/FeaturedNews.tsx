@@ -67,7 +67,8 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
   return (
     <article
       id={`news-${id}`}
-      className="overflow-hidden mb-8 relative"
+      className="overflow-hidden mb-8 relative transition-all duration-200 rounded-sm cursor-pointer"
+      onClick={() => onTitleClick?.(String(id))}
     >
       {/* Image */}
       <div className="w-full h-64 sm:h-80 overflow-hidden relative">
@@ -76,6 +77,11 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
           <h2 className="px-3 py-1.5 bg-black text-white text-xs font-semibold uppercase tracking-wider">
             Top Aggregated Story
           </h2>
+        </div>
+
+        {/* Share Button - Top Right */}
+        <div className="absolute top-4 right-4 z-10">
+          <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" />
         </div>
 
         {imageUrl && !imageError ? (
@@ -139,8 +145,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
 
         {/* Headline */}
         <h2
-          onClick={() => onTitleClick?.(String(id))}
-          className="text-xl sm:text-[49px] font-bold text-[var(--text-primary)] leading-tight cursor-pointer hover:text-[var(--accent-positive)] transition-colors mb-3 line-clamp-2 text-left"
+          className="text-xl sm:text-[49px] font-bold text-[var(--text-primary)] leading-tight transition-colors mb-3 line-clamp-2 text-left"
         >
           {title}
         </h2>
@@ -218,7 +223,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
                 return (
                   <Avatar
                     key={source.id || source.source}
-                    className="w-8 h-8"
+                    className="w-6 h-6 ring-1 ring-[var(--bg-card)]"
                     style={{ zIndex: 5 - index }}
                   >
                     {faviconUrl ? (
@@ -227,7 +232,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
                         alt={source.source || 'Source'}
                       />
                     ) : null}
-                    <AvatarFallback className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-surface)]">
+                    <AvatarFallback className="text-[9px] text-[var(--text-muted)] bg-[var(--bg-surface)]">
                       {(source.source || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

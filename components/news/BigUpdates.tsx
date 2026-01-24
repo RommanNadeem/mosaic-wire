@@ -18,15 +18,19 @@ export default function BigUpdates({ newsItems, onTitleClick, onShare }: BigUpda
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">
-          The Big Story
+          THE BIG STORY
         </h2>
         <a
           href="#more-stories"
-          className="text-sm text-[var(--accent-positive)] hover:underline"
+          className="text-sm text-[var(--accent-positive)] hover:underline uppercase"
         >
           SEE ALL STORIES
         </a>
       </div>
+      
+      {/* Bottom divider - slightly thicker */}
+      <div className="border-t-2 border-[var(--text-primary)] mb-4"></div>
+      
       <div className="grid grid-cols-1 gap-4">
         {newsItems.map((item) => (
           <NewsCard

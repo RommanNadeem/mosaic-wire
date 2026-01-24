@@ -5,25 +5,18 @@ import { useImage } from '@/hooks/useImage'
 import { formatTimeAgo } from '@/utils/formatting/time'
 import { capitalizeFirst, getCategoryColor } from '@/utils/category/category'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import ShareButton from '@/components/shared/ShareButton'
 
 interface NewsCardProps {
   newsItem: NewsItem
-  isHighlighted?: boolean
-  highlightedNewsId?: string | null
-  isExpanded?: boolean
   onTitleClick?: (id: string) => void
-  onCloseHighlight?: () => void
   onShare?: (url: string) => void
   layout?: 'vertical' | 'horizontal'
 }
 
 export default function NewsCard({
   newsItem,
-  isHighlighted,
-  highlightedNewsId,
-  isExpanded,
   onTitleClick,
-  onCloseHighlight,
   onShare,
   layout = 'vertical',
 }: NewsCardProps) {
@@ -73,9 +66,8 @@ export default function NewsCard({
     return (
       <article
         id={`news-${id}`}
-        className={`overflow-hidden transition-all ${
-          isHighlighted ? 'ring-2 ring-[var(--accent-positive)] ring-offset-2' : ''
-        }`}
+        className={`group overflow-hidden transition-all cursor-pointer rounded-sm`}
+        onClick={() => onTitleClick?.(String(id))}
       >
         <div className="flex flex-row">
           {/* Content Section - Left */}
@@ -101,8 +93,7 @@ export default function NewsCard({
 
             {/* Title */}
             <h3
-              onClick={() => onTitleClick?.(String(id))}
-              className="text-lg font-bold text-[var(--text-primary)] cursor-pointer hover:text-[var(--accent-positive)] transition-colors mb-3 line-clamp-2 leading-tight"
+              className="text-lg font-bold text-[var(--text-primary)] transition-colors mb-3 line-clamp-2 leading-tight group-hover:underline"
             >
               {title}
             </h3>
@@ -185,7 +176,11 @@ export default function NewsCard({
           </div>
 
           {/* Image Section - Right */}
-          <div className="w-48 flex-shrink-0 h-48 overflow-hidden">
+          <div className="w-48 flex-shrink-0 h-48 overflow-hidden relative">
+            {/* Share Button - Top Right */}
+            <div className="absolute top-2 right-2 z-10">
+              <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" iconSize="w-3.5 h-3.5" />
+            </div>
             {imageUrl && !imageError ? (
               <img
                 src={imageUrl}
@@ -220,12 +215,15 @@ export default function NewsCard({
   return (
     <article
       id={`news-${id}`}
-      className={`overflow-hidden transition-all ${
-        isHighlighted ? 'ring-2 ring-[var(--accent-positive)] ring-offset-2' : ''
-      }`}
+      className={`group overflow-hidden transition-all cursor-pointer rounded-sm`}
+      onClick={() => onTitleClick?.(String(id))}
     >
       {/* Image */}
-      <div className="w-full h-48 overflow-hidden">
+      <div className="w-full h-48 overflow-hidden relative">
+        {/* Share Button - Top Right */}
+        <div className="absolute top-2 right-2 z-10">
+          <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" iconSize="w-3.5 h-3.5" />
+        </div>
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -253,8 +251,8 @@ export default function NewsCard({
       </div>
 
       <div className="pr-4 pt-4 pb-4">
-        {/* Category */}
-        <div className="mb-2">
+        {/* Category and Date */}
+        <div className="flex items-center gap-3 mb-2">
           {(() => {
             const colorClass = getCategoryColor(category)
             const displayText = category || 'UNCATEGORIZED'
@@ -267,12 +265,14 @@ export default function NewsCard({
               </span>
             )
           })()}
+          <span className="text-xs text-[var(--text-muted)]">
+            {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
         </div>
 
         {/* Title */}
         <h3
-          onClick={() => onTitleClick?.(String(id))}
-          className="text-base font-bold text-[var(--text-primary)] cursor-pointer hover:text-[var(--accent-positive)] transition-colors mb-3 line-clamp-2 leading-tight"
+          className="text-base font-bold text-[var(--text-primary)] transition-colors mb-3 line-clamp-2 leading-tight group-hover:underline"
         >
           {title}
         </h3>
