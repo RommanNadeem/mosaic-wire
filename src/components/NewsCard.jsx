@@ -223,42 +223,40 @@ function NewsCard({
         </h2>
 
         {/* Category Tag and Time */}
-        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Category Tag */}
-            {category &&
-              (() => {
-                const categoryColor = getCategoryColor(category);
-                return (
-                  <span
-                    className="px-2 py-1 text-xs font-medium rounded-full"
-                    style={{
-                      backgroundColor: categoryColor.bg || "var(--bg-surface)",
-                      color: categoryColor.text || "var(--text-muted)",
-                    }}
-                  >
-                    {capitalizeFirst(category)}
-                  </span>
-                );
-              })()}
-            {/* Time Ago */}
-            <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
-            </span>
-          </div>
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {/* Category Tag */}
+          {category &&
+            (() => {
+              const categoryColor = getCategoryColor(category);
+              return (
+                <span
+                  className="px-2 py-1 text-xs font-medium rounded-full"
+                  style={{
+                    backgroundColor: categoryColor.bg || "var(--bg-surface)",
+                    color: categoryColor.text || "var(--text-muted)",
+                  }}
+                >
+                  {capitalizeFirst(category)}
+                </span>
+              );
+            })()}
+          {/* Time Ago */}
+          <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {typeof timeAgo === "string" ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
           {/* Share Button */}
           <ShareButton newsItem={newsItem} onShare={onShare} className="" iconSize="w-4 h-4" />
         </div>

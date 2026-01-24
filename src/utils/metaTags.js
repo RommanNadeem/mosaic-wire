@@ -55,8 +55,10 @@ export function updateMetaTags(newsItem, shareUrl) {
   if (!newsItem) return;
 
   const title = newsItem.title || 'MosaicBeat - A real-time digest of Pakistan\'s most consequential stories';
-  const description = newsItem.summary || 'Read the latest news from Pakistan with AI-powered sentiment analysis.';
+  // Use summary if available, otherwise fallback to default description
+  const description = newsItem.summary || 'Pakistan\'s news, unmasked. Get AI-powered sentiment analysis of the latest news from multiple sources.';
   const category = newsItem.category || null;
+  // Ensure shareUrl includes the full URL with hash
   const url = shareUrl || window.location.href;
   
   // Process image URL for social sharing
@@ -76,6 +78,8 @@ export function updateMetaTags(newsItem, shareUrl) {
 
   // Helper function to set or update meta tag
   const setMetaTag = (property, content) => {
+    if (!content) return; // Don't set empty content
+    
     let meta = document.querySelector(`meta[property="${property}"]`) || 
                document.querySelector(`meta[name="${property}"]`);
     
@@ -120,6 +124,7 @@ export function updateMetaTags(newsItem, shareUrl) {
   setMetaTag('twitter:title', title);
   setMetaTag('twitter:description', description);
   setMetaTag('twitter:image', imageUrl);
+  setMetaTag('twitter:url', url);
 
   // Standard meta tags
   setMetaTag('description', description);
@@ -128,6 +133,14 @@ export function updateMetaTags(newsItem, shareUrl) {
   if (category) {
     setMetaTag('keywords', `${category}, Pakistan news, news aggregator, sentiment analysis`);
   }
+  
+  // Log for debugging
+  console.log('Meta tags updated:', {
+    title,
+    description: description.substring(0, 100) + '...',
+    imageUrl,
+    url
+  });
 }
 
 /**
