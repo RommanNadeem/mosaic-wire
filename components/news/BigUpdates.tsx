@@ -16,16 +16,10 @@ export default function BigUpdates({ newsItems, onTitleClick, onShare }: BigUpda
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">
           THE BIG STORY
         </h2>
-        <a
-          href="#more-stories"
-          className="text-sm text-[var(--accent-positive)] hover:underline uppercase"
-        >
-          SEE ALL STORIES
-        </a>
       </div>
       
       {/* Bottom divider - slightly thicker */}

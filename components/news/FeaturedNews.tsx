@@ -67,18 +67,11 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
   return (
     <article
       id={`news-${id}`}
-      className="overflow-hidden mb-8 relative transition-all duration-200 rounded-sm cursor-pointer"
+      className="group overflow-hidden mb-8 relative transition-all duration-200 rounded-sm cursor-pointer"
       onClick={() => onTitleClick?.(String(id))}
     >
       {/* Image */}
       <div className="w-full h-64 sm:h-80 overflow-hidden relative">
-        {/* Label - Overlapping the image */}
-        <div className="absolute top-4 left-4 z-10">
-          <h2 className="px-3 py-1.5 bg-black text-white text-xs font-semibold uppercase tracking-wider">
-            Top Aggregated Story
-          </h2>
-        </div>
-
         {/* Share Button - Top Right */}
         <div className="absolute top-4 right-4 z-10">
           <ShareButton newsItem={newsItem} onShare={onShare} className="bg-black/50 rounded backdrop-blur-sm" />
@@ -145,7 +138,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
 
         {/* Headline */}
         <h2
-          className="text-xl sm:text-[49px] font-bold text-[var(--text-primary)] leading-tight transition-colors mb-3 line-clamp-2 text-left"
+          className="text-xl sm:text-[49px] font-bold text-[var(--text-primary)] leading-tight transition-colors mb-3 line-clamp-2 text-left group-hover:underline"
         >
           {title}
         </h2>
