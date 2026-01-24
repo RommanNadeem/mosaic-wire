@@ -84,6 +84,59 @@
     <meta name="twitter:description" content="Pakistan's news, unmasked. Get AI-powered sentiment analysis of the latest news from multiple sources." />
     <meta name="twitter:image" content="" />
     
+    <!-- Update meta tags from hash if present (for social media crawlers) -->
+    <!-- Note: This provides basic meta tags. For full social previews with images, -->
+    <!-- consider using Vercel Edge Functions or API routes for server-side meta tags -->
+    <script>
+      (function() {
+        // This runs synchronously before React loads
+        var hash = window.location.hash;
+        if (hash && hash.startsWith('#news/')) {
+          // Extract slug from hash
+          var slugWithId = hash.replace('#news/', '');
+          var slugParts = slugWithId.split('-');
+          var slug = slugParts.slice(0, -1).join(' '); // Remove last part (short ID)
+          
+          if (slug) {
+            // Update title with slug-based title
+            var title = slug.split(' ').map(function(word) {
+              return word.charAt(0).toUpperCase() + word.slice(1);
+            }).join(' ') + ' | MosaicBeat';
+            document.title = title;
+            
+            // Update og:title
+            var ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) ogTitle.setAttribute('content', title);
+            
+            // Update twitter:title
+            var twitterTitle = document.querySelector('meta[name="twitter:title"]');
+            if (twitterTitle) twitterTitle.setAttribute('content', title);
+            
+            // Update URL to include hash
+            var fullUrl = window.location.origin + window.location.pathname + hash;
+            var ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', fullUrl);
+            var twitterUrl = document.querySelector('meta[name="twitter:url"]');
+            if (twitterUrl) twitterUrl.setAttribute('content', fullUrl);
+            
+            // Set og:type to article for shared links
+            var ogType = document.querySelector('meta[property="og:type"]');
+            if (ogType) ogType.setAttribute('content', 'article');
+            
+            // Set default image if not already set
+            var ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage && !ogImage.getAttribute('content')) {
+              ogImage.setAttribute('content', window.location.origin + '/mosaicbeat-white.png');
+            }
+            var twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage && !twitterImage.getAttribute('content')) {
+              twitterImage.setAttribute('content', window.location.origin + '/mosaicbeat-white.png');
+            }
+          }
+        }
+      })();
+    </script>
+    
     <!-- Microsoft Clarity - Delayed initialization for better performance -->
     <script type="text/javascript">
         // Delay Clarity initialization until after page load
