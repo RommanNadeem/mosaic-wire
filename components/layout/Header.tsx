@@ -1,7 +1,7 @@
 'use client'
 
 import { useTheme } from '@/hooks/useTheme'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 
 export default function Header() {
@@ -12,17 +12,21 @@ export default function Header() {
   const desktopThemeButtonRef = useRef<HTMLButtonElement>(null)
 
   // Local date (no time) formatted with ordinal day
-  const getOrdinal = (n: number): string => {
-    const s = ['th', 'st', 'nd', 'rd']
-    const v = n % 100
-    return n + (s[(v - 20) % 10] || s[v] || s[0])
-  }
-  const now = new Date()
-  const weekday = now.toLocaleString(undefined, { weekday: 'long' })
-  const month = now.toLocaleString(undefined, { month: 'long' })
-  const day = getOrdinal(now.getDate())
-  const year = now.getFullYear()
-  const formattedDate = `${weekday}, ${day} ${month}, ${year}`
+  const [formattedDate, setFormattedDate] = useState<string>('')
+  
+  useEffect(() => {
+    const getOrdinal = (n: number): string => {
+      const s = ['th', 'st', 'nd', 'rd']
+      const v = n % 100
+      return n + (s[(v - 20) % 10] || s[v] || s[0])
+    }
+    const now = new Date()
+    const weekday = now.toLocaleString(undefined, { weekday: 'long' })
+    const month = now.toLocaleString(undefined, { month: 'long' })
+    const day = getOrdinal(now.getDate())
+    const year = now.getFullYear()
+    setFormattedDate(`${weekday}, ${day} ${month}, ${year}`)
+  }, [])
 
   return (
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
@@ -43,7 +47,7 @@ export default function Header() {
               </Link>
             </h1>
             {/* Date - Below heading on mobile, inline on desktop */}
-            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap md:hidden">
+            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap md:hidden" suppressHydrationWarning>
               {formattedDate}
             </span>
             <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
@@ -111,7 +115,7 @@ export default function Header() {
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
             {/* Local Date */}
-            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap">
+            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap" suppressHydrationWarning>
               {formattedDate}
             </span>
             {/* Today's Front Page */}

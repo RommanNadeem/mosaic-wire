@@ -20,33 +20,40 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  // Always start with a default theme to avoid hydration mismatch
+  const [theme, setTheme] = useState<Theme>('light')
+  const [mounted, setMounted] = useState(false)
+
+  // Load theme from localStorage/system preference after mount
+  useEffect(() => {
+    setMounted(true)
+    
     // Check localStorage first
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('mosaicbeat-theme')
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        return savedTheme
-      }
-      
-      // Check system preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark'
-      }
+    const savedTheme = localStorage.getItem('mosaicbeat-theme')
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      setTheme(savedTheme)
+      document.documentElement.setAttribute('data-theme', savedTheme)
+      return
     }
     
-    // Default to light theme
-    return 'light'
-  })
+    // Check system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light')
+    }
+  }, [])
 
   useEffect(() => {
-    // Save theme to localStorage
-    if (typeof window !== 'undefined') {
+    if (mounted) {
+      // Save theme to localStorage
       localStorage.setItem('mosaicbeat-theme', theme)
       
       // Apply theme data attribute for CSS variables
       document.documentElement.setAttribute('data-theme', theme)
     }
-  }, [theme])
+  }, [theme, mounted])
 
   const toggleTheme = (newTheme: Theme) => {
     setTheme(newTheme)
