@@ -24,6 +24,8 @@ function NewsCard({
   const [imageUrl, setImageUrl] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [openTooltip, setOpenTooltip] = useState(null);
 
   if (!newsItem) return null;
 
@@ -47,6 +49,47 @@ function NewsCard({
         return sourceSentiment === selectedSentiment;
       })
     : sources;
+
+  // Detect touch device
+  useEffect(() => {
+    const checkTouchDevice = () => {
+      setIsTouchDevice(
+        "ontouchstart" in window ||
+          navigator.maxTouchPoints > 0 ||
+          window.matchMedia("(pointer: coarse)").matches
+      );
+    };
+    checkTouchDevice();
+    window.addEventListener("resize", checkTouchDevice);
+    return () => window.removeEventListener("resize", checkTouchDevice);
+  }, []);
+
+  // Close tooltip when clicking outside on mobile
+  useEffect(() => {
+    if (!isTouchDevice || !openTooltip) return;
+
+    const handleClickOutside = (e) => {
+      // Use a small delay to allow Radix UI's internal handlers to run first
+      setTimeout(() => {
+        const target = e.target;
+        const isTooltipContent = target.closest('[role="tooltip"]');
+        const isTooltipTrigger = target.closest('[data-radix-tooltip-trigger]');
+        const isSentimentBar = target.closest('.sentiment-bar-container');
+        
+        // Only close if clicking outside the tooltip, trigger, and sentiment bar
+        if (!isTooltipContent && !isTooltipTrigger && !isSentimentBar) {
+          setOpenTooltip(null);
+        }
+      }, 10);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isTouchDevice, openTooltip]);
 
   // Get signed URL for images that need authentication
   useEffect(() => {
@@ -286,20 +329,37 @@ function NewsCard({
                 : { positive: 0, neutral: 0, negative: 0 };
 
             return (
-              <TooltipProvider delayDuration={200}>
+              <TooltipProvider delayDuration={isTouchDevice ? 0 : 200}>
                 <div
                   className={`mb-3 relative overflow-visible ${
                     isExpanded ? "z-[60]" : ""
                   }`}
                 >
-                  <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative">
+                  <div className="flex h-[12px] overflow-hidden bg-[var(--bg-surface)] relative sentiment-bar-container">
                     {/* Negative Segment */}
                     {percentages.negative > 0 && (
-                      <Tooltip>
+                      <Tooltip
+                        open={
+                          isTouchDevice ? openTooltip === "negative" : undefined
+                        }
+                        onOpenChange={(open) => {
+                          if (isTouchDevice) {
+                            setOpenTooltip(open ? "negative" : null);
+                          }
+                        }}
+                      >
                         <TooltipTrigger asChild>
                           <div
-                            className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                            className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                             style={{ width: `${percentages.negative}%` }}
+                            onClick={(e) => {
+                              if (isTouchDevice) {
+                                e.stopPropagation();
+                                setOpenTooltip(
+                                  openTooltip === "negative" ? null : "negative"
+                                );
+                              }
+                            }}
                           >
                             <span className="text-[10px] font-medium text-white px-1">
                               {percentages.negative}%
@@ -370,11 +430,28 @@ function NewsCard({
 
                     {/* Neutral Segment */}
                     {percentages.neutral > 0 && (
-                      <Tooltip>
+                      <Tooltip
+                        open={
+                          isTouchDevice ? openTooltip === "neutral" : undefined
+                        }
+                        onOpenChange={(open) => {
+                          if (isTouchDevice) {
+                            setOpenTooltip(open ? "neutral" : null);
+                          }
+                        }}
+                      >
                         <TooltipTrigger asChild>
                           <div
-                            className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                            className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                             style={{ width: `${percentages.neutral}%` }}
+                            onClick={(e) => {
+                              if (isTouchDevice) {
+                                e.stopPropagation();
+                                setOpenTooltip(
+                                  openTooltip === "neutral" ? null : "neutral"
+                                );
+                              }
+                            }}
                           >
                             <span className="text-[10px] font-medium text-white px-1">
                               {percentages.neutral}%
@@ -445,11 +522,28 @@ function NewsCard({
 
                     {/* Positive Segment */}
                     {percentages.positive > 0 && (
-                      <Tooltip>
+                      <Tooltip
+                        open={
+                          isTouchDevice ? openTooltip === "positive" : undefined
+                        }
+                        onOpenChange={(open) => {
+                          if (isTouchDevice) {
+                            setOpenTooltip(open ? "positive" : null);
+                          }
+                        }}
+                      >
                         <TooltipTrigger asChild>
                           <div
-                            className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
+                            className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110 active:brightness-110"
                             style={{ width: `${percentages.positive}%` }}
+                            onClick={(e) => {
+                              if (isTouchDevice) {
+                                e.stopPropagation();
+                                setOpenTooltip(
+                                  openTooltip === "positive" ? null : "positive"
+                                );
+                              }
+                            }}
                           >
                             <span className="text-[10px] font-medium text-white px-1">
                               {percentages.positive}%
