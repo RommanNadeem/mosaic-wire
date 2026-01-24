@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// For server-side, prefer non-prefixed vars, fallback to NEXT_PUBLIC_ vars
+// For server-side, use environment variables (never hardcode secrets)
+// Prefer non-prefixed vars for server-only secrets, fallback to NEXT_PUBLIC_ vars
+// NOTE: Service role keys should NEVER be used in client-accessible code
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -9,6 +11,7 @@ export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
 
 // Create Supabase client for server-side usage (RSC)
 // This creates a new client instance for each request
+// Uses anon key only - service role keys should never be in this codebase
 export function createServerClient() {
   if (!isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey) {
     return null
