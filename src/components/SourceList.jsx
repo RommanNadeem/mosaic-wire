@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { formatTimeAgo } from "../utils/dataTransformers";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -61,6 +62,25 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
 
   const hiddenCount = hiddenSources.length;
 
+  // Helper function to extract domain from URL
+  const getDomainFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch (e) {
+      // If URL parsing fails, try to extract domain manually
+      const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+      return match ? match[1] : null;
+    }
+  };
+
+  // Helper function to get Google favicon URL
+  const getGoogleFaviconUrl = (domain) => {
+    if (!domain) return null;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  };
+
   // Get sentiment distribution of hidden sources
   const hiddenSentiments = hiddenSources.map(
     (s) => s.sentiment?.toLowerCase() || "neutral"
@@ -71,15 +91,63 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
     negative: hiddenSentiments.filter((s) => s === "negative").length,
   };
 
-  const handleFaviconError = (sourceId) => {
-    setBrokenFavicons((prev) => new Set(prev).add(sourceId));
+  // Get unique source favicons from hidden sources (for display in "more sources" button)
+  const hiddenSourceFavicons = [];
+  const seenSourceNames = new Set();
+  hiddenSources.forEach((source) => {
+    const sourceName = source.source || "Unknown";
+    if (!seenSourceNames.has(sourceName)) {
+      seenSourceNames.add(sourceName);
+      const hasDirectFavicon =
+        source.favicon &&
+        source.favicon.trim() !== "" &&
+        !brokenFavicons.has(source.id);
+      
+      const domain = !hasDirectFavicon ? getDomainFromUrl(source.url) : null;
+      const googleFaviconUrl = domain ? getGoogleFaviconUrl(domain) : null;
+      const googleFaviconFailed = brokenFavicons.has(`google-${source.id}`);
+      const shouldUseGoogleFavicon = !hasDirectFavicon && googleFaviconUrl && !googleFaviconFailed;
+      
+      const faviconUrl = hasDirectFavicon
+        ? source.favicon
+        : (shouldUseGoogleFavicon ? googleFaviconUrl : null);
+      
+      if (faviconUrl) {
+        hiddenSourceFavicons.push({
+          url: faviconUrl,
+          sourceId: source.id,
+          sourceName: sourceName,
+          isDirect: hasDirectFavicon,
+          isGoogle: shouldUseGoogleFavicon,
+        });
+      }
+    }
+  });
+
+  const handleFaviconError = (sourceId, isGoogleFavicon = false) => {
+    if (isGoogleFavicon) {
+      setBrokenFavicons((prev) => new Set(prev).add(`google-${sourceId}`));
+    } else {
+      setBrokenFavicons((prev) => new Set(prev).add(sourceId));
+    }
   };
 
   const renderSource = (source, index = 0) => {
-    const hasFavicon = 
-      source.favicon && 
-      source.favicon.trim() !== "" && 
+    const hasDirectFavicon =
+      source.favicon &&
+      source.favicon.trim() !== "" &&
       !brokenFavicons.has(source.id);
+
+    // Get Google favicon URL if direct favicon is not available or failed
+    const domain = !hasDirectFavicon ? getDomainFromUrl(source.url) : null;
+    const googleFaviconUrl = domain ? getGoogleFaviconUrl(domain) : null;
+    const googleFaviconFailed = brokenFavicons.has(`google-${source.id}`);
+    const shouldUseGoogleFavicon = !hasDirectFavicon && googleFaviconUrl && !googleFaviconFailed;
+
+    // Determine which favicon to use: direct favicon > Google favicon > placeholder
+    const faviconUrl = hasDirectFavicon
+      ? source.favicon
+      : (shouldUseGoogleFavicon ? googleFaviconUrl : null);
     
     return (
       <div
@@ -95,14 +163,31 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap text-left">
-            {hasFavicon && (
+            {faviconUrl ? (
               <img
-                src={source.favicon}
+                src={faviconUrl}
                 alt={`${source.source} favicon`}
                 className="w-4 h-4 rounded flex-shrink-0"
-                onError={() => handleFaviconError(source.id)}
+                onError={() => {
+                  if (hasDirectFavicon) {
+                    // Direct favicon failed, mark it as broken so we try Google favicon next
+                    handleFaviconError(source.id, false);
+                  } else if (shouldUseGoogleFavicon) {
+                    // Google favicon also failed, mark it and show placeholder
+                    handleFaviconError(source.id, true);
+                  }
+                }}
                 loading="lazy"
               />
+            ) : (
+              // Placeholder: first letter of source name
+              source.source && source.source.length > 0 ? (
+                <div className="w-4 h-4 rounded flex-shrink-0 bg-[var(--bg-surface)] flex items-center justify-center border border-[var(--border-subtle)]">
+                  <span className="text-[8px] font-semibold uppercase text-[var(--text-muted)]">
+                    {source.source.charAt(0)}
+                  </span>
+                </div>
+              ) : null
             )}
             <span className="text-sm font-medium text-[var(--text-primary)]">
               {source.source}
@@ -158,45 +243,73 @@ function SourceList({ sources, onMoreSourcesClick, showAll = false }) {
           }}
           className="w-full flex items-center gap-2 py-2 text-sm text-[var(--text-muted)] transition-colors cursor-pointer mt-2 hover:text-[var(--text-primary)] text-left relative z-10"
         >
-          {/* Sentiment dots cluster */}
-          <div className="flex items-center gap-1">
-            {sentimentCounts.positive > 0 && (
-              <div className="flex -space-x-0.5">
-                {Array(Math.min(sentimentCounts.positive, 5))
-                  .fill(0)
-                  .map((_, i) => (
-                    <div
-                      key={`pos-${i}`}
-                      className="w-1.5 h-1.5 rounded-full bg-[var(--accent-positive)] border border-[var(--bg-card)]"
-                    />
-                  ))}
-              </div>
-            )}
-            {sentimentCounts.neutral > 0 && (
-              <div className="flex -space-x-0.5">
-                {Array(Math.min(sentimentCounts.neutral, 5))
-                  .fill(0)
-                  .map((_, i) => (
-                    <div
-                      key={`neu-${i}`}
-                      className="w-1.5 h-1.5 rounded-full bg-[var(--accent-neutral)] border border-[var(--bg-card)]"
-                    />
-                  ))}
-              </div>
-            )}
-            {sentimentCounts.negative > 0 && (
-              <div className="flex -space-x-0.5">
-                {Array(Math.min(sentimentCounts.negative, 5))
-                  .fill(0)
-                  .map((_, i) => (
-                    <div
-                      key={`neg-${i}`}
-                      className="w-1.5 h-1.5 rounded-full bg-[var(--accent-negative)] border border-[var(--bg-card)]"
-                    />
-                  ))}
-              </div>
-            )}
-          </div>
+          {/* Source favicons - Using Avatar components to match NewsCard style */}
+          {hiddenSourceFavicons.length > 0 && (
+            <div className="flex items-center" style={{ marginLeft: "-4px" }}>
+              {hiddenSourceFavicons.slice(0, 5).map((favicon, idx) => (
+                <Avatar
+                  key={`favicon-${favicon.sourceId}-${idx}`}
+                  className="border-2 border-[var(--bg-card)]"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    marginLeft: idx > 0 ? "-4px" : "0",
+                    zIndex: 5 - idx,
+                  }}
+                >
+                  <AvatarImage
+                    src={favicon.url}
+                    alt={`${favicon.sourceName} favicon`}
+                    onError={() => {
+                      if (favicon.isDirect) {
+                        handleFaviconError(favicon.sourceId, false);
+                      } else if (favicon.isGoogle) {
+                        handleFaviconError(favicon.sourceId, true);
+                      }
+                    }}
+                  />
+                  <AvatarFallback className="bg-[var(--bg-surface)] text-[var(--text-muted)]">
+                    {favicon.sourceName && favicon.sourceName.length > 0 ? (
+                      <span className="text-[10px] font-semibold uppercase">
+                        {favicon.sourceName.charAt(0)}
+                      </span>
+                    ) : (
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                        />
+                      </svg>
+                    )}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+              {hiddenSourceFavicons.length > 5 && (
+                <Avatar
+                  className="border-2 border-[var(--bg-card)] bg-[var(--bg-surface)]"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    marginLeft: "-4px",
+                    zIndex: 0,
+                  }}
+                >
+                  <AvatarFallback className="bg-[var(--bg-surface)] text-[var(--text-muted)]">
+                    <span className="text-[10px] font-semibold">
+                      +{hiddenSourceFavicons.length - 5}
+                    </span>
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+          )}
           <span className="text-sm text-[var(--text-secondary)]">
             {hiddenCount} more source{hiddenCount !== 1 ? "s" : ""}
           </span>

@@ -120,7 +120,7 @@ function App() {
           setHighlightedNewsId(String(newsItem.id));
           setExpandedNewsId(null);
           updateQueryParam("modal", null);
-          
+
           // Scroll to the highlighted news after a delay
           setTimeout(() => {
             const element = document.getElementById(`news-${String(newsItem.id)}`);
@@ -188,7 +188,6 @@ function App() {
           }
 
           hasInitializedFromQuery.current = true;
-
           // Update meta tags for the shared news item
           const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
           updateMetaTags(newsItem, shareUrl);
@@ -362,8 +361,8 @@ function App() {
             />
           )}
 
-          {/* News Cards Grid - 2 columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          {/* News Cards Grid - 1 column */}
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             {newsData.slice(1).map((item) => (
               <NewsCard
                 key={item.id}
@@ -380,11 +379,10 @@ function App() {
 
         {/* Right side - Sidebar (25% width, sticky on scroll) - Top on mobile, right on desktop */}
         <aside
-          className={`order-1 lg:order-2 lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:h-fit ${
-            highlightedNewsId || expandedNewsId
-              ? "opacity-60 pointer-events-none"
-              : ""
-          }`}
+          className={`order-1 lg:order-2 lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-2 transition-all lg:sticky lg:top-8 lg:h-fit ${highlightedNewsId || expandedNewsId
+            ? "opacity-60 pointer-events-none"
+            : ""
+            }`}
         >
           <BiasDistribution newsData={newsData} />
           <HowToRead
