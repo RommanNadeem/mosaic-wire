@@ -30,7 +30,7 @@ export default function Header() {
 
   return (
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
-      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-4 sm:py-5">
         <div className="flex items-center justify-between">
           {/* Left side - Logo and Date (mobile: stacked, desktop: inline) */}
           <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">

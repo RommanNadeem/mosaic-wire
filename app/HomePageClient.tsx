@@ -42,7 +42,7 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
         </div>
       )}
       <main
-        className="max-w-[90rem] mx-auto px-[40px] py-8
+        className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8
         flex flex-col lg:flex-row lg:items-start
         gap-6 lg:gap-8 w-full"
       >

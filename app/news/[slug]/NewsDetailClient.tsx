@@ -105,7 +105,7 @@ export default function NewsDetailClient({
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <div className="max-w-[90rem] mx-auto px-[40px] py-8">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content - Left Column */}
           <div className="flex-1 lg:w-[75%]">
