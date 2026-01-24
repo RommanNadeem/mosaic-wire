@@ -372,6 +372,10 @@ function App() {
                 isExpanded={expandedNewsId === String(item.id)}
                 onTitleClick={handleTitleClick}
                 onCloseHighlight={handleCloseHighlight}
+                onShare={(url) => {
+                  // Use the URL from ShareButton (already includes slug with last 6 chars of ID)
+                  updateMetaTags(item, url);
+                }}
               />
             ))}
           </div>

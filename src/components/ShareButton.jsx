@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createSlug } from '../utils/slugUtils';
 
 function ShareButton({ 
   newsItem, 
@@ -32,8 +33,9 @@ function ShareButton({
     e.preventDefault();
     e.stopPropagation();
     
-    // Create URL with query parameter using the news ID
-    const shareUrl = `${window.location.origin}${window.location.pathname}?modal=${id}`;
+    // Create URL with slug-based hash format: #news/slug-shortId
+    const slug = createSlug(title, id);
+    const shareUrl = `${window.location.origin}${window.location.pathname}#news/${slug}`;
     const shareTitle = title || 'Check out this news on MosaicBeat';
     
     // Build share text (URL is passed separately to avoid duplication)
