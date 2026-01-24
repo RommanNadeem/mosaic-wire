@@ -95,3 +95,44 @@ export async function getTopicsByCategory(category) {
   }
 }
 
+/**
+ * Get a single topic by short ID (last 6 characters of topic_id)
+ * Used for server-side meta tag generation
+ * @param {string} shortId - Last 6 characters of topic_id
+ * @returns {Promise<Object|null>} Topic object or null if not found
+ */
+export async function getTopicByShortId(shortId) {
+  if (!isSupabaseConfigured || !shortId) {
+    return null
+  }
+
+  try {
+    // Fetch recent topics and find by matching short ID
+    // We limit to recent topics for performance
+    const { data: topics, error } = await supabase
+      .from('topic_snapshots')
+      .select('*')
+      .order('rank_score', { ascending: false })
+      .limit(200) // Limit to recent topics for performance
+
+    if (error) {
+      console.error('Error fetching topics:', error)
+      return null
+    }
+
+    if (!topics || topics.length === 0) return null
+
+    // Find topic where topic_id ends with shortId
+    const topic = topics.find(t => {
+      const topicIdString = String(t.topic_id || t.id || '')
+      const topicShortId = topicIdString.slice(-6)
+      return topicShortId === shortId
+    })
+
+    return topic || null
+  } catch (error) {
+    console.error('Error in getTopicByShortId:', error)
+    return null
+  }
+}
+
