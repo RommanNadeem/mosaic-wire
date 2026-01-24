@@ -3,6 +3,50 @@
  */
 
 /**
+ * Process image URL for social media meta tags
+ * Converts private/authenticated Supabase Storage URLs to public format
+ * Ensures all URLs are absolute and publicly accessible
+ * @param {string} imageUrl - The raw image URL from newsItem
+ * @returns {string} - Processed, publicly accessible image URL
+ */
+function processImageUrlForMetaTags(imageUrl) {
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Supabase Storage URL patterns
+  const supabaseStoragePattern = /(https?:\/\/[^\/]+\.supabase\.co\/storage\/v1\/object\/)(sign|authenticated|public)\/([^\/]+)\/(.+)$/;
+  const match = imageUrl.match(supabaseStoragePattern);
+
+  if (match) {
+    const [, baseUrl, accessType, bucket, path] = match;
+    
+    // Convert private/authenticated buckets to public format
+    // This assumes the bucket is actually public but URL format is wrong
+    if (accessType === 'sign' || accessType === 'authenticated') {
+      // Try converting to public format
+      const publicUrl = `${baseUrl}public/${bucket}/${path}`;
+      console.warn('Converting Supabase Storage URL to public format for social sharing:', {
+        original: imageUrl,
+        converted: publicUrl
+      });
+      return publicUrl;
+    }
+    
+    // Already public, return as-is
+    return imageUrl;
+  }
+
+  // Check if URL is absolute
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl; // Already absolute
+  }
+
+  // Relative path, make it absolute
+  return `${window.location.origin}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+}
+
+/**
  * Updates meta tags for a specific news item
  * @param {Object} newsItem - The news item object with title, summary, image, etc.
  * @param {string} shareUrl - The URL to share
@@ -13,20 +57,21 @@ export function updateMetaTags(newsItem, shareUrl) {
   const title = newsItem.title || 'MosaicBeat - A real-time digest of Pakistan\'s most consequential stories';
   const description = newsItem.summary || 'Read the latest news from Pakistan with AI-powered sentiment analysis.';
   const category = newsItem.category || null;
-  
-  // Use image if available, otherwise use default
-  const image = newsItem.image || `${window.location.origin}/vite.svg`;
   const url = shareUrl || window.location.href;
   
-  // Ensure image URL is absolute and properly formatted
-  // If it's already a full URL (http/https), use it as-is
-  // If it's a Supabase public URL, it should already be absolute
-  let imageUrl;
-  if (image.startsWith('http://') || image.startsWith('https://')) {
-    imageUrl = image; // Already absolute
-  } else {
-    // Relative path, make it absolute
-    imageUrl = `${window.location.origin}${image.startsWith('/') ? image : '/' + image}`;
+  // Process image URL for social sharing
+  // Convert private/authenticated Supabase URLs to public format
+  const defaultImage = `${window.location.origin}/mosaicbeat-white.png`;
+  const rawImage = newsItem.image;
+  let imageUrl = defaultImage; // Default fallback
+  
+  if (rawImage) {
+    const processedUrl = processImageUrlForMetaTags(rawImage);
+    if (processedUrl) {
+      imageUrl = processedUrl;
+    } else {
+      console.warn('Failed to process image URL for meta tags, using default:', rawImage);
+    }
   }
 
   // Helper function to set or update meta tag
@@ -91,7 +136,7 @@ export function updateMetaTags(newsItem, shareUrl) {
 export function resetMetaTags() {
   const defaultTitle = 'MosaicBeat - A real-time digest of Pakistan\'s most consequential stories';
   const defaultDescription = 'Pakistan\'s news, unmasked. Get AI-powered sentiment analysis of the latest news from multiple sources.';
-  const defaultImage = `${window.location.origin}/vite.svg`;
+  const defaultImage = `${window.location.origin}/mosaicbeat-white.png`;
 
   document.title = defaultTitle;
 
