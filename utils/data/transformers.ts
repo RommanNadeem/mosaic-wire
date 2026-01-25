@@ -112,16 +112,17 @@ export function transformTopicToNewsItem(topic: TopicSnapshot, articles: any[] =
     sentiment = calculateSentiment(transformedArticles)
   }
 
-  const timeAgo =
-    topic.topic_time_ago ||
-    topic.time_ago ||
-    calculateTimeAgo(topic.updated_at || (topic as any).created_at)
+  // Calculate time difference from topic creation time on the frontend
+  // Always use created_at if available, otherwise fallback to updated_at
+  const creationTime = topic.created_at || topic.updated_at
+  const minutesAgo = calculateTimeAgo(creationTime)
+  const timeAgo = formatTimeAgo(minutesAgo)
 
   return {
     id: topic.topic_id || (topic as any).id,
     title: topic.headline || (topic as any).topic_name,
     category: topic.tag || (topic as any).category,
-    timeAgo: typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo),
+    timeAgo: timeAgo,
     summary: topic.summary || (topic as any).ai_summary || '',
     sentiment: sentiment,
     image: topic.image_url || null,

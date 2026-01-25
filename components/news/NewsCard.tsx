@@ -69,9 +69,9 @@ export default function NewsCard({
         className={`group overflow-hidden transition-all cursor-pointer rounded-sm`}
         onClick={() => onTitleClick?.(String(id))}
       >
-        <div className="flex flex-row">
+        <div className="flex flex-col sm:flex-row">
           {/* Content Section - Left */}
-          <div className="flex-1 flex flex-col pr-5 pt-5 pb-5 min-w-0">
+          <div className="flex-1 flex flex-col p-4 sm:pr-5 sm:pt-5 sm:pb-5 min-w-0">
             {/* Category, Date, and Share Button */}
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ export default function NewsCard({
           </div>
 
           {/* Image Section - Right */}
-          <div className="w-48 flex-shrink-0 h-48 overflow-hidden relative">
+          <div className="w-full sm:w-48 flex-shrink-0 h-48 overflow-hidden relative order-first sm:order-none">
             {imageUrl && !imageError ? (
               <img
                 src={imageUrl}

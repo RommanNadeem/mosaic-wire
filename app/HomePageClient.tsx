@@ -43,12 +43,12 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
       )}
       <main
         className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8
-        flex flex-col lg:flex-row lg:items-start
+        flex flex-col xl:flex-row lg:items-start
         gap-6 lg:gap-8 w-full"
       >
         {/* Left side - Main Content */}
-        <div className="order-2 lg:order-1 flex-1 lg:w-[75%] flex flex-col gap-6 lg:gap-8">
-          {/* Featured News - Highest Priority Topic */}
+        <div className="order-2 xl:order-1 flex-1 xl:w-[75%] flex flex-col gap-6 lg:gap-8">
+          {/* Featured News - Highest Trending Score Topic */}
           {newsData.length > 0 && (
             <FeaturedNews
               newsItem={newsData[0]}
@@ -62,7 +62,7 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
             <div className="border-t border-[var(--text-primary)] mb-4"></div>
           )}
 
-          {/* Big Updates - Next 5 Highest Priority Topics */}
+          {/* Big Updates - Next 5 Highest Trending Score Topics */}
           {newsData.length > 1 && (
             <BigUpdates
               newsItems={newsData.slice(1, 6)}
@@ -88,7 +88,7 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
 
         {/* Right side - Sidebar */}
         <aside
-          className="order-1 lg:order-2 lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 transition-all lg:sticky lg:top-8 lg:h-fit"
+          className="order-1 xl:order-2 xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 transition-all xl:sticky xl:top-8 xl:h-fit"
         >
           <BiasDistribution newsData={newsData} />
           <WhatWeAnalyze newsData={newsData} />

@@ -71,7 +71,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
       onClick={() => onTitleClick?.(String(id))}
     >
       {/* Image */}
-      <div className="w-full h-64 sm:h-80 overflow-hidden relative">
+      <div className="w-full h-64 md:h-80 lg:h-[450px] overflow-hidden relative">
         {imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -137,7 +137,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
 
         {/* Headline */}
         <h2
-          className="text-xl sm:text-[49px] font-bold text-[var(--text-primary)] leading-tight transition-colors mb-3 line-clamp-2 text-left group-hover:underline"
+          className="text-2xl md:text-4xl lg:text-[49px] font-bold text-[var(--text-primary)] leading-tight transition-colors mb-3 line-clamp-2 text-left group-hover:underline"
         >
           {title}
         </h2>

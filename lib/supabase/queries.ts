@@ -3,7 +3,7 @@ import { createServerClient } from './server'
 
 /**
  * Fetch topics from topic_snapshots table (client-side)
- * Uses rank_score for ordering (precomputed snapshots)
+ * Uses trending_score for ordering (precomputed snapshots)
  */
 export async function getLatestTopics(limit: number | null = null) {
   if (!isSupabaseConfigured || !supabase) {
@@ -14,7 +14,7 @@ export async function getLatestTopics(limit: number | null = null) {
     let query = supabase
       .from('topic_snapshots')
       .select('*')
-      .order('rank_score', { ascending: false })
+      .order('trending_score', { ascending: false })
     
     if (limit !== null && limit !== undefined) {
       query = query.limit(limit)
@@ -36,7 +36,7 @@ export async function getLatestTopics(limit: number | null = null) {
 
 /**
  * Fetch topics from topic_snapshots table (server-side)
- * Uses rank_score for ordering (precomputed snapshots)
+ * Uses trending_score for ordering (precomputed snapshots)
  */
 export async function getLatestTopicsServer(limit: number | null = null) {
   const supabaseClient = createServerClient()
@@ -48,7 +48,7 @@ export async function getLatestTopicsServer(limit: number | null = null) {
     let query = supabaseClient
       .from('topic_snapshots')
       .select('*')
-      .order('rank_score', { ascending: false })
+      .order('trending_score', { ascending: false })
     
     if (limit !== null && limit !== undefined) {
       query = query.limit(limit)
@@ -108,7 +108,7 @@ export async function getTopicByShortIdServer(shortId: string) {
     const { data: topics, error } = await supabaseClient
       .from('topic_snapshots')
       .select('*')
-      .order('rank_score', { ascending: false })
+      .order('trending_score', { ascending: false })
       .limit(200)
 
     if (error) {
@@ -199,7 +199,7 @@ export async function getTopicsByCategory(category: string) {
       .from('topic_snapshots')
       .select('*')
       .eq('tag', category)
-      .order('rank_score', { ascending: false })
+      .order('trending_score', { ascending: false })
 
     if (error) {
       console.error('Error fetching topics by category:', error)

@@ -106,9 +106,9 @@ export default function NewsDetailClient({
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <div className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col xl:flex-row gap-8">
           {/* Main Content - Left Column */}
-          <div className="flex-1 lg:w-[75%]">
+          <div className="flex-1 xl:w-[75%]">
             {/* Top Section - Back Link, Category, Date */}
             <div className="mb-6">
               <Link 
@@ -129,7 +129,7 @@ export default function NewsDetailClient({
                 {/* Share Button - Right side */}
                 <ShareButton newsItem={newsItem} onShare={() => {}} />
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
                 {title}
               </h1>
             </div>
@@ -182,7 +182,7 @@ export default function NewsDetailClient({
             )}
 
             {/* Image */}
-            <div className="w-full h-[250px] lg:h-[350px] mb-12 overflow-hidden relative">
+            <div className="w-full h-[200px] md:h-[300px] lg:h-[400px] mb-12 overflow-hidden relative">
               {imageUrl && !imageError ? (
                 <img
                   src={imageUrl}
@@ -272,7 +272,7 @@ export default function NewsDetailClient({
                     return (
                       <div 
                         key={source.id} 
-                        className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm p-4 flex items-start gap-4"
+                        className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm p-4 flex flex-col sm:flex-row items-start gap-4"
                       >
                         {/* Source Icon/Logo */}
                         <Avatar className="w-10 h-10 flex-shrink-0 rounded-sm">
@@ -336,7 +336,7 @@ export default function NewsDetailClient({
           </div>
 
           {/* Right Sidebar */}
-          <aside className="lg:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 lg:sticky lg:top-8 lg:h-fit">
+          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:top-8 xl:h-fit">
             <BiasDistribution newsData={allNewsData} />
             <WhatWeAnalyze newsData={allNewsData} />
             <LatestStories newsData={allNewsData} />

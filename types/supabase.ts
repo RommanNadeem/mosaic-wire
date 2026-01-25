@@ -32,9 +32,11 @@ export interface TopicSnapshot {
   overall_sentiment: number
   top_articles: TopArticle[]
   rank_score: number
+  trending_score?: number
   time_ago?: string
   topic_time_ago?: string
   updated_at: string
+  created_at?: string
   snapshot_timestamp?: string
   date?: string
 }
