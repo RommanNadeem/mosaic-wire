@@ -19,6 +19,14 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Next.js
+.next/
+out/
+
+# Debug logs
+.cursor/
+*.log
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

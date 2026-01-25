@@ -10,7 +10,6 @@ export async function getLatestTopics(limit = null) {
   if (!isSupabaseConfigured) {
     return []
   }
-
   try {
     let query = supabase
       .from('topic_snapshots')
