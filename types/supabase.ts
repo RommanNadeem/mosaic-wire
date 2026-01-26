@@ -35,6 +35,7 @@ export interface TopicSnapshot {
   trending_score?: number
   time_ago?: string
   topic_time_ago?: string
+  topic_created_at?: string
   updated_at: string
   created_at?: string
   snapshot_timestamp?: string
