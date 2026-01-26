@@ -110,3 +110,13 @@ export function getCategoryColor(category: string | null | undefined): string {
   return result
 }
 
+/**
+ * Get category text color (converts background color to text color)
+ * Returns a text color class for the category
+ */
+export function getCategoryTextColor(category: string | null | undefined): string {
+  const bgColor = getCategoryColor(category)
+  // Convert bg- classes to text- classes
+  return bgColor.replace('bg-', 'text-')
+}
+

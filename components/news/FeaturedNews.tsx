@@ -5,7 +5,7 @@ import type { NewsItem } from '@/types/news'
 import { useImage } from '@/hooks/useImage'
 import { useTouchDevice } from '@/hooks/useTouchDevice'
 import { formatTimeAgo } from '@/utils/formatting/time'
-import { capitalizeFirst, getCategoryColor } from '@/utils/category/category'
+import { capitalizeFirst, getCategoryTextColor } from '@/utils/category/category'
 import ShareButton from '@/components/shared/ShareButton'
 import SourceList from '@/components/news/SourceList'
 import SentimentTooltip from '@/components/sentiment/SentimentTooltip'
@@ -67,7 +67,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
   return (
     <article
       id={`news-${id}`}
-      className="group overflow-hidden mb-8 relative transition-all duration-200 rounded-sm cursor-pointer"
+      className="group overflow-hidden mb-8 relative transition-all duration-200 cursor-pointer rounded-none"
       onClick={() => onTitleClick?.(String(id))}
     >
       {/* Image */}
@@ -99,48 +99,40 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
         )}
       </div>
 
-      <div className="pr-4 sm:pr-6 py-4">
-        {/* Category, Date, and Share Button */}
+      <div className="pr-4 sm:pr-6 py-4 overflow-visible">
+        {/* Category and Share Button */}
         <div className="flex items-center justify-between gap-3 mb-3 text-left">
           <div className="flex items-center gap-3">
             {(() => {
-              const colorClass = getCategoryColor(category)
-              const displayText = category || 'UNCATEGORIZED'
-              const fullClassName = `px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`
-              // #region agent log
-              fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/FeaturedNews.tsx:111',message:'rendering category badge',data:{category,displayText,colorClass,fullClassName,classNameLength:fullClassName.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'D'})}).catch(()=>{});
-              // #endregion
-              // #region agent log - verify DOM after render
-              if (typeof window !== 'undefined') {
-                setTimeout(() => {
-                  const elements = document.querySelectorAll('[class*="bg-blue-600"], [class*="bg-purple-600"], [class*="bg-slate-600"], [class*="bg-green-600"]')
-                  elements.forEach((el, idx) => {
-                    const computedStyle = window.getComputedStyle(el)
-                    fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/FeaturedNews.tsx:DOM',message:'DOM element check',data:{elementIndex:idx,className:el.className,bgColor:computedStyle.backgroundColor,color:computedStyle.color,hasBgClass:el.className.includes('bg-')},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-                  })
-                }, 1000)
-              }
-              // #endregion
+              const textColorClass = getCategoryTextColor(category)
+              const displayText = (category || 'UNCATEGORIZED').toUpperCase()
               return (
-                <span className={fullClassName}>
+                <span className={`text-xs font-semibold uppercase ${textColorClass}`}>
                   {displayText}
                 </span>
               )
             })()}
-            <span className="text-xs text-[var(--text-muted)]">
-              {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
-            </span>
           </div>
           {/* Share Button - Right side */}
           <ShareButton newsItem={newsItem} onShare={onShare} />
         </div>
 
         {/* Headline */}
-        <h2
-          className="text-2xl md:text-4xl lg:text-[49px] font-bold text-[var(--text-primary)] leading-tight transition-colors mb-3 line-clamp-2 text-left group-hover:underline"
-        >
-          {title}
-        </h2>
+        <div className="mb-6">
+          <h2
+            className="text-2xl md:text-4xl lg:text-[49px] font-bold text-[var(--text-primary)] leading-[1.25] transition-all line-clamp-2 text-left group-hover:underline decoration-2 underline-offset-2"
+            style={{ 
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              paddingBottom: '0.15em'
+            }}
+          >
+            {title}
+          </h2>
+        </div>
 
         {/* Sentiment Bar with percentage on the right */}
         {sentiment && total > 0 && (
@@ -196,48 +188,53 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
           </p>
         )}
 
-        {/* Source Aggregation */}
-        {sources && sources.length > 0 && (
-          <div className="flex items-center gap-2 text-left">
-            <div className="flex items-center -space-x-2">
-              {uniqueSources.slice(0, 4).map((source, index) => {
-                const domain = source.url ? (() => {
-                  try {
-                    const urlObj = new URL(source.url)
-                    return urlObj.hostname.replace('www.', '')
-                  } catch (e) {
-                    const match = source.url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
-                    return match ? match[1] : null
-                  }
-                })() : null
-                const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
-                
-                return (
-                  <Avatar
-                    key={source.id || source.source}
-                    className="w-6 h-6 ring-1 ring-[var(--bg-card)]"
-                    style={{ zIndex: 4 - index }}
-                  >
-                    {faviconUrl ? (
-                      <AvatarImage
-                        src={faviconUrl}
-                        alt={source.source || 'Source'}
-                      />
-                    ) : null}
-                    <AvatarFallback className="text-[9px] text-[var(--text-muted)] bg-[var(--bg-surface)]">
-                      {(source.source || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                )
-              })}
-            </div>
-            {uniqueSources.length > 4 && (
-              <span className="text-xs text-[var(--text-muted)] font-medium">
-                +{uniqueSources.length - 4} more
-              </span>
-            )}
-          </div>
-        )}
+        {/* Source Aggregation with Time */}
+        <div className="flex items-center gap-2 text-left">
+          {sources && sources.length > 0 && (
+            <>
+              <div className="flex items-center -space-x-2">
+                {uniqueSources.slice(0, 4).map((source, index) => {
+                  const domain = source.url ? (() => {
+                    try {
+                      const urlObj = new URL(source.url)
+                      return urlObj.hostname.replace('www.', '')
+                    } catch (e) {
+                      const match = source.url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
+                      return match ? match[1] : null
+                    }
+                  })() : null
+                  const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
+                  
+                  return (
+                    <Avatar
+                      key={source.id || source.source}
+                      className="w-6 h-6 ring-1 ring-[var(--bg-card)]"
+                      style={{ zIndex: 4 - index }}
+                    >
+                      {faviconUrl ? (
+                        <AvatarImage
+                          src={faviconUrl}
+                          alt={source.source || 'Source'}
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-[9px] text-[var(--text-muted)] bg-[var(--bg-surface)]">
+                        {(source.source || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )
+                })}
+              </div>
+              {uniqueSources.length > 4 && (
+                <span className="text-xs text-[var(--text-muted)] font-medium">
+                  +{uniqueSources.length - 4} more
+                </span>
+              )}
+            </>
+          )}
+          <span className="text-xs text-[var(--text-muted)] ml-auto">
+            {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
+        </div>
       </div>
     </article>
   )

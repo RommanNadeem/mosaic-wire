@@ -48,13 +48,13 @@ export default function SentimentTooltip({
     }
 
     const tooltipLeft = barRect.left + (barRect.width * left) / 100
-    const tooltipTop = barRect.top - 10
+    const tooltipTop = barRect.top - 8
 
     setTooltipStyle({
       position: 'fixed',
       left: `${tooltipLeft}px`,
       top: `${tooltipTop}px`,
-      transform: 'translateX(-50%)',
+      transform: 'translateX(-50%) translateY(-100%)',
       zIndex: 9999,
     })
   }, [hoveredSegment, sentiment, sentimentBarRef, setTooltipStyle])
@@ -75,42 +75,56 @@ export default function SentimentTooltip({
   const getSegmentLabel = (segment: string) => {
     switch (segment) {
       case 'positive':
-        return 'Positive'
+        return 'POSITIVE'
       case 'negative':
-        return 'Negative'
+        return 'NEGATIVE'
       case 'neutral':
-        return 'Neutral'
+        return 'NEUTRAL'
       default:
-        return segment
+        return segment.toUpperCase()
+    }
+  }
+
+  const getSegmentDescription = (segment: string) => {
+    switch (segment) {
+      case 'positive':
+        return 'Constructive or optimistic coverage'
+      case 'negative':
+        return 'Critical or concerning coverage'
+      case 'neutral':
+        return 'Factual or balanced reporting'
+      default:
+        return ''
     }
   }
 
   const getSegmentValue = (segment: string) => {
     switch (segment) {
       case 'positive':
-        return { count: positive, percentage: percentages.positive }
+        return percentages.positive
       case 'negative':
-        return { count: negative, percentage: percentages.negative }
+        return percentages.negative
       case 'neutral':
-        return { count: neutral, percentage: percentages.neutral }
+        return percentages.neutral
       default:
-        return { count: 0, percentage: 0 }
+        return 0
     }
   }
 
-  const segmentValue = getSegmentValue(hoveredSegment)
+  const percentage = getSegmentValue(hoveredSegment)
+  const description = getSegmentDescription(hoveredSegment)
 
   return (
     <div
       ref={tooltipRef}
       style={tooltipStyle}
-      className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded px-3 py-2 shadow-lg pointer-events-none"
+      className="bg-black text-white px-3 py-2 rounded-sm pointer-events-none whitespace-nowrap z-[9999] shadow-xl border border-white/10"
     >
-      <div className="text-xs font-semibold text-[var(--text-primary)] mb-1">
-        {getSegmentLabel(hoveredSegment)}
+      <div className="text-[10px] font-bold tracking-wider mb-0.5">
+        {getSegmentLabel(hoveredSegment)} {percentage}%
       </div>
-      <div className="text-xs text-[var(--text-secondary)]">
-        {segmentValue.count} article{segmentValue.count !== 1 ? 's' : ''} ({segmentValue.percentage}%)
+      <div className="text-[9px] text-gray-400 font-medium uppercase tracking-tight">
+        {description}
       </div>
     </div>
   )

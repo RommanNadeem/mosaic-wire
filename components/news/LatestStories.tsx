@@ -89,9 +89,8 @@ export default function LatestStories({ newsData }: LatestStoriesProps) {
   }
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] p-4">
-      <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4 uppercase tracking-wide flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-[var(--accent-positive)]"></span>
+    <div className="p-4 border border-[var(--border-subtle)]">
+      <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4 uppercase tracking-wide">
         The Latest
       </h2>
       <div className="space-y-3">

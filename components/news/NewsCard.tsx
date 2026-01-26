@@ -1,11 +1,14 @@
 'use client'
 
+import { useState, useRef } from 'react'
 import type { NewsItem } from '@/types/news'
 import { useImage } from '@/hooks/useImage'
+import { useTouchDevice } from '@/hooks/useTouchDevice'
 import { formatTimeAgo } from '@/utils/formatting/time'
-import { capitalizeFirst, getCategoryColor } from '@/utils/category/category'
+import { capitalizeFirst, getCategoryTextColor } from '@/utils/category/category'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import ShareButton from '@/components/shared/ShareButton'
+import SentimentTooltip from '@/components/sentiment/SentimentTooltip'
 
 interface NewsCardProps {
   newsItem: NewsItem
@@ -21,6 +24,11 @@ export default function NewsCard({
   layout = 'vertical',
 }: NewsCardProps) {
   const { imageUrl, imageError } = useImage(newsItem?.image || null)
+  const { isTouchDevice } = useTouchDevice()
+  const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const sentimentBarRef = useRef<HTMLDivElement>(null)
 
   if (!newsItem) return null
 
@@ -66,30 +74,24 @@ export default function NewsCard({
     return (
       <article
         id={`news-${id}`}
-        className={`group overflow-hidden transition-all cursor-pointer rounded-sm`}
+        className={`group overflow-hidden transition-all cursor-pointer rounded-none`}
         onClick={() => onTitleClick?.(String(id))}
       >
         <div className="flex flex-col sm:flex-row">
           {/* Content Section - Left */}
-          <div className="flex-1 flex flex-col p-4 sm:pr-5 sm:pt-5 sm:pb-5 min-w-0">
-            {/* Category, Date, and Share Button */}
+          <div className="flex-1 flex flex-col pt-5 pb-5 pr-5 min-w-0">
+            {/* Category and Share Button */}
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
                 {(() => {
-                  const colorClass = getCategoryColor(category)
-                  const displayText = category || 'UNCATEGORIZED'
-                  // #region agent log
-                  fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/NewsCard.tsx:85',message:'rendering category badge (horizontal)',data:{category,displayText,colorClass,layout:'horizontal'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                  // #endregion
+                  const textColorClass = getCategoryTextColor(category)
+                  const displayText = (category || 'UNCATEGORIZED').toUpperCase()
                   return (
-                    <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`}>
+                    <span className={`text-xs font-semibold uppercase ${textColorClass}`}>
                       {displayText}
                     </span>
                   )
                 })()}
-                <span className="text-xs text-[var(--text-muted)]">
-                  {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
-                </span>
               </div>
               {/* Share Button - Right side */}
               <ShareButton newsItem={newsItem} onShare={onShare} />
@@ -104,31 +106,47 @@ export default function NewsCard({
 
             {/* Sentiment Bar */}
             {sentiment && total > 0 && (
-              <div className="mb-3">
+              <div className="mb-3" ref={sentimentBarRef}>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-xs font-semibold text-[var(--text-primary)] uppercase">
                     {dominantSentiment} {dominantPercentage}%
                   </span>
                 </div>
-                <div className="flex h-3 overflow-hidden">
-                  {percentages.negative > 0 && (
-                    <div
-                      className="bg-[var(--accent-negative)]"
-                      style={{ width: `${percentages.negative}%` }}
-                    />
-                  )}
-                  {percentages.neutral > 0 && (
-                    <div
-                      className="bg-[var(--accent-neutral)]"
-                      style={{ width: `${percentages.neutral}%` }}
-                    />
-                  )}
-                  {percentages.positive > 0 && (
-                    <div
-                      className="bg-[var(--accent-positive)]"
-                      style={{ width: `${percentages.positive}%` }}
-                    />
-                  )}
+                <div className="relative overflow-visible">
+                  <div className="flex h-3 overflow-hidden">
+                    {percentages.negative > 0 && (
+                      <div
+                        className="bg-[var(--accent-negative)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                        style={{ width: `${percentages.negative}%` }}
+                        onMouseEnter={() => !isTouchDevice && setHoveredSegment('negative')}
+                        onMouseLeave={() => setHoveredSegment(null)}
+                      />
+                    )}
+                    {percentages.neutral > 0 && (
+                      <div
+                        className="bg-[var(--accent-neutral)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                        style={{ width: `${percentages.neutral}%` }}
+                        onMouseEnter={() => !isTouchDevice && setHoveredSegment('neutral')}
+                        onMouseLeave={() => setHoveredSegment(null)}
+                      />
+                    )}
+                    {percentages.positive > 0 && (
+                      <div
+                        className="bg-[var(--accent-positive)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                        style={{ width: `${percentages.positive}%` }}
+                        onMouseEnter={() => !isTouchDevice && setHoveredSegment('positive')}
+                        onMouseLeave={() => setHoveredSegment(null)}
+                      />
+                    )}
+                  </div>
+                  <SentimentTooltip
+                    hoveredSegment={hoveredSegment}
+                    sentiment={sentiment}
+                    tooltipRef={tooltipRef}
+                    sentimentBarRef={sentimentBarRef}
+                    tooltipStyle={tooltipStyle}
+                    setTooltipStyle={setTooltipStyle}
+                  />
                 </div>
               </div>
             )}
@@ -140,52 +158,58 @@ export default function NewsCard({
               </p>
             )}
 
-            {/* Source Avatars and Count */}
-            {sources && sources.length > 0 && (
-              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mt-auto">
-                <div className="flex items-center -space-x-2">
-                  {displayedSources.map((source, index) => {
-                    const domain = source.url ? (() => {
-                      try {
-                        const urlObj = new URL(source.url)
-                        return urlObj.hostname.replace('www.', '')
-                      } catch (e) {
-                        const match = source.url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
-                        return match ? match[1] : null
-                      }
-                    })() : null
-                    const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
-                    const fallback = source.source ? source.source.charAt(0).toUpperCase() : '?'
-                    
-                    return (
-                      <Avatar
-                        key={source.id || source.source}
-                        className="h-6 w-6 ring-1 ring-[var(--bg-card)]"
-                      >
-                        <AvatarImage src={faviconUrl || undefined} alt={source.source || 'Source'} />
-                        <AvatarFallback className="text-[var(--text-secondary)] text-xs font-medium">
-                          {fallback}
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  })}
-                </div>
-                {remainingSourcesCount > 0 && (
-                  <span className="font-medium text-[var(--text-secondary)]">
-                    +{remainingSourcesCount} more
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Source Avatars, Count, and Time */}
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mt-auto">
+              {sources && sources.length > 0 && (
+                <>
+                  <div className="flex items-center -space-x-2">
+                    {displayedSources.map((source, index) => {
+                      const domain = source.url ? (() => {
+                        try {
+                          const urlObj = new URL(source.url)
+                          return urlObj.hostname.replace('www.', '')
+                        } catch (e) {
+                          const match = source.url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
+                          return match ? match[1] : null
+                        }
+                      })() : null
+                      const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
+                      const fallback = source.source ? source.source.charAt(0).toUpperCase() : '?'
+                      
+                      return (
+                        <Avatar
+                          key={source.id || source.source}
+                          className="h-6 w-6 ring-1 ring-[var(--bg-card)]"
+                        >
+                          <AvatarImage src={faviconUrl || undefined} alt={source.source || 'Source'} />
+                          <AvatarFallback className="text-[var(--text-secondary)] text-xs font-medium">
+                            {fallback}
+                          </AvatarFallback>
+                        </Avatar>
+                      )
+                    })}
+                  </div>
+                  {remainingSourcesCount > 0 && (
+                    <span className="font-medium text-[var(--text-secondary)]">
+                      +{remainingSourcesCount} more
+                    </span>
+                  )}
+                </>
+              )}
+              <span className="text-xs text-[var(--text-muted)] ml-auto">
+                {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+              </span>
+            </div>
           </div>
 
           {/* Image Section - Right */}
-          <div className="w-full sm:w-48 flex-shrink-0 h-48 overflow-hidden relative order-first sm:order-none">
+          <div className="w-full sm:w-48 flex-shrink-0 h-48 overflow-hidden relative order-first sm:order-none flex items-center justify-center">
             {imageUrl && !imageError ? (
               <img
                 src={imageUrl}
                 alt={title || 'News image'}
-                className="w-full h-full object-cover object-right-center"
+                className="min-w-full min-h-full w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                style={{ objectPosition: 'center' }}
                 loading="lazy"
               />
             ) : (
@@ -215,7 +239,7 @@ export default function NewsCard({
   return (
     <article
       id={`news-${id}`}
-      className={`group overflow-hidden transition-all cursor-pointer rounded-sm`}
+      className={`group overflow-hidden transition-all cursor-pointer`}
       onClick={() => onTitleClick?.(String(id))}
     >
       {/* Image */}
@@ -224,7 +248,7 @@ export default function NewsCard({
           <img
             src={imageUrl}
             alt={title || 'News image'}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
@@ -247,24 +271,18 @@ export default function NewsCard({
       </div>
 
       <div className="pr-4 pt-4 pb-4">
-        {/* Category, Date, and Share Button */}
+        {/* Category and Share Button */}
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-3">
             {(() => {
-              const colorClass = getCategoryColor(category)
-              const displayText = category || 'UNCATEGORIZED'
-              // #region agent log
-              fetch('http://127.0.0.1:7244/ingest/42a0f6a5-3fa7-4a58-9e96-0413017a13f0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'components/news/NewsCard.tsx:250',message:'rendering category badge (vertical)',data:{category,displayText,colorClass,layout:'vertical'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-              // #endregion
+              const textColorClass = getCategoryTextColor(category)
+              const displayText = (category || 'UNCATEGORIZED').toUpperCase()
               return (
-                <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${colorClass}`}>
+                <span className={`text-xs font-semibold uppercase ${textColorClass}`}>
                   {displayText}
                 </span>
               )
             })()}
-            <span className="text-xs text-[var(--text-muted)]">
-              {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
-            </span>
           </div>
           {/* Share Button - Right side */}
           <ShareButton newsItem={newsItem} onShare={onShare} />
@@ -272,38 +290,54 @@ export default function NewsCard({
 
         {/* Title */}
         <h3
-          className="text-base font-bold text-[var(--text-primary)] transition-colors mb-3 line-clamp-2 leading-tight group-hover:underline"
+          className="text-base font-bold text-[var(--text-primary)] transition-colors mb-3 line-clamp-2 leading-tight group-hover:underline overflow-hidden h-[2.5rem]"
         >
           {title}
         </h3>
 
         {/* Sentiment Bar */}
         {sentiment && total > 0 && (
-          <div className="mb-3">
+          <div className="mb-3" ref={sentimentBarRef}>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-xs font-semibold text-[var(--text-primary)] uppercase">
                 {dominantSentiment} {dominantPercentage}%
               </span>
             </div>
-            <div className="flex h-3 overflow-hidden bg-[var(--bg-surface)]">
-              {percentages.negative > 0 && (
-                <div
-                  className="bg-[var(--accent-negative)]"
-                  style={{ width: `${percentages.negative}%` }}
-                />
-              )}
-              {percentages.neutral > 0 && (
-                <div
-                  className="bg-[var(--accent-neutral)]"
-                  style={{ width: `${percentages.neutral}%` }}
-                />
-              )}
-              {percentages.positive > 0 && (
-                <div
-                  className="bg-[var(--accent-positive)]"
-                  style={{ width: `${percentages.positive}%` }}
-                />
-              )}
+            <div className="relative overflow-visible">
+              <div className="flex h-3 overflow-hidden bg-[var(--bg-surface)]">
+                {percentages.negative > 0 && (
+                  <div
+                    className="bg-[var(--accent-negative)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                    style={{ width: `${percentages.negative}%` }}
+                    onMouseEnter={() => !isTouchDevice && setHoveredSegment('negative')}
+                    onMouseLeave={() => setHoveredSegment(null)}
+                  />
+                )}
+                {percentages.neutral > 0 && (
+                  <div
+                    className="bg-[var(--accent-neutral)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                    style={{ width: `${percentages.neutral}%` }}
+                    onMouseEnter={() => !isTouchDevice && setHoveredSegment('neutral')}
+                    onMouseLeave={() => setHoveredSegment(null)}
+                  />
+                )}
+                {percentages.positive > 0 && (
+                  <div
+                    className="bg-[var(--accent-positive)] cursor-pointer transition-all duration-200 hover:brightness-110"
+                    style={{ width: `${percentages.positive}%` }}
+                    onMouseEnter={() => !isTouchDevice && setHoveredSegment('positive')}
+                    onMouseLeave={() => setHoveredSegment(null)}
+                  />
+                )}
+              </div>
+              <SentimentTooltip
+                hoveredSegment={hoveredSegment}
+                sentiment={sentiment}
+                tooltipRef={tooltipRef}
+                sentimentBarRef={sentimentBarRef}
+                tooltipStyle={tooltipStyle}
+                setTooltipStyle={setTooltipStyle}
+              />
             </div>
           </div>
         )}
@@ -315,48 +349,53 @@ export default function NewsCard({
           </p>
         )}
 
-        {/* Source Count */}
-        {sources && sources.length > 0 && (
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-medium">
-            <div className="flex items-center -space-x-2">
-              {sources.slice(0, 4).map((source, index) => {
-                const domain = source.url ? (() => {
-                  try {
-                    const urlObj = new URL(source.url)
-                    return urlObj.hostname.replace('www.', '')
-                  } catch (e) {
-                    const match = source.url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
-                    return match ? match[1] : null
-                  }
-                })() : null
-                const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
-                
-                return (
-                  <Avatar
-                    key={source.id}
-                    className="w-6 h-6 border-2 border-[var(--bg-card)]"
-                    style={{ zIndex: 4 - index }}
-                  >
-                    {faviconUrl ? (
-                      <AvatarImage
-                        src={faviconUrl}
-                        alt={source.source || 'Source'}
-                      />
-                    ) : null}
-                    <AvatarFallback className="text-[9px] text-[var(--text-muted)]">
-                      {(source.source || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                )
-              })}
-            </div>
-            {sources.length > 4 && (
-              <span className="text-xs text-[var(--text-muted)] font-medium">
-                +{sources.length - 4} more
-              </span>
-            )}
-          </div>
-        )}
+        {/* Source Count and Time */}
+        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-medium">
+          {sources && sources.length > 0 && (
+            <>
+              <div className="flex items-center -space-x-2">
+                {sources.slice(0, 4).map((source, index) => {
+                  const domain = source.url ? (() => {
+                    try {
+                      const urlObj = new URL(source.url)
+                      return urlObj.hostname.replace('www.', '')
+                    } catch (e) {
+                      const match = source.url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
+                      return match ? match[1] : null
+                    }
+                  })() : null
+                  const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
+                  
+                  return (
+                    <Avatar
+                      key={source.id}
+                      className="w-6 h-6 border-2 border-[var(--bg-card)]"
+                      style={{ zIndex: 4 - index }}
+                    >
+                      {faviconUrl ? (
+                        <AvatarImage
+                          src={faviconUrl}
+                          alt={source.source || 'Source'}
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-[9px] text-[var(--text-muted)]">
+                        {(source.source || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )
+                })}
+              </div>
+              {sources.length > 4 && (
+                <span className="text-xs text-[var(--text-muted)] font-medium">
+                  +{sources.length - 4} more
+                </span>
+              )}
+            </>
+          )}
+          <span className="text-xs text-[var(--text-muted)] ml-auto">
+            {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+          </span>
+        </div>
       </div>
     </article>
   )

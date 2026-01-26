@@ -17,13 +17,11 @@ export default function BigUpdates({ newsItems, onTitleClick, onShare }: BigUpda
   return (
     <div className="mb-8">
       <div className="mb-4">
-        <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">
+        <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide mb-2">
           THE BIG STORY
         </h2>
+        <div className="border-t border-[var(--text-primary)]"></div>
       </div>
-      
-      {/* Bottom divider - slightly thicker */}
-      <div className="border-t-2 border-[var(--text-primary)] mb-4"></div>
       
       <div className="grid grid-cols-1 gap-4">
         {newsItems.map((item) => (
