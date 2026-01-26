@@ -11,6 +11,16 @@ const nextConfig = {
     ],
     domains: ['localhost'],
   },
+  // Webpack configuration to fix Supabase module resolution
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
+  },
   // Headers for security
   async headers() {
     return [

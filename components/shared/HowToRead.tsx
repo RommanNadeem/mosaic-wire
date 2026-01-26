@@ -11,7 +11,7 @@ interface HowToReadProps {
 
 export default function HowToRead({ newsData, isExpanded, onToggle }: HowToReadProps) {
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] p-4">
+    <div className="p-4 border border-[var(--border-subtle)]">
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between text-left"
@@ -36,50 +36,47 @@ export default function HowToRead({ newsData, isExpanded, onToggle }: HowToReadP
         </svg>
       </button>
 
-      {isExpanded && (
-        <div className="mt-4 space-y-3 text-xs text-[var(--text-secondary)]">
-          <div>
-            <h3 className="font-semibold text-[var(--text-primary)] mb-1">
-              Sentiment Colors
-            </h3>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[var(--accent-positive)]"></div>
-                <span>Positive sentiment</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[var(--accent-neutral)]"></div>
-                <span>Neutral sentiment</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[var(--accent-negative)]"></div>
-                <span>Negative sentiment</span>
-              </div>
-            </div>
-          </div>
+             {isExpanded && (
+               <div className="mt-4 space-y-4 text-xs text-[var(--text-secondary)]">
+                 <div>
+                   <h3 className="font-bold text-[var(--text-primary)] mb-2 uppercase tracking-tight">
+                     Sentiment Spectrum
+                   </h3>
+                   <div className="space-y-1.5">
+                     <div className="flex items-center gap-2">
+                       <div className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-positive)]"></div>
+                       <span><strong className="text-[var(--text-primary)]">POSITIVE:</strong> Constructive or optimistic coverage</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <div className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-neutral)]"></div>
+                       <span><strong className="text-[var(--text-primary)]">NEUTRAL:</strong> Factual or balanced reporting</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <div className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-negative)]"></div>
+                       <span><strong className="text-[var(--text-primary)]">NEGATIVE:</strong> Critical or concerning coverage</span>
+                     </div>
+                   </div>
+                 </div>
 
-          <div>
-            <h3 className="font-semibold text-[var(--text-primary)] mb-1">
-              Reading the Bars
-            </h3>
-            <p>
-              The sentiment bars show the distribution of positive, neutral, and negative
-              articles across all sources. Click on a segment to filter sources by that
-              sentiment.
-            </p>
-          </div>
+                 <div>
+                   <h3 className="font-bold text-[var(--text-primary)] mb-1 uppercase tracking-tight">
+                     The Sentiment Bar
+                   </h3>
+                   <p className="leading-relaxed">
+                     Visualizes the breakdown of viewpoints across all analyzed sources. Hover over any segment to see the exact percentage of coverage for that sentiment.
+                   </p>
+                 </div>
 
-          <div>
-            <h3 className="font-semibold text-[var(--text-primary)] mb-1">
-              Sources
-            </h3>
-            <p>
-              Each source is color-coded by sentiment. Click on any headline to read the
-              full article from that source.
-            </p>
-          </div>
-        </div>
-      )}
+                 <div>
+                   <h3 className="font-bold text-[var(--text-primary)] mb-1 uppercase tracking-tight">
+                     Source Verification
+                   </h3>
+                   <p className="leading-relaxed">
+                     Every story is aggregated from multiple verified outlets. Click any source icon or headline to read the original full-length article.
+                   </p>
+                 </div>
+               </div>
+             )}
     </div>
   )
 }

@@ -7,9 +7,8 @@ import { createSlug } from '@/utils/routing/navigation'
 import FeaturedNews from '@/components/news/FeaturedNews'
 import BigUpdates from '@/components/news/BigUpdates'
 import MoreStories from '@/components/news/MoreStories'
-import BiasDistribution from '@/components/news/BiasDistribution'
+import PakistanMood from '@/components/news/PakistanMood'
 import LatestStories from '@/components/news/LatestStories'
-import WhatWeAnalyze from '@/components/news/WhatWeAnalyze'
 import HowToRead from '@/components/shared/HowToRead'
 
 interface HomePageClientProps {
@@ -57,11 +56,6 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
             />
           )}
 
-          {/* Divider between Featured News and Big Story */}
-          {newsData.length > 1 && (
-            <div className="border-t border-[var(--text-primary)] mb-4"></div>
-          )}
-
           {/* Big Updates - Next 5 Highest Trending Score Topics */}
           {newsData.length > 1 && (
             <BigUpdates
@@ -69,11 +63,6 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
               onTitleClick={handleTitleClick}
               onShare={() => {}}
             />
-          )}
-
-          {/* Divider between Big Updates and More Stories */}
-          {newsData.length > 6 && (
-            <div className="border-t border-[var(--text-primary)] mb-4"></div>
           )}
 
           {/* More Stories - Remaining Topics */}
@@ -88,10 +77,9 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
 
         {/* Right side - Sidebar */}
         <aside
-          className="order-1 xl:order-2 xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 transition-all xl:sticky xl:top-8 xl:h-fit"
+          className="order-1 xl:order-2 xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 transition-all xl:sticky xl:bottom-8 xl:self-end"
         >
-          <BiasDistribution newsData={newsData} />
-          <WhatWeAnalyze newsData={newsData} />
+          <PakistanMood newsData={newsData} />
           <HowToRead
             newsData={newsData}
             isExpanded={sidebarExpanded}

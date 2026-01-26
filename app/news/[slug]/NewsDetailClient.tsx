@@ -4,11 +4,10 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useImage } from '@/hooks/useImage'
 import { useTouchDevice } from '@/hooks/useTouchDevice'
-import { getCategoryColor } from '@/utils/category/category'
+import { getCategoryTextColor } from '@/utils/category/category'
 import ShareButton from '@/components/shared/ShareButton'
-import BiasDistribution from '@/components/news/BiasDistribution'
+import PakistanMood from '@/components/news/PakistanMood'
 import LatestStories from '@/components/news/LatestStories'
-import WhatWeAnalyze from '@/components/news/WhatWeAnalyze'
 import SentimentTooltip from '@/components/sentiment/SentimentTooltip'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import type { NewsItem, Source } from '@/types/news'
@@ -74,6 +73,24 @@ export default function NewsDetailClient({
   // Get all sources for the "Sources in Cluster" section
   const clusterSources = sources || []
 
+  // Group sources by domain/source name
+  const groupedSources = clusterSources.reduce((acc, source) => {
+    const key = source.source || 'Unknown'
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(source)
+    return acc
+  }, {} as Record<string, Source[]>)
+
+  // Sort groups by the most recent article in each group
+  const sortedGroupedSources = Object.entries(groupedSources).sort((a, b) => {
+    const getLatestTime = (sources: Source[]) => {
+      return Math.max(...sources.map(s => s.dateTime ? new Date(s.dateTime).getTime() : 0))
+    }
+    return getLatestTime(b[1]) - getLatestTime(a[1])
+  })
+
   // Format date/time for sources
   const formatSourceDateTime = (source: Source) => {
     if (source.dateTime) {
@@ -110,17 +127,25 @@ export default function NewsDetailClient({
           {/* Main Content - Left Column */}
           <div className="flex-1 xl:w-[75%]">
             {/* Top Section - Back Link, Category, Date */}
-            <div className="mb-6">
-              <Link 
-                href="/"
-                className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-positive)] mb-4 inline-block"
-              >
-                &lt; BACK TO NEWSROOM
-              </Link>
+                   <div className="mb-6">
+                     <Link 
+                       href="/"
+                       className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4 inline-flex items-center gap-1.5 uppercase tracking-wider transition-colors group/back"
+                     >
+                       <svg 
+                         className="w-3 h-3 transition-transform group-hover/back:-translate-x-1" 
+                         fill="none" 
+                         stroke="currentColor" 
+                         viewBox="0 0 24 24"
+                       >
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                       </svg>
+                       BACK TO NEWSROOM
+                     </Link>
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 text-xs font-semibold uppercase text-white ${getCategoryColor(category)}`}>
-                    {category || 'UNCATEGORIZED'}
+                  <span className={`text-xs font-semibold uppercase ${getCategoryTextColor(category)}`}>
+                    {(category || 'UNCATEGORIZED').toUpperCase()}
                   </span>
                   <span className="text-sm text-[var(--text-muted)]">
                     {date}
@@ -223,122 +248,126 @@ export default function NewsDetailClient({
               </div>
             )}
 
-            {/* Sources in Cluster */}
-            {clusterSources.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">SOURCES IN CLUSTER</h2>
-                  <span className="text-sm text-[var(--text-secondary)] uppercase tracking-wide">MULTIPLE VIEWPOINTS ANALYZED</span>
-                </div>
-                <div className="space-y-4">
-                  {clusterSources.map((source) => {
-                    // Get sentiment label
-                    const sentimentLabel = source.sentiment 
-                      ? source.sentiment.toUpperCase() 
-                      : 'NEUTRAL'
-                    
-                    // Get sentiment color class
-                    const getSentimentColor = (sentiment: string | null | undefined): string => {
-                      if (!sentiment) return 'bg-[var(--accent-neutral)]'
-                      const sentimentLower = sentiment.toLowerCase()
-                      if (sentimentLower === 'positive') {
-                        return 'bg-[var(--accent-positive)]'
-                      } else if (sentimentLower === 'negative') {
-                        return 'bg-[var(--accent-negative)]'
-                      }
-                      return 'bg-[var(--accent-neutral)]'
-                    }
-                    
-                    const sentimentColorClass = getSentimentColor(source.sentiment)
-                    
-                    // Get source abbreviation for fallback
-                    const sourceAbbr = getSourceAbbreviation(source.source || 'UN')
-                    
-                    // Get domain from URL for favicon
-                    const getDomainFromUrl = (url: string | null | undefined): string | null => {
-                      if (!url) return null
-                      try {
-                        const urlObj = new URL(url)
-                        return urlObj.hostname.replace('www.', '')
-                      } catch (e) {
-                        const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
-                        return match ? match[1] : null
-                      }
-                    }
-                    
-                    const domain = getDomainFromUrl(source.url)
-                    const faviconUrl = source.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
-                    
-                    return (
-                      <div 
-                        key={source.id} 
-                        className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm p-4 flex flex-col sm:flex-row items-start gap-4"
-                      >
-                        {/* Source Icon/Logo */}
-                        <Avatar className="w-10 h-10 flex-shrink-0 rounded-sm">
-                          {faviconUrl ? (
-                            <AvatarImage
-                              src={faviconUrl}
-                              alt={source.source || 'Source'}
-                              className="object-cover"
-                            />
-                          ) : null}
-                          <AvatarFallback className="bg-[var(--text-primary)] text-[var(--bg-primary)] text-xs font-bold rounded-sm">
-                            {sourceAbbr}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        {/* Content Section */}
-                        <div className="flex-1 min-w-0">
-                          {/* Source Name and Sentiment Tag */}
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span className="text-sm font-bold text-[var(--text-primary)] uppercase">
-                              {source.source?.toUpperCase() || 'UNKNOWN'}
-                            </span>
-                            <span className={`px-2 py-0.5 ${sentimentColorClass} text-white text-xs font-semibold uppercase rounded-sm`}>
-                              {sentimentLabel}
-                            </span>
-                          </div>
-                          
-                          {/* Headline */}
-                          <h3 className="text-sm font-bold text-[var(--text-primary)] italic mb-2 leading-relaxed">
-                            {source.headline}
-                          </h3>
-                        </div>
-                        
-                        {/* Right Section - Date and Read Button */}
-                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                          {/* Publication Date */}
-                          <div className="text-xs text-[var(--text-muted)] uppercase whitespace-nowrap">
-                            {formatSourceDateTime(source)}
-                          </div>
-                          
-                          {/* Read Button */}
-                          <a
-                            href={source.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-[var(--text-muted)] hover:text-[var(--accent-positive)] inline-flex items-center gap-1 uppercase tracking-wide"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            READ
-                            <svg className="w-3 h-3 text-[var(--accent-positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </a>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+                   {/* Sources in Cluster */}
+                   {clusterSources.length > 0 && (
+                     <div>
+                       <div className="flex items-center justify-between mb-8">
+                         <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">SOURCES IN CLUSTER</h2>
+                       </div>
+                       <div className="space-y-8">
+                         {sortedGroupedSources.map(([sourceName, groupSources]) => {
+                           // Get source abbreviation for fallback
+                           const sourceAbbr = getSourceAbbreviation(sourceName)
+                           
+                           // Get domain from URL for favicon
+                           const getDomainFromUrl = (url: string | null | undefined): string | null => {
+                             if (!url) return null
+                             try {
+                               const urlObj = new URL(url)
+                               return urlObj.hostname.replace('www.', '')
+                             } catch (e) {
+                               const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
+                               return match ? match[1] : null
+                             }
+                           }
+                           
+                           const domain = getDomainFromUrl(groupSources[0]?.url)
+                           const faviconUrl = groupSources[0]?.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
+
+                           return (
+                             <div key={sourceName} className="space-y-4">
+                               {/* Source Header */}
+                               <div className="flex items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
+                                 <Avatar className="w-6 h-6 rounded-sm">
+                                   {faviconUrl ? (
+                                     <AvatarImage
+                                       src={faviconUrl}
+                                       alt={sourceName}
+                                       className="object-cover"
+                                     />
+                                   ) : null}
+                                   <AvatarFallback className="bg-[var(--text-primary)] text-[var(--bg-primary)] text-[8px] font-bold rounded-sm">
+                                     {sourceAbbr}
+                                   </AvatarFallback>
+                                 </Avatar>
+                                 <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">
+                                   {sourceName}
+                                 </h3>
+                                 <span className="text-xs text-[var(--text-muted)] ml-auto">
+                                   {groupSources.length} {groupSources.length === 1 ? 'ARTICLE' : 'ARTICLES'}
+                                 </span>
+                               </div>
+
+                               {/* Source Articles */}
+                               <div className="grid grid-cols-1 gap-4">
+                                 {groupSources.map((source) => {
+                                   const sentimentLabel = source.sentiment 
+                                     ? source.sentiment.toUpperCase() 
+                                     : 'NEUTRAL'
+                                   
+                                   const getSentimentColor = (sentiment: string | null | undefined): string => {
+                                     if (!sentiment) return 'bg-[var(--accent-neutral)]'
+                                     const sentimentLower = sentiment.toLowerCase()
+                                     if (sentimentLower === 'positive') return 'bg-[var(--accent-positive)]'
+                                     if (sentimentLower === 'negative') return 'bg-[var(--accent-negative)]'
+                                     return 'bg-[var(--accent-neutral)]'
+                                   }
+                                   
+                                   const sentimentColorClass = getSentimentColor(source.sentiment)
+                                   
+                                   return (
+                                     <div 
+                                       key={source.id} 
+                                       className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm p-4 flex flex-col sm:flex-row items-start gap-4"
+                                     >
+                                       {/* Content Section */}
+                                       <div className="flex-1 min-w-0">
+                                         {/* Sentiment Tag */}
+                                         <div className="mb-2">
+                                           <span className={`px-2 py-0.5 ${sentimentColorClass} text-white text-[10px] font-semibold uppercase rounded-sm`}>
+                                             {sentimentLabel}
+                                           </span>
+                                         </div>
+                                         
+                                         {/* Headline */}
+                                         <h4 className="text-sm font-bold text-[var(--text-primary)] italic mb-2 leading-relaxed">
+                                           {source.headline}
+                                         </h4>
+                                       </div>
+                                       
+                                       {/* Right Section - Date and Read Button */}
+                                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                         <div className="text-[10px] text-[var(--text-muted)] uppercase whitespace-nowrap">
+                                           {formatSourceDateTime(source)}
+                                         </div>
+                                         <a
+                                           href={source.url}
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent-positive)] inline-flex items-center gap-1 uppercase tracking-wide"
+                                           onClick={(e) => e.stopPropagation()}
+                                         >
+                                           READ
+                                           <svg className="w-3 h-3 text-[var(--accent-positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                           </svg>
+                                         </a>
+                                       </div>
+                                     </div>
+                                   )
+                                 })}
+                               </div>
+                             </div>
+                           )
+                         })}
+                       </div>
+                     </div>
+                   )}
           </div>
 
           {/* Right Sidebar */}
-          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:top-8 xl:h-fit">
-            <BiasDistribution newsData={allNewsData} />
-            <WhatWeAnalyze newsData={allNewsData} />
+          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:bottom-8 xl:self-end">
+            <PakistanMood newsData={allNewsData} />
             <LatestStories newsData={allNewsData} />
           </aside>
         </div>
