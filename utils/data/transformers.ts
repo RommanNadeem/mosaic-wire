@@ -112,18 +112,19 @@ export function transformTopicToNewsItem(topic: TopicSnapshot, articles: any[] =
     sentiment = calculateSentiment(transformedArticles)
   }
 
-  // Use topic_time_ago from database, fallback to time_ago, then calculate if needed
+  // Calculate time difference from topic_created_at on the frontend
+  // Use topic_created_at if available, otherwise fallback to created_at or updated_at
   let timeAgo: string
-  if (topic.topic_time_ago) {
-    timeAgo = topic.topic_time_ago
-  } else if (topic.time_ago) {
-    timeAgo = topic.time_ago
+  const creationTime = topic.topic_created_at || topic.created_at || topic.updated_at
+  if (creationTime) {
+    const minutesAgo = calculateTimeAgo(creationTime)
+    timeAgo = formatTimeAgo(minutesAgo)
   } else {
-    // Fallback: calculate from created_at or updated_at if database fields not available
-    const creationTime = topic.created_at || topic.updated_at
-    if (creationTime) {
-      const minutesAgo = calculateTimeAgo(creationTime)
-      timeAgo = formatTimeAgo(minutesAgo)
+    // Last resort: use pre-calculated fields if timestamp not available
+    if (topic.topic_time_ago) {
+      timeAgo = topic.topic_time_ago
+    } else if (topic.time_ago) {
+      timeAgo = topic.time_ago
     } else {
       timeAgo = 'Unknown'
     }
