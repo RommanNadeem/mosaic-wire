@@ -8,6 +8,15 @@ export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
 
 // Create Supabase client only if configured (for client-side usage)
 export const supabase = isSupabaseConfigured && supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      // Ensure browser fetches don't get stuck behind any intermediary cache.
+      global: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...(init || {}),
+            cache: 'no-store',
+          }),
+      },
+    })
   : null
 

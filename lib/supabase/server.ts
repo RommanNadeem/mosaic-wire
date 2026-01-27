@@ -16,7 +16,20 @@ export function createServerClient() {
   if (!isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey) {
     return null
   }
-  
-  return createClient(supabaseUrl, supabaseAnonKey)
+
+  // Next.js App Router can cache `fetch` calls. Supabase-js uses `fetch` under the hood,
+  // so we override it to ensure all Supabase reads are "no-store" (always fresh).
+  const fetchNoStore: typeof fetch = (input, init) => {
+    const nextInit = (init || {}) as any
+    return fetch(input as any, {
+      ...nextInit,
+      cache: 'no-store',
+      next: { ...(nextInit.next || {}), revalidate: 0 },
+    })
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: fetchNoStore },
+  })
 }
 
