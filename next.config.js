@@ -39,6 +39,13 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
+          // Disable device/sensor APIs at the browser level to avoid permission prompts.
+          // (We also avoid calling clipboard/share APIs in code.)
+          {
+            key: 'Permissions-Policy',
+            value:
+              'accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(), gamepad=(), geolocation=(), gyroscope=(), hid=(), identity-credentials-get=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), web-share=(), xr-spatial-tracking=()',
+          },
         ],
       },
     ];
