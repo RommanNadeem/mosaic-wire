@@ -240,9 +240,19 @@ export default function NewsDetailClient({
                 <div className="flex gap-4">
                   <div className="w-1 bg-[var(--accent-positive)] flex-shrink-0"></div>
                   <div className="flex-1">
-                    <p className="text-base text-[var(--text-secondary)] leading-relaxed">
+                    <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-6">
                       {summary}
                     </p>
+                    {newsItem.detailedSummary && (
+                      <div className="mt-6 pt-6 border-t border-[var(--border-subtle)]">
+                        <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Detailed Analysis</h3>
+                        <div className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-4">
+                          {newsItem.detailedSummary.split('\n').map((paragraph, index) => (
+                            paragraph.trim() && <p key={index}>{paragraph.trim()}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

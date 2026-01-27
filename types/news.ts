@@ -15,6 +15,7 @@ export interface NewsItem {
   sources: Source[]
   recentArticlesCount?: number
   updatedAt?: string
+  detailedSummary?: string | null
 }
 
 export interface Source {
