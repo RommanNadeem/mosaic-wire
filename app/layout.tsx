@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -28,33 +27,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-9NYQDTQ53Z"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-9NYQDTQ53Z');
-          `}
-        </Script>
-        {/* Microsoft Clarity - Delayed initialization for better performance */}
-        <Script id="microsoft-clarity" strategy="afterInteractive">
-          {`
-            window.addEventListener('load', function() {
-              setTimeout(function() {
-                (function(c,l,a,r,i,t,y){
-                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-                })(window, document, "clarity", "script", "uw2ww3u2kd");
-              }, 1000);
-            });
-          `}
-        </Script>
         <ThemeProvider>
           <div className="min-h-screen flex flex-col">
             <Header />
