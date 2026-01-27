@@ -24,7 +24,6 @@ export function createServerClient() {
     return fetch(input as any, {
       ...nextInit,
       cache: 'no-store',
-      next: { ...(nextInit.next || {}), revalidate: 0 },
     })
   }
 
