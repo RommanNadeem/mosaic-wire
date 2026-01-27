@@ -132,10 +132,11 @@ export function transformTopicToNewsItem(topic: TopicSnapshot, articles: any[] =
 
   return {
     id: topic.topic_id || (topic as any).id,
-    title: topic.headline || (topic as any).topic_name,
-    category: topic.tag || (topic as any).category,
+    title: topic.headline || (topic as any).topic_name || '',
+    category: topic.tag || (topic as any).category || null,
     timeAgo: timeAgo,
     summary: topic.summary || (topic as any).ai_summary || '',
+    detailedSummary: topic.detailed_summary || null,
     sentiment: sentiment,
     image: topic.image_url || null,
     sources: transformedArticles,
