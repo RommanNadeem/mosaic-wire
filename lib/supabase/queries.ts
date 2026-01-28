@@ -97,6 +97,7 @@ export async function getTopicBySlug(slug: string) {
 /**
  * Get a single topic by short ID (last 6 characters of topic_id)
  * Used for server-side meta tag generation
+ * Falls back to topics table if not found in topic_snapshots
  */
 export async function getTopicByShortIdServer(shortId: string) {
   const supabaseClient = createServerClient()
@@ -105,26 +106,72 @@ export async function getTopicByShortIdServer(shortId: string) {
   }
 
   try {
-    const { data: topics, error } = await supabaseClient
+    // First, try to find in topic_snapshots (current/active topics)
+    const { data: snapshotTopics, error: snapshotError } = await supabaseClient
       .from('topic_snapshots')
       .select('*')
       .order('trending_score', { ascending: false })
       .limit(200)
 
-    if (error) {
-      console.error('Error fetching topics:', error)
+    if (!snapshotError && snapshotTopics && snapshotTopics.length > 0) {
+      const topic = snapshotTopics.find(t => {
+        const topicIdString = String(t.topic_id || t.id || '')
+        const topicShortId = topicIdString.slice(-6)
+        return topicShortId === shortId
+      })
+
+      if (topic) {
+        return topic
+      }
+    }
+
+    // If not found in snapshots, fallback to topics table
+    // This handles cases where a topic was shared but is no longer in snapshots
+    const { data: allTopics, error: topicsError } = await supabaseClient
+      .from('topics')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1000) // Limit to recent topics for performance
+
+    if (topicsError) {
+      console.error('Error fetching topics from topics table:', topicsError)
+      // Don't return null here, as we might have found it in snapshots
+      // Only return null if we've exhausted both options
       return null
     }
 
-    if (!topics || topics.length === 0) return null
+    if (!allTopics || allTopics.length === 0) {
+      return null
+    }
 
-    const topic = topics.find(t => {
-      const topicIdString = String(t.topic_id || t.id || '')
+    // Find topic where id ends with shortId
+    const topicFromTable = allTopics.find(t => {
+      const topicIdString = String(t.id || t.topic_id || '')
       const topicShortId = topicIdString.slice(-6)
       return topicShortId === shortId
     })
 
-    return topic || null
+    if (topicFromTable) {
+      // Transform the topic from topics table to match topic_snapshots format
+      // The transformer function should handle both formats, but we ensure compatibility
+      return {
+        ...topicFromTable,
+        topic_id: topicFromTable.id || topicFromTable.topic_id,
+        // Map common fields that might differ
+        headline: topicFromTable.headline || topicFromTable.topic_name || null,
+        summary: topicFromTable.summary || topicFromTable.ai_summary || null,
+        tag: topicFromTable.tag || topicFromTable.category || null,
+        image_url: topicFromTable.image_url || topicFromTable.image || null,
+        // Set defaults for fields that might not exist in topics table
+        article_count: topicFromTable.article_count || 0,
+        source_count: topicFromTable.source_count || 0,
+        recent_articles_count: topicFromTable.recent_articles_count || 0,
+        updated_at: topicFromTable.updated_at || topicFromTable.created_at || new Date().toISOString(),
+        topic_created_at: topicFromTable.created_at || topicFromTable.topic_created_at || null,
+      }
+    }
+
+    return null
   } catch (error) {
     console.error('Error in getTopicByShortIdServer:', error)
     return null
