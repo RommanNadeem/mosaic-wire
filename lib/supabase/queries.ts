@@ -125,31 +125,43 @@ export async function getTopicByShortIdServer(shortId: string) {
       }
     }
 
-    // If not found in snapshots, fallback to topics table
-    // This handles cases where a topic was shared but is no longer in snapshots
-    const { data: allTopics, error: topicsError } = await supabaseClient
-      .from('topics')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1000) // Limit to recent topics for performance
+    // If not found in snapshots, fallback to topics table.
+    // IMPORTANT: old shared links may point to topics far older than the most recent N rows.
+    // PostgREST doesn't support "ends_with" on UUID columns cleanly, so we page and match in JS.
+    const PAGE_SIZE = 500
+    const MAX_PAGES = 40 // safety cap: 500 * 40 = 20k rows scanned max
 
-    if (topicsError) {
-      console.error('Error fetching topics from topics table:', topicsError)
-      // Don't return null here, as we might have found it in snapshots
-      // Only return null if we've exhausted both options
-      return null
+    let topicFromTable: any | null = null
+
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const from = page * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+
+      const { data: topicsPage, error: topicsError } = await supabaseClient
+        .from('topics')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, to)
+
+      if (topicsError) {
+        console.error('Error fetching topics from topics table:', topicsError)
+        return null
+      }
+
+      if (!topicsPage || topicsPage.length === 0) {
+        break
+      }
+
+      topicFromTable = topicsPage.find((t: any) => {
+        const topicIdString = String(t.topic_id || t.id || '')
+        const topicShortId = topicIdString.slice(-6)
+        return topicShortId === shortId
+      }) || null
+
+      if (topicFromTable) {
+        break
+      }
     }
-
-    if (!allTopics || allTopics.length === 0) {
-      return null
-    }
-
-    // Find topic where id ends with shortId
-    const topicFromTable = allTopics.find(t => {
-      const topicIdString = String(t.id || t.topic_id || '')
-      const topicShortId = topicIdString.slice(-6)
-      return topicShortId === shortId
-    })
 
     if (topicFromTable) {
       // Transform the topic from topics table to match topic_snapshots format
