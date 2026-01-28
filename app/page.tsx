@@ -1,8 +1,11 @@
 import { getLatestTopicsServer } from '@/lib/supabase/queries'
 import { transformSupabaseData } from '@/utils/data/transformers'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
+import { generateWebSiteSchema, generateItemListSchema, generateFAQSchema, generateHowToSchema } from '@/utils/seo/structured-data'
+import { generatePlatformFAQSchema } from '@/utils/seo/ai-optimization'
 import HomePageClient from './HomePageClient'
 import { sampleNewsData } from '@/data/sampleData'
+import Script from 'next/script'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -40,6 +43,42 @@ export default async function HomePage() {
     usingSampleData = true
   }
 
-  return <HomePageClient initialNewsData={newsData} usingSampleData={usingSampleData} />
+  const websiteSchema = generateWebSiteSchema()
+  const itemListSchema = generateItemListSchema(newsData)
+  const faqSchema = generateFAQSchema()
+  const howToSchema = generateHowToSchema()
+  const platformFAQSchema = generatePlatformFAQSchema()
+
+  return (
+    <>
+      {/* Structured Data Schemas */}
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <Script
+        id="itemlist-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <Script
+        id="howto-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+      />
+      <Script
+        id="platform-faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(platformFAQSchema) }}
+      />
+      <HomePageClient initialNewsData={newsData} usingSampleData={usingSampleData} />
+    </>
+  )
 }
 
