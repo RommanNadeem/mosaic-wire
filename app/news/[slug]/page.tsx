@@ -50,6 +50,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const publishedTime = newsItem.updatedAt || new Date().toISOString()
   const modifiedTime = newsItem.updatedAt || publishedTime
   
+  // Ensure description is never null for OpenGraph
+  const ogDescription = newsItem.summary || newsItem.detailedSummary || undefined
+  
   return {
     ...metadata,
     metadataBase: new URL(baseUrl),
@@ -79,6 +82,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       }] : metadata.openGraph?.images,
       locale: 'en_PK',
       siteName: 'MosaicBeat',
+      description: ogDescription,
     },
     twitter: {
       ...metadata.twitter,

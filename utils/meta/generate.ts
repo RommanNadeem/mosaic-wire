@@ -18,14 +18,19 @@ export function generateNewsMetadata(newsItem: NewsItem, baseUrl: string) {
     ...(newsItem.sources?.map(s => s.source).filter(Boolean).slice(0, 5) || []),
   ].filter(Boolean).join(', ')
   
+  // Ensure description is never null (convert null to undefined or provide fallback)
+  const description = newsItem.summary || newsItem.detailedSummary || 'Real-time analysis of how Pakistan\'s news is told'
+  const ogDescription = newsItem.summary || newsItem.detailedSummary || undefined
+  const twitterDescription = newsItem.summary || newsItem.detailedSummary || undefined
+
   return {
     title: newsItem.title || 'MosaicBeat',
-    description: newsItem.summary || newsItem.detailedSummary || 'Real-time analysis of how Pakistan\'s news is told',
+    description: description,
     keywords,
     authors: [{ name: 'MosaicBeat' }],
     openGraph: {
       title: newsItem.title,
-      description: newsItem.summary || newsItem.detailedSummary,
+      description: ogDescription,
       images: [{
         url: imageUrl,
         width: 1200,
@@ -44,7 +49,7 @@ export function generateNewsMetadata(newsItem: NewsItem, baseUrl: string) {
     twitter: {
       card: 'summary_large_image',
       title: newsItem.title,
-      description: newsItem.summary || newsItem.detailedSummary,
+      description: twitterDescription,
       images: [imageUrl],
     },
     other: {
