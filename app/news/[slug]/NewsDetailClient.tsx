@@ -120,44 +120,55 @@ export default function NewsDetailClient({
     return sourceName.substring(0, 2).toUpperCase()
   }
 
+  const publishedDate = newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : new Date().toISOString()
+  const modifiedDate = newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : publishedDate
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <div className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8">
+      <article itemScope itemType="https://schema.org/NewsArticle" className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8">
         <div className="flex flex-col xl:flex-row gap-8">
           {/* Main Content - Left Column */}
           <div className="flex-1 xl:w-[75%]">
             {/* Top Section - Back Link, Category, Date */}
-                   <div className="mb-6">
-                     <Link 
-                       href="/"
-                       className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4 inline-flex items-center gap-1.5 uppercase tracking-wider transition-colors group/back"
-                     >
-                       <svg 
-                         className="w-3 h-3 transition-transform group-hover/back:-translate-x-1" 
-                         fill="none" 
-                         stroke="currentColor" 
-                         viewBox="0 0 24 24"
-                       >
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                       </svg>
-                       BACK TO NEWSROOM
-                     </Link>
+            <header className="mb-6">
+              <nav aria-label="Breadcrumb">
+                <Link 
+                  href="/"
+                  className="text-[11px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4 inline-flex items-center gap-1.5 uppercase tracking-wider transition-colors group/back"
+                >
+                  <svg 
+                    className="w-3 h-3 transition-transform group-hover/back:-translate-x-1" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  BACK TO NEWSROOM
+                </Link>
+              </nav>
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-semibold uppercase ${getCategoryTextColor(category)}`}>
+                  <span itemProp="articleSection" className={`text-xs font-semibold uppercase ${getCategoryTextColor(category)}`}>
                     {(category || 'UNCATEGORIZED').toUpperCase()}
                   </span>
-                  <span className="text-sm text-[var(--text-muted)]">
+                  <time itemProp="datePublished" dateTime={publishedDate} className="text-sm text-[var(--text-muted)]">
                     {date}
-                  </span>
+                  </time>
+                  {modifiedDate !== publishedDate && (
+                    <time itemProp="dateModified" dateTime={modifiedDate} className="sr-only">
+                      {modifiedDate}
+                    </time>
+                  )}
                 </div>
                 {/* Share Button - Right side */}
                 <ShareButton newsItem={newsItem} onShare={() => {}} />
               </div>
-              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
+              <h1 itemProp="headline" className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
                 {title}
               </h1>
-            </div>
+            </header>
 
             {/* Sentiment Bar with percentage on the right */}
             {sentiment && total > 0 && (
@@ -207,16 +218,17 @@ export default function NewsDetailClient({
             )}
 
             {/* Image */}
-            <div className="w-full h-[200px] md:h-[300px] lg:h-[400px] mb-12 overflow-hidden relative">
+            <figure className="w-full h-[200px] md:h-[300px] lg:h-[400px] mb-12 overflow-hidden relative">
               {imageUrl && !imageError ? (
                 <img
+                  itemProp="image"
                   src={imageUrl}
                   alt={title || 'News image'}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[var(--bg-surface)]">
+                <div className="w-full h-full flex items-center justify-center bg-[var(--bg-surface)]" aria-hidden="true">
                   <svg
                     className="w-16 h-16 text-[var(--text-muted)] opacity-50"
                     fill="none"
@@ -232,35 +244,35 @@ export default function NewsDetailClient({
                   </svg>
                 </div>
               )}
-            </div>
+            </figure>
 
             {/* Summary Section - Below Image */}
             {summary && (
-              <div className="mb-12">
+              <section className="mb-12" itemProp="description">
                 <div className="flex gap-4">
-                  <div className="w-1 bg-[var(--accent-positive)] flex-shrink-0"></div>
+                  <div className="w-1 bg-[var(--accent-positive)] flex-shrink-0" aria-hidden="true"></div>
                   <div className="flex-1">
-                    <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-6">
+                    <p itemProp="abstract" className="text-base text-[var(--text-secondary)] leading-relaxed mb-6">
                       {summary}
                     </p>
                   </div>
                 </div>
                 {newsItem.detailedSummary && (
                   <div className="mt-6 pt-6 border-t border-[var(--border-subtle)]">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Detailed Analysis</h3>
-                    <div className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-4">
+                    <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Detailed Analysis</h2>
+                    <div itemProp="articleBody" className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-4">
                       {newsItem.detailedSummary.split('\n').map((paragraph, index) => (
                         paragraph.trim() && <p key={index}>{paragraph.trim()}</p>
                       ))}
                     </div>
                   </div>
                 )}
-              </div>
+              </section>
             )}
 
                    {/* Sources in Cluster */}
                    {clusterSources.length > 0 && (
-                     <div>
+                     <section aria-label="Sources in Cluster">
                        <div className="flex items-center justify-between mb-8">
                          <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">SOURCES IN CLUSTER</h2>
                        </div>
@@ -371,17 +383,17 @@ export default function NewsDetailClient({
                            )
                          })}
                        </div>
-                     </div>
+                     </section>
                    )}
           </div>
 
           {/* Right Sidebar */}
-          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:bottom-8 xl:self-end">
+          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:bottom-8 xl:self-end" aria-label="Related content">
             <PakistanMood newsData={allNewsData} />
             <LatestStories newsData={allNewsData} />
           </aside>
         </div>
-      </div>
+      </article>
     </div>
   )
 }
