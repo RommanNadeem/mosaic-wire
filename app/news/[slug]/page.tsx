@@ -24,6 +24,8 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const topic = await getTopicBySlug(params.slug)
+
+  
   
   if (!topic) {
     return {
