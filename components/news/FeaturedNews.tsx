@@ -138,7 +138,7 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
         {sentiment && total > 0 && (
           <div className="mb-4 text-left" ref={sentimentBarRef}>
             <div className="flex items-center gap-3">
-              <div className="flex-1 relative overflow-visible">
+              <div className="w-1/2 relative overflow-visible">
                 <div className="flex h-4 overflow-hidden relative">
                   {percentages.negative > 0 && (
                     <div

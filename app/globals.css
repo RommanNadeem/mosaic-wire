@@ -44,6 +44,10 @@
     --radius: 0.5rem;
   }
 
+  [data-theme="dark"] .header-logo {
+    filter: invert(1);
+  }
+
   [data-theme="dark"] {
     /* Dark Theme (Derived) - Analytical, Low-noise */
     --bg-primary: #1e1e1e;

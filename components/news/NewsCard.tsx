@@ -106,13 +106,8 @@ export default function NewsCard({
 
             {/* Sentiment Bar */}
             {sentiment && total > 0 && (
-              <div className="mb-3" ref={sentimentBarRef}>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-xs font-semibold text-[var(--text-primary)] uppercase">
-                    {dominantSentiment} {dominantPercentage}%
-                  </span>
-                </div>
-                <div className="relative overflow-visible">
+              <div className="mb-3 flex items-center gap-2" ref={sentimentBarRef}>
+                <div className="relative overflow-visible w-1/2">
                   <div className="flex h-3 overflow-hidden">
                     {percentages.negative > 0 && (
                       <div
@@ -148,6 +143,9 @@ export default function NewsCard({
                     setTooltipStyle={setTooltipStyle}
                   />
                 </div>
+                <span className="text-xs font-semibold text-[var(--text-primary)] uppercase whitespace-nowrap">
+                  {dominantSentiment} {dominantPercentage}%
+                </span>
               </div>
             )}
 
@@ -297,13 +295,8 @@ export default function NewsCard({
 
         {/* Sentiment Bar */}
         {sentiment && total > 0 && (
-          <div className="mb-3" ref={sentimentBarRef}>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs font-semibold text-[var(--text-primary)] uppercase">
-                {dominantSentiment} {dominantPercentage}%
-              </span>
-            </div>
-            <div className="relative overflow-visible">
+          <div className="mb-3 flex items-center gap-2" ref={sentimentBarRef}>
+            <div className="relative overflow-visible w-1/2">
               <div className="flex h-3 overflow-hidden bg-[var(--bg-surface)]">
                 {percentages.negative > 0 && (
                   <div
@@ -339,6 +332,9 @@ export default function NewsCard({
                 setTooltipStyle={setTooltipStyle}
               />
             </div>
+            <span className="text-xs font-semibold text-[var(--text-primary)] uppercase whitespace-nowrap">
+              {dominantSentiment} {dominantPercentage}%
+            </span>
           </div>
         )}
 

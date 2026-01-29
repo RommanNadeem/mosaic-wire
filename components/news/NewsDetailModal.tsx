@@ -71,7 +71,7 @@ export default function NewsDetailModal({
 
         {/* Sentiment Bar */}
         {newsItem.sentiment && (
-          <div className="mb-4">
+          <div className="mb-4 w-1/2">
             <SentimentBar sentiment={newsItem.sentiment} height="h-4" />
           </div>
         )}

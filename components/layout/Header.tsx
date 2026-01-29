@@ -34,16 +34,20 @@ export default function Header() {
         <div className="flex items-center justify-between min-w-0 gap-2">
           {/* Left side - Logo and Date (mobile: stacked, desktop: inline) */}
           <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
+            <h1 className="flex items-center shrink-0">
               <Link
                 href="/"
                 onClick={(e) => {
                   e.preventDefault()
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
-                className="hover:text-[var(--accent-positive)] transition-colors cursor-pointer"
+                className="block hover:opacity-90 transition-opacity cursor-pointer"
               >
-                MosaicBeat
+                <img
+                  src="/mosaicbeatlogo.svg"
+                  alt="MosaicBeat"
+                  className="header-logo h-7 w-auto sm:h-8 md:h-9 object-contain"
+                />
               </Link>
             </h1>
             {/* Date - Below heading on mobile, inline on desktop */}
