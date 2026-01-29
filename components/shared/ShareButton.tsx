@@ -26,7 +26,11 @@ export default function ShareButton({
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          handleShare(newsItem)
+          handleShare({
+            id: newsItem.id,
+            title: newsItem.title,
+            summary: newsItem.summary,
+          })
         }}
         className="relative p-1.5 hover:bg-[var(--bg-surface)] transition-colors focus:outline-none focus:ring-0"
         title={shareCopied ? 'Copied!' : 'Share this news'}

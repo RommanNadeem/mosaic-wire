@@ -206,7 +206,7 @@ export default function NewsCard({
               <img
                 src={imageUrl}
                 alt={title || 'News image'}
-                className="min-w-full min-h-full w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="min-w-full min-h-full w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                 style={{ objectPosition: 'center' }}
                 loading="lazy"
               />
@@ -246,7 +246,7 @@ export default function NewsCard({
           <img
             src={imageUrl}
             alt={title || 'News image'}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             loading="lazy"
           />
         ) : (

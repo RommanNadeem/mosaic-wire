@@ -5,7 +5,7 @@ import { generateNewsUrl } from '@/utils/routing/navigation'
 
 interface UseShareReturn {
   shareCopied: boolean
-  handleShare: (newsItem: { id: string; title: string }) => Promise<void>
+  handleShare: (newsItem: { id: string; title: string; summary?: string }) => Promise<void>
 }
 
 export function useShare(
@@ -13,10 +13,37 @@ export function useShare(
 ): UseShareReturn {
   const [shareCopied, setShareCopied] = useState(false)
 
-  const handleShare = useCallback(async (newsItem: { id: string; title: string }) => {
+  const handleShare = useCallback(async (newsItem: { id: string; title: string; summary?: string }) => {
     const shareUrl = generateNewsUrl(newsItem.title, newsItem.id)
     
-    // Silently copy to clipboard - no dialogs or prompts
+    // Try Web Share API first (works on mobile devices)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        const shareData: ShareData = {
+          title: newsItem.title,
+          text: newsItem.summary || newsItem.title,
+          url: shareUrl,
+        }
+        
+        await navigator.share(shareData)
+        
+        // Share was successful
+        if (onShare) {
+          onShare(shareUrl)
+        }
+        return
+      } catch (err: any) {
+        // User cancelled the share or an error occurred
+        // If user cancelled (AbortError), don't fall through to clipboard
+        if (err.name === 'AbortError') {
+          return
+        }
+        // For other errors, fall through to clipboard copy
+        console.error('Web Share API failed:', err)
+      }
+    }
+    
+    // Fallback: Copy to clipboard (for desktop or when Web Share API is not available)
     try {
       // Modern clipboard API (works silently when triggered by user interaction)
       if (navigator.clipboard && navigator.clipboard.writeText) {
