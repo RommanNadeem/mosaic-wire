@@ -6,9 +6,7 @@ import Link from 'next/link'
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme()
-  const [mobileTooltipPosition, setMobileTooltipPosition] = useState<'top' | 'bottom'>('top')
   const [desktopTooltipPosition, setDesktopTooltipPosition] = useState<'top' | 'bottom'>('top')
-  const mobileThemeButtonRef = useRef<HTMLButtonElement>(null)
   const desktopThemeButtonRef = useRef<HTMLButtonElement>(null)
 
   // Local date (no time) formatted with ordinal day
@@ -38,8 +36,10 @@ export default function Header() {
               <Link
                 href="/"
                 onClick={(e) => {
-                  e.preventDefault()
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                  if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                    e.preventDefault()
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
                 }}
                 className="block hover:opacity-90 transition-opacity cursor-pointer"
               >
@@ -60,20 +60,11 @@ export default function Header() {
             </span>
           </div>
 
-          {/* Mobile navigation - Theme toggle only */}
+          {/* Mobile navigation - Theme toggle only (no tooltip on mobile) */}
           <nav className="flex md:hidden items-center space-x-3">
-            {/* Theme toggle */}
             <button
-              ref={mobileThemeButtonRef}
-              onMouseEnter={() => {
-                if (mobileThemeButtonRef.current) {
-                  const rect = mobileThemeButtonRef.current.getBoundingClientRect()
-                  const spaceAbove = rect.top
-                  setMobileTooltipPosition(spaceAbove < 60 ? 'bottom' : 'top')
-                }
-              }}
               onClick={() => toggleTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 hover:bg-[var(--bg-surface)] transition-colors relative group"
+              className="p-2 hover:bg-[var(--bg-surface)] transition-colors"
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
@@ -105,14 +96,6 @@ export default function Header() {
                   />
                 </svg>
               )}
-              {/* Tooltip */}
-              <span className={`absolute left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs text-[var(--bg-card)] bg-[var(--text-primary)] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999] ${
-                mobileTooltipPosition === 'top' 
-                  ? 'bottom-full mb-2' 
-                  : 'top-full mt-2'
-              }`}>
-                {theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-              </span>
             </button>
           </nav>
 

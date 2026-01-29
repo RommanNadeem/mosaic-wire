@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useImage } from '@/hooks/useImage'
 import { useTouchDevice } from '@/hooks/useTouchDevice'
@@ -78,6 +78,17 @@ export default function NewsDetailClient({
   const [detailedAnalysisExpanded, setDetailedAnalysisExpanded] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const sentimentBarRef = useRef<HTMLDivElement>(null)
+
+  // On mobile: close sentiment tooltip when tapping outside the bar
+  useEffect(() => {
+    if (!isTouchDevice) return
+    const handlePointerDown = (e: PointerEvent) => {
+      if (sentimentBarRef.current?.contains(e.target as Node)) return
+      setHoveredSegment(null)
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isTouchDevice])
 
   const { id, title, category, summary, sentiment, sources } = newsItem
 
@@ -219,7 +230,10 @@ export default function NewsDetailClient({
                           className="bg-[var(--accent-negative)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
                           style={{ width: `${percentages.negative}%` }}
                           onMouseEnter={() => !isTouchDevice && setHoveredSegment('negative')}
-                          onMouseLeave={() => setHoveredSegment(null)}
+                          onMouseLeave={() => !isTouchDevice && setHoveredSegment(null)}
+                          onClick={() => isTouchDevice && setHoveredSegment((prev) => (prev === 'negative' ? null : 'negative'))}
+                          role={isTouchDevice ? 'button' : undefined}
+                          aria-label={isTouchDevice ? 'Negative sentiment — tap for details' : undefined}
                         />
                       )}
                       {percentages.neutral > 0 && (
@@ -227,7 +241,10 @@ export default function NewsDetailClient({
                           className="bg-[var(--accent-neutral)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
                           style={{ width: `${percentages.neutral}%` }}
                           onMouseEnter={() => !isTouchDevice && setHoveredSegment('neutral')}
-                          onMouseLeave={() => setHoveredSegment(null)}
+                          onMouseLeave={() => !isTouchDevice && setHoveredSegment(null)}
+                          onClick={() => isTouchDevice && setHoveredSegment((prev) => (prev === 'neutral' ? null : 'neutral'))}
+                          role={isTouchDevice ? 'button' : undefined}
+                          aria-label={isTouchDevice ? 'Neutral sentiment — tap for details' : undefined}
                         />
                       )}
                       {percentages.positive > 0 && (
@@ -235,7 +252,10 @@ export default function NewsDetailClient({
                           className="bg-[var(--accent-positive)] flex items-center justify-center cursor-pointer transition-all duration-200 hover:brightness-110"
                           style={{ width: `${percentages.positive}%` }}
                           onMouseEnter={() => !isTouchDevice && setHoveredSegment('positive')}
-                          onMouseLeave={() => setHoveredSegment(null)}
+                          onMouseLeave={() => !isTouchDevice && setHoveredSegment(null)}
+                          onClick={() => isTouchDevice && setHoveredSegment((prev) => (prev === 'positive' ? null : 'positive'))}
+                          role={isTouchDevice ? 'button' : undefined}
+                          aria-label={isTouchDevice ? 'Positive sentiment — tap for details' : undefined}
                         />
                       )}
                     </div>
