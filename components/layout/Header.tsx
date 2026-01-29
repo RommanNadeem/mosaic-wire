@@ -30,10 +30,10 @@ export default function Header() {
 
   return (
     <header className="bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
-      <div className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-4 sm:py-5">
-        <div className="flex items-center justify-between">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-4 sm:py-5 min-w-0 overflow-x-hidden">
+        <div className="flex items-center justify-between min-w-0 gap-2">
           {/* Left side - Logo and Date (mobile: stacked, desktop: inline) */}
-          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
               <Link
                 href="/"
@@ -47,7 +47,7 @@ export default function Header() {
               </Link>
             </h1>
             {/* Date - Below heading on mobile, inline on desktop */}
-            <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap md:hidden" suppressHydrationWarning>
+            <span className="text-[12px] text-[var(--text-secondary)] truncate max-w-[180px] md:max-w-none md:whitespace-nowrap md:hidden" suppressHydrationWarning>
               {formattedDate}
             </span>
             <span className="text-[var(--text-muted)] hidden sm:inline">|</span>
@@ -118,13 +118,6 @@ export default function Header() {
             <span className="text-[12px] text-[var(--text-secondary)] whitespace-nowrap" suppressHydrationWarning>
               {formattedDate}
             </span>
-            {/* Today's Front Page */}
-            <Link
-              href="#"
-              className="text-sm lg:text-base text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
-            >
-              Today's Front Page
-            </Link>
             {/* Live indicator */}
             <div className="flex items-center space-x-1.5 text-[var(--text-secondary)]">
               <span className="w-1.5 h-1.5 bg-[var(--accent-positive)] rounded-full"></span>

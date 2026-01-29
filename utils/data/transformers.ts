@@ -141,6 +141,7 @@ export function transformTopicToNewsItem(topic: TopicSnapshot, articles: any[] =
     image: topic.image_url || null,
     sources: transformedArticles,
     recentArticlesCount: topic.recent_articles_count,
+    publishedAt: topic.topic_created_at || topic.created_at || null,
     updatedAt: topic.updated_at,
   }
 }

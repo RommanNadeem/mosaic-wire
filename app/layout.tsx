@@ -112,9 +112,9 @@ export default function RootLayout({
           `}
         </Script>
         <ThemeProvider>
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col min-w-0">
             <Header />
-            <main className="flex-1">
+            <main className="flex-1 min-w-0">
               {children}
             </main>
             <Footer />

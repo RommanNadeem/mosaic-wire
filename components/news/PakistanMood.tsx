@@ -15,10 +15,6 @@ export default function PakistanMood({ newsData }: PakistanMoodProps) {
   
   if (totalArticles === 0) return null
 
-  // Count unique sources across all topics
-  const uniqueSourcesSet = new Set(allArticles.map(a => a.source).filter(Boolean))
-  const totalSources = uniqueSourcesSet.size
-
   // Calculate sentiment percentages based on all articles
   const sentimentCounts = {
     positive: 0,
@@ -44,16 +40,16 @@ export default function PakistanMood({ newsData }: PakistanMoodProps) {
   // Ensure the sum is exactly 100% by adjusting the largest segment or negative
   percentages.negative = totalArticles > 0 ? 100 - (percentages.positive + percentages.neutral) : 0;
 
-  // Calculate "What We Analyze" statistics
-  const totalTopics = newsData.length
-
   return (
     <div className="flex flex-col bg-black text-white p-4 border border-white/10">
       {/* Pakistan's Mood Today Section */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wide">
+        <h2 className="text-sm font-semibold text-white mb-1 uppercase tracking-wide">
           Pakistan's Mood Today
         </h2>
+        <p className="text-xs text-gray-400 mb-4">
+          A snapshot of how today's major stories are being framed across the media landscape.
+        </p>
         
         <div className="space-y-3">
           {/* Negative */}
@@ -96,30 +92,6 @@ export default function PakistanMood({ newsData }: PakistanMoodProps) {
                 style={{ width: `${percentages.positive}%` }}
               />
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-gray-800 my-2"></div>
-
-      {/* What We Analyze Section - Integrated */}
-      <div className="mt-4">
-        <h2 className="text-sm font-semibold text-white mb-4 uppercase tracking-wide">
-          What We Analyze
-        </h2>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-400 text-xs">ARTICLES PROCESSED:</span>
-            <span className="font-semibold text-white text-xs">{totalArticles}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400 text-xs">TOPICS CLUSTERED:</span>
-            <span className="font-semibold text-white text-xs">{totalTopics}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400 text-xs">SOURCES COMPARED:</span>
-            <span className="font-semibold text-white text-xs">{totalSources}</span>
           </div>
         </div>
       </div>

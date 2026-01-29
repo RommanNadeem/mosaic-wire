@@ -18,7 +18,7 @@ export default function BigUpdates({ newsItems, onTitleClick, onShare }: BigUpda
     <div className="mb-8">
       <div className="mb-4">
         <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide mb-2">
-          THE BIG STORY
+          KEY STORIES
         </h2>
         <div className="border-t border-[var(--text-primary)]"></div>
       </div>

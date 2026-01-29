@@ -80,7 +80,13 @@
     --radius: 0.5rem;
   }
 
-  html, body {
+  html {
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  body {
     height: 100%;
     margin: 0;
   }
@@ -99,6 +105,7 @@
     color: var(--text-primary, #1a1a1a);
     transition: background-color 0.2s ease, color 0.2s ease;
     overflow-x: hidden;
+    overflow-wrap: break-word;
   }
 
   /* Editorial font for headlines */
@@ -192,6 +199,22 @@
 
   [data-radix-dialog-content][data-state="closed"] {
     animation: dialog-content-hide 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Loading Moodline – expand and contract */
+  @keyframes moodline-expand-contract {
+    0%,
+    100% {
+      width: 20%;
+    }
+    50% {
+      width: 85%;
+    }
+  }
+
+  .moodline-loading-bar {
+    width: 20%;
+    animation: moodline-expand-contract 2s ease-in-out infinite;
   }
 }
 

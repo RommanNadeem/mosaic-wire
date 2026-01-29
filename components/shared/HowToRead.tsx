@@ -17,7 +17,7 @@ export default function HowToRead({ newsData, isExpanded, onToggle }: HowToReadP
         className="w-full flex items-center justify-between text-left"
       >
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-          How to Read
+          How to Read This
         </h2>
         <svg
           className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${
@@ -45,25 +45,28 @@ export default function HowToRead({ newsData, isExpanded, onToggle }: HowToReadP
                    <div className="space-y-1.5">
                      <div className="flex items-center gap-2">
                        <div className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-positive)]"></div>
-                       <span><strong className="text-[var(--text-primary)]">POSITIVE:</strong> Constructive or optimistic coverage</span>
+                       <span><strong className="text-[var(--text-primary)]">Positive:</strong> Constructive or optimistic coverage</span>
                      </div>
                      <div className="flex items-center gap-2">
                        <div className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-neutral)]"></div>
-                       <span><strong className="text-[var(--text-primary)]">NEUTRAL:</strong> Factual or balanced reporting</span>
+                       <span><strong className="text-[var(--text-primary)]">Neutral:</strong> Factual, descriptive, or balanced reporting</span>
                      </div>
                      <div className="flex items-center gap-2">
                        <div className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-negative)]"></div>
-                       <span><strong className="text-[var(--text-primary)]">NEGATIVE:</strong> Critical or concerning coverage</span>
+                       <span><strong className="text-[var(--text-primary)]">Negative:</strong> Critical, skeptical, or concern-driven coverage</span>
                      </div>
                    </div>
+                   <p className="mt-2 leading-relaxed">
+                     Sentiment reflects tone and framing, not whether an event itself is &quot;good&quot; or &quot;bad.&quot;
+                   </p>
                  </div>
 
                  <div>
                    <h3 className="font-bold text-[var(--text-primary)] mb-1 uppercase tracking-tight">
-                     The Sentiment Bar
+                     The MOODLINE
                    </h3>
                    <p className="leading-relaxed">
-                     Visualizes the breakdown of viewpoints across all analyzed sources. Hover over any segment to see the exact percentage of coverage for that sentiment.
+                     Shows the distribution of viewpoints across all analyzed sources for today. Hover over any segment to see the exact percentage of coverage associated with that sentiment.
                    </p>
                  </div>
 
@@ -72,7 +75,7 @@ export default function HowToRead({ newsData, isExpanded, onToggle }: HowToReadP
                      Source Verification
                    </h3>
                    <p className="leading-relaxed">
-                     Every story is aggregated from multiple verified outlets. Click any source icon or headline to read the original full-length article.
+                     Every story is aggregated from multiple verified outlets. Click a headline or source icon to read the original, full-length reporting and compare perspectives directly.
                    </p>
                  </div>
                </div>

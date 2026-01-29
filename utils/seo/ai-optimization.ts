@@ -120,7 +120,7 @@ export function generateContentHierarchy(newsItem: NewsItem): ContentHierarchy {
     h2: [
       'Summary',
       'Sentiment Analysis',
-      'Sources in Cluster',
+      'Coverage across sources',
     ],
     h3: newsItem.sources?.map(s => s.headline).filter(Boolean).slice(0, 5) || [],
   }

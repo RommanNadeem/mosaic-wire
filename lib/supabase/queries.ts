@@ -125,9 +125,8 @@ export async function getTopicByShortIdServer(shortId: string) {
       }
     }
 
-    // If not found in snapshots, fallback to topics table.
-    // IMPORTANT: old shared links may point to topics far older than the most recent N rows.
-    // PostgREST doesn't support "ends_with" on UUID columns cleanly, so we page and match in JS.
+    // If not found in snapshots, fallback to topics table (e.g. old/archived topics).
+    // topics table schema uses: id, display_label, category_tag, first_seen_at, last_updated_at.
     const PAGE_SIZE = 500
     const MAX_PAGES = 40 // safety cap: 500 * 40 = 20k rows scanned max
 
@@ -140,7 +139,7 @@ export async function getTopicByShortIdServer(shortId: string) {
       const { data: topicsPage, error: topicsError } = await supabaseClient
         .from('topics')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('last_updated_at', { ascending: false, nullsFirst: false })
         .range(from, to)
 
       if (topicsError) {
@@ -153,7 +152,7 @@ export async function getTopicByShortIdServer(shortId: string) {
       }
 
       topicFromTable = topicsPage.find((t: any) => {
-        const topicIdString = String(t.topic_id || t.id || '')
+        const topicIdString = String(t.id || t.topic_id || '')
         const topicShortId = topicIdString.slice(-6)
         return topicShortId === shortId
       }) || null
@@ -164,22 +163,19 @@ export async function getTopicByShortIdServer(shortId: string) {
     }
 
     if (topicFromTable) {
-      // Transform the topic from topics table to match topic_snapshots format
-      // The transformer function should handle both formats, but we ensure compatibility
+      // Map topics table schema to topic_snapshots-like shape for transformTopicToNewsItem
       return {
         ...topicFromTable,
         topic_id: topicFromTable.id || topicFromTable.topic_id,
-        // Map common fields that might differ
-        headline: topicFromTable.headline || topicFromTable.topic_name || null,
+        headline: topicFromTable.display_label || topicFromTable.headline || topicFromTable.topic_name || null,
         summary: topicFromTable.summary || topicFromTable.ai_summary || null,
-        tag: topicFromTable.tag || topicFromTable.category || null,
+        tag: topicFromTable.category_tag || topicFromTable.tag || topicFromTable.category || null,
         image_url: topicFromTable.image_url || topicFromTable.image || null,
-        // Set defaults for fields that might not exist in topics table
-        article_count: topicFromTable.article_count || 0,
+        article_count: topicFromTable.article_count || topicFromTable.cluster_size || 0,
         source_count: topicFromTable.source_count || 0,
         recent_articles_count: topicFromTable.recent_articles_count || 0,
-        updated_at: topicFromTable.updated_at || topicFromTable.created_at || new Date().toISOString(),
-        topic_created_at: topicFromTable.created_at || topicFromTable.topic_created_at || null,
+        updated_at: topicFromTable.last_updated_at || topicFromTable.updated_at || new Date().toISOString(),
+        topic_created_at: topicFromTable.first_seen_at || topicFromTable.created_at || topicFromTable.topic_created_at || null,
       }
     }
 
@@ -241,6 +237,106 @@ export async function getArticlesForTopic(topicId: string) {
     return data || []
   } catch (error) {
     console.error('Error in getArticlesForTopic:', error)
+    return []
+  }
+}
+
+/**
+ * Fetch distinct category_tag values from topics (for archive tabs).
+ * Returns sorted list of non-null tags from recent topics.
+ */
+export async function getArchiveCategoryTagsServer(): Promise<string[]> {
+  const supabaseClient = createServerClient()
+  if (!supabaseClient) {
+    return []
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('topics')
+      .select('category_tag')
+      .order('last_updated_at', { ascending: false, nullsFirst: false })
+      .limit(500)
+
+    if (error) {
+      console.error('Error fetching archive category tags:', error)
+      return []
+    }
+
+    const tags = [...new Set((data || []).map((r: { category_tag?: string | null }) => r.category_tag).filter(Boolean))] as string[]
+    return tags.sort((a, b) => a.localeCompare(b))
+  } catch (error) {
+    console.error('Error in getArchiveCategoryTagsServer:', error)
+    return []
+  }
+}
+
+/**
+ * Fetch archive topics from topics table (server-side).
+ * Order: recent to older (last_updated_at descending).
+ * Optional categoryTag filters by category_tag.
+ */
+export async function getArchiveTopicsServer(limit: number, offset: number = 0, categoryTag?: string | null) {
+  const supabaseClient = createServerClient()
+  if (!supabaseClient) {
+    return []
+  }
+
+  try {
+    const from = offset
+    const to = offset + limit - 1
+    let query = supabaseClient
+      .from('topics')
+      .select('*')
+      .order('last_updated_at', { ascending: false, nullsFirst: false })
+
+    if (categoryTag && categoryTag !== 'All') {
+      query = query.eq('category_tag', categoryTag)
+    }
+    const { data, error } = await query.range(from, to)
+
+    if (error) {
+      console.error('Error fetching archive topics:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error in getArchiveTopicsServer:', error)
+    return []
+  }
+}
+
+/**
+ * Fetch archive topics from topics table (client-side, for load-more).
+ * Optional categoryTag filters by category_tag.
+ */
+export async function getArchiveTopics(limit: number, offset: number = 0, categoryTag?: string | null) {
+  if (!isSupabaseConfigured || !supabase) {
+    return []
+  }
+
+  try {
+    const from = offset
+    const to = offset + limit - 1
+    let query = supabase
+      .from('topics')
+      .select('*')
+      .order('last_updated_at', { ascending: false, nullsFirst: false })
+
+    if (categoryTag && categoryTag !== 'All') {
+      query = query.eq('category_tag', categoryTag)
+    }
+    const { data, error } = await query.range(from, to)
+
+    if (error) {
+      console.error('Error fetching archive topics:', error)
+      throw error
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error in getArchiveTopics:', error)
     return []
   }
 }

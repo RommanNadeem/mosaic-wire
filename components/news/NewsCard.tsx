@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import type { NewsItem } from '@/types/news'
 import { useImage } from '@/hooks/useImage'
 import { useTouchDevice } from '@/hooks/useTouchDevice'
-import { formatTimeAgo } from '@/utils/formatting/time'
+import { formatTimeAgo, formatPublishedUpdated } from '@/utils/formatting/time'
 import { capitalizeFirst, getCategoryTextColor } from '@/utils/category/category'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import ShareButton from '@/components/shared/ShareButton'
@@ -197,7 +197,7 @@ export default function NewsCard({
                 </>
               )}
               <span className="text-xs text-[var(--text-muted)] ml-auto">
-                {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+                {formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || (typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo))}
               </span>
             </div>
           </div>
@@ -393,7 +393,7 @@ export default function NewsCard({
             </>
           )}
           <span className="text-xs text-[var(--text-muted)] ml-auto">
-            {typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo)}
+            {formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || (typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo))}
           </span>
         </div>
       </div>

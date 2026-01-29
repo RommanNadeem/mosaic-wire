@@ -6,9 +6,9 @@ import { useImage } from '@/hooks/useImage'
 import { useTouchDevice } from '@/hooks/useTouchDevice'
 import { getCategoryTextColor } from '@/utils/category/category'
 import ShareButton from '@/components/shared/ShareButton'
-import PakistanMood from '@/components/news/PakistanMood'
-import LatestStories from '@/components/news/LatestStories'
 import SentimentTooltip from '@/components/sentiment/SentimentTooltip'
+import { createSlug } from '@/utils/routing/navigation'
+import { formatPublishedUpdated } from '@/utils/formatting/time'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import type { NewsItem, Source } from '@/types/news'
 
@@ -23,9 +23,47 @@ interface NewsDetailClientProps {
   aggregationLatency: string
 }
 
+const TRENDING_SIDEBAR_COUNT = 5
+
+function TrendingSidebarCard({ item }: { item: NewsItem }) {
+  const { imageUrl, imageError } = useImage(item?.image || null)
+  const slug = createSlug(item.title, item.id)
+  return (
+    <Link
+      href={`/news/${slug}`}
+      className="flex gap-3 p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-surface)] transition-colors group"
+    >
+      <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-[var(--bg-surface)]">
+        {imageUrl && !imageError ? (
+          <img
+            src={imageUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+            </svg>
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <span className={`text-[10px] font-semibold uppercase ${getCategoryTextColor(item.category)}`}>
+          {(item.category || 'News').toUpperCase()}
+        </span>
+        <h3 className="text-sm font-semibold text-[var(--text-primary)] mt-0.5 line-clamp-2 leading-snug group-hover:underline">
+          {item.title}
+        </h3>
+      </div>
+    </Link>
+  )
+}
+
 export default function NewsDetailClient({
   newsItem,
-  allNewsData,
+  allNewsData = [],
   articles,
   date,
   verdict,
@@ -37,6 +75,7 @@ export default function NewsDetailClient({
   const { isTouchDevice } = useTouchDevice()
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
+  const [detailedAnalysisExpanded, setDetailedAnalysisExpanded] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const sentimentBarRef = useRef<HTMLDivElement>(null)
 
@@ -120,16 +159,16 @@ export default function NewsDetailClient({
     return sourceName.substring(0, 2).toUpperCase()
   }
 
-  const publishedDate = newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : new Date().toISOString()
+  const publishedDate = newsItem.publishedAt ? new Date(newsItem.publishedAt).toISOString() : (newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : new Date().toISOString())
   const modifiedDate = newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : publishedDate
+  const publishedUpdatedLabel = formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || date
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)]">
-      <article itemScope itemType="https://schema.org/NewsArticle" className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8">
-        <div className="flex flex-col xl:flex-row gap-8">
-          {/* Main Content - Left Column */}
-          <div className="flex-1 xl:w-[75%]">
-            {/* Top Section - Back Link, Category, Date */}
+    <div className="min-h-screen bg-[var(--bg-primary)] overflow-x-hidden">
+      <article itemScope itemType="https://schema.org/NewsArticle" className="max-w-[90rem] mx-auto px-4 sm:px-8 lg:px-[60px] py-8 min-w-0">
+        <div className="flex flex-col xl:flex-row gap-8 xl:items-start min-w-0">
+          {/* Main Content - Left Column (article grid: back link, meta, share, heading, content) */}
+          <div className="flex-1 xl:w-[75%] min-w-0">
             <header className="mb-6">
               <nav aria-label="Breadcrumb">
                 <Link 
@@ -145,7 +184,7 @@ export default function NewsDetailClient({
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
-                  BACK TO NEWSROOM
+                  BACK TO STORIES
                 </Link>
               </nav>
               <div className="flex items-center justify-between gap-3 mb-4">
@@ -154,7 +193,7 @@ export default function NewsDetailClient({
                     {(category || 'UNCATEGORIZED').toUpperCase()}
                   </span>
                   <time itemProp="datePublished" dateTime={publishedDate} className="text-sm text-[var(--text-muted)]">
-                    {date}
+                    {publishedUpdatedLabel}
                   </time>
                   {modifiedDate !== publishedDate && (
                     <time itemProp="dateModified" dateTime={modifiedDate} className="sr-only">
@@ -162,13 +201,12 @@ export default function NewsDetailClient({
                     </time>
                   )}
                 </div>
-                {/* Share Button - Right side */}
                 <ShareButton newsItem={newsItem} onShare={() => {}} />
               </div>
-              <h1 itemProp="headline" className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
-                {title}
-              </h1>
             </header>
+            <h1 itemProp="headline" className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--text-primary)] uppercase leading-tight mb-6">
+              {title}
+            </h1>
 
             {/* Sentiment Bar with percentage on the right */}
             {sentiment && total > 0 && (
@@ -257,24 +295,40 @@ export default function NewsDetailClient({
                     </p>
                   </div>
                 </div>
-                {newsItem.detailedSummary && (
-                  <div className="mt-6 pt-6 border-t border-[var(--border-subtle)]">
-                    <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Detailed Analysis</h2>
-                    <div itemProp="articleBody" className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-4">
-                      {newsItem.detailedSummary.split('\n').map((paragraph, index) => (
-                        paragraph.trim() && <p key={index}>{paragraph.trim()}</p>
-                      ))}
+                {newsItem.detailedSummary && (() => {
+                  const paragraphs = newsItem.detailedSummary.split('\n').map(p => p.trim()).filter(Boolean)
+                  const firstParagraph = paragraphs[0] ?? ''
+                  const hasMore = paragraphs.length > 1
+                  const isExpanded = detailedAnalysisExpanded || !hasMore
+                  return (
+                    <div className="mt-6 pt-6 border-t border-[var(--border-subtle)]">
+                      <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Detailed Analysis</h2>
+                      <div itemProp="articleBody" className="text-sm text-[var(--text-secondary)] leading-relaxed space-y-4">
+                        <p>{firstParagraph}</p>
+                        {isExpanded && paragraphs.slice(1).map((paragraph, index) => (
+                          <p key={index}>{paragraph}</p>
+                        ))}
+                        {hasMore && (
+                          <button
+                            type="button"
+                            onClick={() => setDetailedAnalysisExpanded(!detailedAnalysisExpanded)}
+                            className="text-sm font-medium text-[var(--accent-positive)] hover:underline focus:outline-none focus:underline"
+                          >
+                            {detailedAnalysisExpanded ? 'Less' : 'More…'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
               </section>
             )}
 
                    {/* Sources in Cluster */}
                    {clusterSources.length > 0 && (
-                     <section aria-label="Sources in Cluster">
+                     <section aria-label="Coverage across sources">
                        <div className="flex items-center justify-between mb-8">
-                         <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">SOURCES IN CLUSTER</h2>
+                         <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">COVERAGE ACROSS SOURCES</h2>
                        </div>
                        <div className="space-y-8">
                          {sortedGroupedSources.map(([sourceName, groupSources]) => {
@@ -387,10 +441,24 @@ export default function NewsDetailClient({
                    )}
           </div>
 
-          {/* Right Sidebar */}
-          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:bottom-8 xl:self-end" aria-label="Related content">
-            <PakistanMood newsData={allNewsData} />
-            <LatestStories newsData={allNewsData} />
+          {/* Right Sidebar - Next trending stories */}
+          <aside className="xl:w-[25%] lg:flex-shrink-0 flex flex-col space-y-4 xl:sticky xl:top-8 xl:self-start" aria-label="More stories">
+            {allNewsData.length > 1 && (() => {
+              const otherStories = allNewsData.filter((item) => String(item.id) !== String(newsItem.id)).slice(0, TRENDING_SIDEBAR_COUNT)
+              if (otherStories.length === 0) return null
+              return (
+                <>
+                  <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide mb-2">
+                    More Stories
+                  </h2>
+                  <div className="space-y-3">
+                    {otherStories.map((item) => (
+                      <TrendingSidebarCard key={item.id} item={item} />
+                    ))}
+                  </div>
+                </>
+              )
+            })()}
           </aside>
         </div>
       </article>

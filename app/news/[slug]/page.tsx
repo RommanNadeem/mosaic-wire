@@ -1,5 +1,4 @@
-import { getTopicBySlug, getLatestTopicsServer } from '@/lib/supabase/queries'
-import { getArticlesForTopicServer } from '@/lib/supabase/queries'
+import { getTopicBySlug, getLatestTopicsServer, getArticlesForTopicServer } from '@/lib/supabase/queries'
 import { transformTopicToNewsItem, transformSupabaseData } from '@/utils/data/transformers'
 import { generateNewsMetadata } from '@/utils/meta/generate'
 import { processImageForMetaTags } from '@/utils/images/meta-processing'
@@ -12,7 +11,6 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Script from 'next/script'
 import NewsDetailClient from './NewsDetailClient'
-import LatestStories from '@/components/news/LatestStories'
 import type { NewsItem } from '@/types/news'
 
 export const dynamic = 'force-dynamic'
@@ -112,7 +110,7 @@ export default async function NewsPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch all topics for sidebar statistics
+  // Fetch all topics for trending sidebar
   const allTopics = await getLatestTopicsServer()
   const allNewsData = transformSupabaseData(allTopics)
 

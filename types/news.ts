@@ -14,6 +14,7 @@ export interface NewsItem {
   image: string | null
   sources: Source[]
   recentArticlesCount?: number
+  publishedAt?: string | null
   updatedAt?: string
   detailedSummary?: string | null
 }
