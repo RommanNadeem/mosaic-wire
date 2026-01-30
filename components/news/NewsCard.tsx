@@ -194,9 +194,24 @@ export default function NewsCard({
                   )}
                 </>
               )}
-              <span className="text-xs text-[var(--text-muted)] ml-auto">
-                {formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || (typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo))}
-              </span>
+              {(() => {
+                const dateLabel = formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || (typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo))
+                const hasBothPublishedAndUpdated = typeof dateLabel === 'string' && dateLabel.includes(' • ')
+                if (hasBothPublishedAndUpdated) {
+                  const updatedOnly = (dateLabel as string).split(' • ')[1]
+                  return (
+                    <>
+                      <span className="text-xs text-[var(--text-muted)] ml-auto sm:hidden">{updatedOnly}</span>
+                      <span className="text-xs text-[var(--text-muted)] ml-auto hidden sm:inline">{dateLabel}</span>
+                    </>
+                  )
+                }
+                return (
+                  <span className="text-xs text-[var(--text-muted)] ml-auto">
+                    {dateLabel}
+                  </span>
+                )
+              })()}
             </div>
           </div>
 
@@ -388,9 +403,24 @@ export default function NewsCard({
               )}
             </>
           )}
-          <span className="text-xs text-[var(--text-muted)] ml-auto">
-            {formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || (typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo))}
-          </span>
+          {(() => {
+            const dateLabel = formatPublishedUpdated(newsItem.publishedAt, newsItem.updatedAt) || (typeof timeAgo === 'string' ? timeAgo : formatTimeAgo(timeAgo))
+            const hasBothPublishedAndUpdated = typeof dateLabel === 'string' && dateLabel.includes(' • ')
+            if (hasBothPublishedAndUpdated) {
+              const updatedOnly = (dateLabel as string).split(' • ')[1]
+              return (
+                <>
+                  <span className="text-xs text-[var(--text-muted)] ml-auto sm:hidden">{updatedOnly}</span>
+                  <span className="text-xs text-[var(--text-muted)] ml-auto hidden sm:inline">{dateLabel}</span>
+                </>
+              )
+            }
+            return (
+              <span className="text-xs text-[var(--text-muted)] ml-auto">
+                {dateLabel}
+              </span>
+            )
+          })()}
         </div>
       </div>
     </article>

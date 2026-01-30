@@ -3,18 +3,32 @@
 import type { NewsItem, Source } from '@/types/news'
 import { calculateTimeAgo, formatTimeAgo } from '@/utils/formatting/time'
 
+function isTwitterSource(source: Source): boolean {
+  const name = (source.source || '').toLowerCase()
+  const url = (source.url || '').toLowerCase()
+  return (
+    name.includes('twitter') ||
+    name === 'x' ||
+    url.includes('twitter.com') ||
+    url.includes('x.com')
+  )
+}
+
 interface LatestStoriesProps {
   newsData: NewsItem[]
 }
 
 export default function LatestStories({ newsData }: LatestStoriesProps) {
-  // Get the most recent article from each topic based on publication time
+  // Get the most recent article from each topic based on publication time (exclude Twitter)
   const latestArticles: Array<{ newsItem: NewsItem; latestSource: Source }> = []
   
   newsData.forEach((item) => {
     if (item.sources && item.sources.length > 0) {
+      const nonTwitterSources = item.sources.filter((s) => !isTwitterSource(s))
+      if (nonTwitterSources.length === 0) return
+
       // Sort sources by dateTime (most recent first)
-      const sortedSources = [...item.sources].sort((a, b) => {
+      const sortedSources = [...nonTwitterSources].sort((a, b) => {
         const dateA = a.dateTime ? new Date(a.dateTime).getTime() : 0
         const dateB = b.dateTime ? new Date(b.dateTime).getTime() : 0
         return dateB - dateA // Most recent first
@@ -94,7 +108,10 @@ export default function LatestStories({ newsData }: LatestStoriesProps) {
         The Latest
       </h2>
       <div className="space-y-3">
-        {latestArticles.slice(0, 10).map(({ newsItem, latestSource }) => {
+        {latestArticles
+          .filter(({ latestSource }) => !isTwitterSource(latestSource))
+          .slice(0, 10)
+          .map(({ newsItem, latestSource }) => {
           // Calculate time from publication date (dateTime)
           let displayTime: string
           if (latestSource.dateTime) {

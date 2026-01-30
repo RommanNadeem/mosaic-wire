@@ -77,6 +77,11 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://platform.twitter.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://platform.twitter.com" />
+        <link rel="preload" href="https://platform.twitter.com/widgets.js" as="script" />
+      </head>
       <body>
         {/* Organization Schema */}
         <Script
@@ -97,6 +102,12 @@ export default function RootLayout({
             gtag('config', 'G-9NYQDTQ53Z');
           `}
         </Script>
+        {/* Twitter widgets - load early so tweets render faster on article pages */}
+        <Script
+          src="https://platform.twitter.com/widgets.js"
+          strategy="afterInteractive"
+          id="twitter-widgets"
+        />
         {/* Microsoft Clarity - Delayed initialization for better performance */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`

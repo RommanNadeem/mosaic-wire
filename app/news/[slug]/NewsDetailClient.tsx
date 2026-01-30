@@ -8,8 +8,9 @@ import { getCategoryTextColor } from '@/utils/category/category'
 import ShareButton from '@/components/shared/ShareButton'
 import SentimentTooltip from '@/components/sentiment/SentimentTooltip'
 import { createSlug } from '@/utils/routing/navigation'
-import { formatPublishedUpdated } from '@/utils/formatting/time'
+import { formatPublishedUpdated, formatTimeAgo, calculateTimeAgo } from '@/utils/formatting/time'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { getYoutubeVideoId, getYoutubeEmbedUrl } from '@/utils/video/youtube'
 import type { NewsItem, Source } from '@/types/news'
 
 interface NewsDetailClientProps {
@@ -76,8 +77,10 @@ export default function NewsDetailClient({
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
   const [detailedAnalysisExpanded, setDetailedAnalysisExpanded] = useState(false)
+  const [coverageFilter, setCoverageFilter] = useState<'all' | 'positive' | 'neutral' | 'negative'>('all')
   const tooltipRef = useRef<HTMLDivElement>(null)
   const sentimentBarRef = useRef<HTMLDivElement>(null)
+  const twitterSectionRef = useRef<HTMLElement>(null)
 
   // On mobile: close sentiment tooltip when tapping outside the bar
   useEffect(() => {
@@ -91,6 +94,38 @@ export default function NewsDetailClient({
   }, [isTouchDevice])
 
   const { id, title, category, summary, sentiment, sources } = newsItem
+
+  // Tweet sources count for Twitter widget load effect
+  const tweetStatusCount = (sources || []).filter((s) =>
+    /(?:twitter\.com|x\.com)\/\w+\/status\//i.test((s.url || ''))
+  ).length
+
+  // Trigger Twitter to parse tweets: immediately, after short delay, and when section is in view
+  const triggerTwitterLoad = () => {
+    if (typeof window !== 'undefined' && (window as any).twttr?.widgets) {
+      (window as any).twttr.widgets.load()
+    }
+  }
+  useEffect(() => {
+    if (tweetStatusCount === 0) return
+    triggerTwitterLoad()
+    const id1 = setTimeout(triggerTwitterLoad, 150)
+    const id2 = setTimeout(triggerTwitterLoad, 600)
+    const el = twitterSectionRef.current
+    if (!el) return () => { clearTimeout(id1); clearTimeout(id2) }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) triggerTwitterLoad()
+      },
+      { rootMargin: '100px', threshold: 0.1 }
+    )
+    io.observe(el)
+    return () => {
+      clearTimeout(id1)
+      clearTimeout(id2)
+      io.disconnect()
+    }
+  }, [tweetStatusCount])
 
   // Calculate sentiment percentages
   const { positive, neutral, negative } = sentiment || { positive: 0, neutral: 0, negative: 0 }
@@ -123,8 +158,30 @@ export default function NewsDetailClient({
   // Get all sources for the "Sources in Cluster" section
   const clusterSources = sources || []
 
-  // Group sources by domain/source name
-  const groupedSources = clusterSources.reduce((acc, source) => {
+  const isTwitterSource = (source: Source): boolean => {
+    const name = (source.source || '').toLowerCase()
+    const url = (source.url || '').toLowerCase()
+    return (
+      name.includes('twitter') ||
+      name === 'x' ||
+      url.includes('twitter.com') ||
+      url.includes('x.com')
+    )
+  }
+
+  const isYoutubeSource = (source: Source): boolean => {
+    return getYoutubeVideoId(source.url) != null
+  }
+
+  const nonTwitterSources = clusterSources.filter((s) => !isTwitterSource(s))
+  const nonTwitterNonYoutubeSources = clusterSources.filter(
+    (s) => !isTwitterSource(s) && !isYoutubeSource(s)
+  )
+  const twitterSources = clusterSources.filter((s) => isTwitterSource(s))
+  const youtubeSources = clusterSources.filter((s) => isYoutubeSource(s))
+
+  // Group sources by domain/source name (non-Twitter, non-YouTube for coverage list)
+  const groupedSources = nonTwitterNonYoutubeSources.reduce((acc, source) => {
     const key = source.source || 'Unknown'
     if (!acc[key]) {
       acc[key] = []
@@ -145,20 +202,20 @@ export default function NewsDetailClient({
   const formatSourceDateTime = (source: Source) => {
     if (source.dateTime) {
       try {
-        const date = new Date(source.dateTime)
-        const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
-        const day = date.getDate()
-        const hours = date.getHours()
-        const minutes = date.getMinutes()
+        const d = new Date(source.dateTime)
+        const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+        const day = d.getDate()
+        const hours = d.getHours()
+        const minutes = d.getMinutes()
         const ampm = hours >= 12 ? 'PM' : 'AM'
         const displayHours = hours % 12 || 12
         const displayMinutes = minutes.toString().padStart(2, '0')
         return `${month} ${day}, ${displayHours}:${displayMinutes} ${ampm}`
-      } catch (e) {
-        return date
+      } catch {
+        return source.timeAgo || '—'
       }
     }
-    return date
+    return source.timeAgo || '—'
   }
 
   // Get source abbreviation (first letters)
@@ -169,6 +226,64 @@ export default function NewsDetailClient({
     }
     return sourceName.substring(0, 2).toUpperCase()
   }
+
+  const getDomainFromUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null
+    try {
+      const urlObj = new URL(url)
+      return urlObj.hostname.replace('www.', '')
+    } catch {
+      const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^/]+)/)
+      return match ? match[1] : null
+    }
+  }
+
+  // Sentiment color for pills and borders
+  const getSentimentColor = (sentiment: string | null | undefined): string => {
+    if (!sentiment) return 'bg-[var(--accent-neutral)]'
+    const s = sentiment.toLowerCase()
+    if (s === 'positive') return 'bg-[var(--accent-positive)]'
+    if (s === 'negative') return 'bg-[var(--accent-negative)]'
+    return 'bg-[var(--accent-neutral)]'
+  }
+  const getSentimentBorderColor = (sentiment: string | null | undefined): string => {
+    if (!sentiment) return 'border-l-[var(--accent-neutral)]'
+    const s = sentiment.toLowerCase()
+    if (s === 'positive') return 'border-l-[var(--accent-positive)]'
+    if (s === 'negative') return 'border-l-[var(--accent-negative)]'
+    return 'border-l-[var(--accent-neutral)]'
+  }
+
+  // Per-group sentiment counts and dominant for sort
+  const getGroupSentimentCounts = (sources: Source[]) => {
+    const counts = { positive: 0, neutral: 0, negative: 0 }
+    sources.forEach((s) => {
+      const v = (s.sentiment || '').toLowerCase()
+      if (v === 'positive') counts.positive++
+      else if (v === 'negative') counts.negative++
+      else counts.neutral++
+    })
+    return counts
+  }
+  // Filter coverage by sentiment; sort groups by newest first
+  const filteredGroupedEntries: [string, Source[]][] = (() => {
+    const entries: [string, Source[]][] = Object.entries(groupedSources).map(([name, groupSources]) => {
+      const filtered =
+        coverageFilter === 'all'
+          ? groupSources
+          : groupSources.filter((s) => (s.sentiment || '').toLowerCase() === coverageFilter)
+      return [name, filtered]
+    }).filter((entry): entry is [string, Source[]] => entry[1].length > 0)
+
+    return [...entries].sort((a, b) => {
+      const getLatest = (sources: Source[]) =>
+        Math.max(...sources.map((s) => (s.dateTime ? new Date(s.dateTime).getTime() : 0)))
+      return getLatest(b[1]) - getLatest(a[1])
+    })
+  })()
+
+  const totalOutlets = Object.keys(groupedSources).length
+  const totalArticles = nonTwitterNonYoutubeSources.length
 
   const publishedDate = newsItem.publishedAt ? new Date(newsItem.publishedAt).toISOString() : (newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : new Date().toISOString())
   const modifiedDate = newsItem.updatedAt ? new Date(newsItem.updatedAt).toISOString() : publishedDate
@@ -199,11 +314,11 @@ export default function NewsDetailClient({
                 </Link>
               </nav>
               <div className="flex items-center justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                   <span itemProp="articleSection" className={`text-xs font-semibold uppercase ${getCategoryTextColor(category)}`}>
                     {(category || 'UNCATEGORIZED').toUpperCase()}
                   </span>
-                  <time itemProp="datePublished" dateTime={publishedDate} className="text-sm text-[var(--text-muted)]">
+                  <time itemProp="datePublished" dateTime={publishedDate} className="text-sm text-[var(--text-muted)] mt-3 sm:mt-0">
                     {publishedUpdatedLabel}
                   </time>
                   {modifiedDate !== publishedDate && (
@@ -308,7 +423,7 @@ export default function NewsDetailClient({
             {summary && (
               <section className="mb-12" itemProp="description">
                 <div className="flex gap-4">
-                  <div className="w-1 bg-[var(--accent-positive)] flex-shrink-0" aria-hidden="true"></div>
+                  <div className="w-1 bg-[var(--summary-bar)] flex-shrink-0" aria-hidden="true"></div>
                   <div className="flex-1">
                     <p itemProp="abstract" className="text-base text-[var(--text-secondary)] leading-relaxed mb-6">
                       {summary}
@@ -344,43 +459,81 @@ export default function NewsDetailClient({
               </section>
             )}
 
-                   {/* Sources in Cluster */}
-                   {clusterSources.length > 0 && (
+                   {/* Sources in Cluster (non-Twitter, non-YouTube) */}
+                   {nonTwitterNonYoutubeSources.length > 0 && (
                      <section aria-label="Coverage across sources">
-                       <div className="flex items-center justify-between mb-8">
-                         <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">COVERAGE ACROSS SOURCES</h2>
+                       {/* Section header: title, subheading, stats, AI label, takeaway */}
+                       <div className="mb-6">
+                         <h2 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">
+                           COVERAGE ACROSS SOURCES
+                         </h2>
+                         <p className="text-sm text-[var(--text-muted)] mt-1">
+                           How different outlets covered this story.
+                         </p>
+                         <div className="flex flex-wrap items-center gap-3 mt-3">
+                           <span className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">
+                             {totalOutlets} {totalOutlets === 1 ? 'outlet' : 'outlets'} · {totalArticles} {totalArticles === 1 ? 'article' : 'articles'}
+                           </span>
+                         </div>
                        </div>
+
+                       {/* Filter chips */}
+                       <div className="flex flex-wrap items-center gap-1.5 mb-6">
+                         <span className="text-[9px] font-semibold uppercase text-[var(--text-muted)] tracking-wider mr-0.5">Filter:</span>
+                         {(['all', 'positive', 'neutral', 'negative'] as const).map((value) => (
+                           <button
+                             key={value}
+                             type="button"
+                             onClick={() => setCoverageFilter(value)}
+                             className={`min-h-[28px] px-2 py-1 rounded text-[9px] font-semibold uppercase tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-positive)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-primary)] ${
+                               coverageFilter === value
+                                 ? 'bg-[var(--text-primary)] text-[var(--bg-primary)]'
+                                 : 'bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
+                             }`}
+                             aria-pressed={coverageFilter === value}
+                             aria-label={`Filter by ${value === 'all' ? 'all sentiments' : value}`}
+                           >
+                             {value === 'all' ? 'All' : value}
+                           </button>
+                         ))}
+                       </div>
+
+                       {filteredGroupedEntries.length === 0 ? (
+                         <p className="text-sm text-[var(--text-muted)] italic py-4">
+                           {coverageFilter === 'all'
+                             ? 'No coverage sources.'
+                             : `No articles with ${coverageFilter} sentiment.`}
+                         </p>
+                       ) : (
                        <div className="space-y-8">
-                         {sortedGroupedSources.map(([sourceName, groupSources]) => {
-                           // Get source abbreviation for fallback
+                         {filteredGroupedEntries.map(([sourceName, groupSources]) => {
                            const sourceAbbr = getSourceAbbreviation(sourceName)
-                           
-                           // Get domain from URL for favicon
-                           const getDomainFromUrl = (url: string | null | undefined): string | null => {
-                             if (!url) return null
-                             try {
-                               const urlObj = new URL(url)
-                               return urlObj.hostname.replace('www.', '')
-                             } catch (e) {
-                               const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/)
-                               return match ? match[1] : null
-                             }
-                           }
-                           
                            const domain = getDomainFromUrl(groupSources[0]?.url)
                            const faviconUrl = groupSources[0]?.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
+                           const sentimentCounts = getGroupSentimentCounts(groupSources)
+                           const latestInGroup = groupSources.length > 0
+                             ? groupSources.reduce((latest, s) => {
+                                 const t = s.dateTime ? new Date(s.dateTime).getTime() : 0
+                                 return t > (latest.dateTime ? new Date(latest.dateTime).getTime() : 0) ? s : latest
+                               })
+                             : null
+                           const latestTimeAgo = latestInGroup?.dateTime
+                             ? formatTimeAgo(calculateTimeAgo(latestInGroup.dateTime))
+                             : null
+
+                           const sortedArticles = [...groupSources].sort((a, b) => {
+                             const ta = a.dateTime ? new Date(a.dateTime).getTime() : 0
+                             const tb = b.dateTime ? new Date(b.dateTime).getTime() : 0
+                             return tb - ta
+                           })
 
                            return (
                              <div key={sourceName} className="space-y-4">
-                               {/* Source Header */}
-                               <div className="flex items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
-                                 <Avatar className="w-6 h-6 rounded-sm">
+                               {/* Source Header with per-source sentiment summary */}
+                               <div className="flex flex-wrap items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
+                                 <Avatar className="w-6 h-6 rounded-sm flex-shrink-0">
                                    {faviconUrl ? (
-                                     <AvatarImage
-                                       src={faviconUrl}
-                                       alt={sourceName}
-                                       className="object-cover"
-                                     />
+                                     <AvatarImage src={faviconUrl} alt={sourceName} className="object-cover" />
                                    ) : null}
                                    <AvatarFallback className="bg-[var(--text-primary)] text-[var(--bg-primary)] text-[8px] font-bold rounded-sm">
                                      {sourceAbbr}
@@ -389,76 +542,181 @@ export default function NewsDetailClient({
                                  <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">
                                    {sourceName}
                                  </h3>
-                                 <span className="text-xs text-[var(--text-muted)] ml-auto">
-                                   {groupSources.length} {groupSources.length === 1 ? 'ARTICLE' : 'ARTICLES'}
-                                 </span>
-                               </div>
-
-                               {/* Source Articles */}
-                               <div className="grid grid-cols-1 gap-4">
-                                 {groupSources.map((source) => {
-                                   const sentimentLabel = source.sentiment 
-                                     ? source.sentiment.toUpperCase() 
-                                     : 'NEUTRAL'
-                                   
-                                   const getSentimentColor = (sentiment: string | null | undefined): string => {
-                                     if (!sentiment) return 'bg-[var(--accent-neutral)]'
-                                     const sentimentLower = sentiment.toLowerCase()
-                                     if (sentimentLower === 'positive') return 'bg-[var(--accent-positive)]'
-                                     if (sentimentLower === 'negative') return 'bg-[var(--accent-negative)]'
-                                     return 'bg-[var(--accent-neutral)]'
-                                   }
-                                   
-                                   const sentimentColorClass = getSentimentColor(source.sentiment)
-                                   
+                                 {latestTimeAgo && (
+                                   <span className="text-xs text-[var(--text-muted)] ml-auto">
+                                     Updated {latestTimeAgo}
+                                   </span>
+                                 )}
+                                 {/* Mini sentiment bar - hidden on mobile to avoid thin green line; shown sm+ */}
+                                 {(() => {
+                                   const total = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative
+                                   if (total === 0) return null
                                    return (
-                                     <div 
-                                       key={source.id} 
-                                       className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-sm p-4 flex flex-col sm:flex-row items-start gap-4"
-                                     >
-                                       {/* Content Section */}
-                                       <div className="flex-1 min-w-0">
-                                         {/* Sentiment Tag */}
-                                         <div className="mb-2">
-                                           <span className={`px-2 py-0.5 ${sentimentColorClass} text-white text-[10px] font-semibold uppercase rounded-sm`}>
-                                             {sentimentLabel}
-                                           </span>
-                                         </div>
-                                         
-                                         {/* Headline */}
-                                         <h4 className="text-sm font-bold text-[var(--text-primary)] italic mb-2 leading-relaxed">
-                                           {source.headline}
-                                         </h4>
-                                       </div>
-                                       
-                                       {/* Right Section - Date and Read Button */}
-                                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                         <div className="text-[10px] text-[var(--text-muted)] uppercase whitespace-nowrap">
-                                           {formatSourceDateTime(source)}
-                                         </div>
-                                         <a
-                                           href={source.url}
-                                           target="_blank"
-                                           rel="noopener noreferrer"
-                                           className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent-positive)] inline-flex items-center gap-1 uppercase tracking-wide"
-                                           onClick={(e) => e.stopPropagation()}
-                                         >
-                                           READ
-                                           <svg className="w-3 h-3 text-[var(--accent-positive)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                           </svg>
-                                         </a>
-                                       </div>
+                                     <div className="hidden sm:flex w-full sm:w-auto sm:ml-0 h-1.5 rounded overflow-hidden flex-shrink-0" style={{ maxWidth: 80 }} role="img" aria-label={`${sentimentCounts.positive} positive, ${sentimentCounts.neutral} neutral, ${sentimentCounts.negative} negative`}>
+                                       {sentimentCounts.positive > 0 && (
+                                         <div className="h-full bg-[var(--accent-positive)]" style={{ width: `${(sentimentCounts.positive / total) * 100}%` }} title={`${sentimentCounts.positive} positive`} />
+                                       )}
+                                       {sentimentCounts.neutral > 0 && (
+                                         <div className="h-full bg-[var(--accent-neutral)]" style={{ width: `${(sentimentCounts.neutral / total) * 100}%` }} title={`${sentimentCounts.neutral} neutral`} />
+                                       )}
+                                       {sentimentCounts.negative > 0 && (
+                                         <div className="h-full bg-[var(--accent-negative)]" style={{ width: `${(sentimentCounts.negative / total) * 100}%` }} title={`${sentimentCounts.negative} negative`} />
+                                       )}
                                      </div>
                                    )
-                                 })}
+                                 })()}
+                               </div>
+
+                               {/* Source Articles: narrow card for all */}
+                               <div className="grid grid-cols-1 gap-3">
+                                 {sortedArticles.map((source) => (
+                                   <a
+                                     key={source.id}
+                                     href={source.url}
+                                     target="_blank"
+                                     rel="noopener noreferrer"
+                                     className="flex flex-wrap items-center gap-2 py-3 px-3 rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-card)] hover:border-[var(--text-muted)] transition-colors border-l-4 min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-positive)] focus-visible:ring-offset-2"
+                                     style={{ borderLeftColor: source.sentiment === 'positive' ? 'var(--accent-positive)' : source.sentiment === 'negative' ? 'var(--accent-negative)' : 'var(--accent-neutral)' }}
+                                     onClick={(e) => e.stopPropagation()}
+                                     aria-label={`${source.sentiment || 'neutral'} sentiment`}
+                                   >
+                                     <span className="text-sm font-medium text-[var(--text-primary)] italic line-clamp-1 flex-1 min-w-0">
+                                       {source.headline}
+                                     </span>
+                                     <span className="text-[10px] text-[var(--text-muted)] uppercase whitespace-nowrap">
+                                       {formatSourceDateTime(source)}
+                                     </span>
+                                     <span className="text-[10px] text-[var(--accent-positive)] font-semibold uppercase tracking-wide flex-shrink-0">
+                                       Read →
+                                     </span>
+                                   </a>
+                                 ))}
                                </div>
                              </div>
                            )
                          })}
                        </div>
+                       )}
                      </section>
                    )}
+
+                   {/* From YouTube - one row: [YouTube icon] YouTube + all videos in one row */}
+                   {(() => {
+                     if (youtubeSources.length === 0) return null
+                     const seenVideoIds = new Set<string>()
+                     const youtubeVideos = youtubeSources.filter((source) => {
+                       const id = getYoutubeVideoId(source.url)
+                       if (!id || seenVideoIds.has(id)) return false
+                       seenVideoIds.add(id)
+                       return true
+                     })
+                     const embedUrl = (url: string) => getYoutubeEmbedUrl(url) || url
+                     const youtubeFavicon = 'https://www.google.com/s2/favicons?domain=youtube.com&sz=32'
+                     return (
+                       <section className="mt-12" aria-label="From YouTube">
+                         <div className="space-y-4">
+                           <div className="flex flex-wrap items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
+                             <Avatar className="w-6 h-6 rounded-sm flex-shrink-0">
+                               <AvatarImage src={youtubeFavicon} alt="YouTube" className="object-cover" />
+                               <AvatarFallback className="bg-[var(--text-primary)] text-[var(--bg-primary)] text-[8px] font-bold rounded-sm">YT</AvatarFallback>
+                             </Avatar>
+                             <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">YouTube</h3>
+                           </div>
+                           {/* Constrain width so ~2 full videos + half of third show (scroll affordance) */}
+                           <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory scrollbar-hide max-w-[840px]">
+                             {youtubeVideos.map((source) => (
+                               <div key={source.id} className="flex-shrink-0 w-[min(100%,320px)] min-w-[280px] max-w-[360px] rounded overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] snap-start">
+                                 <div className="aspect-video w-full bg-[var(--bg-surface)]">
+                                   <iframe src={embedUrl(source.url)} title={source.headline || 'YouTube video'} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+                                 </div>
+                                 {(source.headline || source.source) && (
+                                   <div className="p-3">
+                                     {source.headline && <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-2">{source.headline}</p>}
+                                     <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent-positive)] mt-2 inline-flex items-center gap-1 uppercase tracking-wide">
+                                       Watch on YouTube →
+                                     </a>
+                                   </div>
+                                 )}
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       </section>
+                     )
+                   })()}
+
+                   {/* From Twitter - same source UI as coverage */}
+                   {(() => {
+                     const tweetSources = twitterSources.filter((s) =>
+                       /(?:twitter\.com|x\.com)\/\w+\/status\//i.test(s.url || '')
+                     )
+                     if (tweetSources.length === 0) return null
+                     const groupedTwitter = tweetSources.reduce((acc, source) => {
+                       const key = source.source || 'Twitter'
+                       if (!acc[key]) acc[key] = []
+                       acc[key].push(source)
+                       return acc
+                     }, {} as Record<string, Source[]>)
+                     const twitterGroupEntries = Object.entries(groupedTwitter).sort((a, b) => {
+                       const getLatest = (s: Source[]) => Math.max(...s.map((x) => (x.dateTime ? new Date(x.dateTime).getTime() : 0)))
+                       return getLatest(b[1]) - getLatest(a[1])
+                     })
+                     return (
+                       <section ref={twitterSectionRef} className="mt-12" aria-label="From Twitter">
+                         <div className="space-y-8">
+                           {twitterGroupEntries.map(([sourceName, groupSources]) => {
+                             const sourceAbbr = getSourceAbbreviation(sourceName)
+                             const domain = getDomainFromUrl(groupSources[0]?.url)
+                             const faviconUrl = groupSources[0]?.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
+                             const sentimentCounts = getGroupSentimentCounts(groupSources)
+                             const latestInGroup = groupSources.length > 0
+                               ? groupSources.reduce((latest, s) => (s.dateTime && new Date(s.dateTime).getTime() > (latest.dateTime ? new Date(latest.dateTime).getTime() : 0) ? s : latest))
+                               : null
+                             const latestTimeAgo = latestInGroup?.dateTime ? formatTimeAgo(calculateTimeAgo(latestInGroup.dateTime)) : null
+                             return (
+                               <div key={sourceName} className="space-y-4">
+                                 <div className="flex flex-wrap items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
+                                   <Avatar className="w-6 h-6 rounded-sm flex-shrink-0">
+                                     {faviconUrl ? <AvatarImage src={faviconUrl} alt={sourceName} className="object-cover" /> : null}
+                                     <AvatarFallback className="bg-[var(--text-primary)] text-[var(--bg-primary)] text-[8px] font-bold rounded-sm">{sourceAbbr}</AvatarFallback>
+                                   </Avatar>
+                                   <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">{sourceName}</h3>
+                                   {latestTimeAgo && <span className="text-xs text-[var(--text-muted)] ml-auto">Updated {latestTimeAgo}</span>}
+                                   {(() => {
+                                     const total = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative
+                                     if (total === 0) return null
+                                     return (
+                                       <div className="hidden sm:flex w-full sm:w-auto h-1.5 rounded overflow-hidden flex-shrink-0" style={{ maxWidth: 80 }} role="img" aria-label={`${sentimentCounts.positive} positive, ${sentimentCounts.neutral} neutral, ${sentimentCounts.negative} negative`}>
+                                         {sentimentCounts.positive > 0 && <div className="h-full bg-[var(--accent-positive)]" style={{ width: `${(sentimentCounts.positive / total) * 100}%` }} />}
+                                         {sentimentCounts.neutral > 0 && <div className="h-full bg-[var(--accent-neutral)]" style={{ width: `${(sentimentCounts.neutral / total) * 100}%` }} />}
+                                         {sentimentCounts.negative > 0 && <div className="h-full bg-[var(--accent-negative)]" style={{ width: `${(sentimentCounts.negative / total) * 100}%` }} />}
+                                       </div>
+                                     )
+                                   })()}
+                                 </div>
+                                 {/* Constrain width so ~2 full tweets + half of third show (scroll affordance) */}
+                                 <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 scroll-smooth snap-x snap-mandatory scrollbar-hide max-w-[1000px]">
+                                   {groupSources.map((source) => (
+                                     <div
+                                       key={source.id}
+                                       className="relative flex-shrink-0 w-[calc((100%-2rem)/3)] min-w-[360px] max-w-[400px] min-h-[480px] overflow-hidden snap-start pt-3 pr-3 pb-3 pl-3"
+                                     >
+                                       {/* Scaled tweet: 550px nominal → 330px visible at 0.6; container fits with padding so no clipping */}
+                                       <div className="absolute overflow-visible" style={{ left: 12, top: 12, width: 550, transform: 'scale(0.6)', transformOrigin: '0 0' }}>
+                                         <blockquote className="twitter-tweet" data-dnt="true" data-theme="dark">
+                                           <a href={source.url!} />
+                                         </blockquote>
+                                       </div>
+                                     </div>
+                                   ))}
+                                 </div>
+                               </div>
+                             )
+                           })}
+                         </div>
+                       </section>
+                     )
+                   })()}
           </div>
 
           {/* Right Sidebar - Next trending stories */}
