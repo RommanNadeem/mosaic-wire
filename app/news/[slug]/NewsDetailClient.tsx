@@ -585,7 +585,7 @@ export default function NewsDetailClient({
                                      onClick={(e) => e.stopPropagation()}
                                      aria-label={`${source.sentiment || 'neutral'} sentiment`}
                                    >
-                                     <span className="text-sm font-medium text-[var(--text-primary)] italic line-clamp-1 flex-1 min-w-0">
+                                     <span className="text-sm font-medium text-[var(--text-primary)] italic line-clamp-2 sm:line-clamp-1 flex-1 min-w-0">
                                        {source.headline}
                                      </span>
                                      <span className="text-[10px] text-[var(--text-muted)] uppercase whitespace-nowrap">
@@ -674,10 +674,6 @@ export default function NewsDetailClient({
                              const domain = getDomainFromUrl(groupSources[0]?.url)
                              const faviconUrl = groupSources[0]?.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null)
                              const sentimentCounts = getGroupSentimentCounts(groupSources)
-                             const latestInGroup = groupSources.length > 0
-                               ? groupSources.reduce((latest, s) => (s.dateTime && new Date(s.dateTime).getTime() > (latest.dateTime ? new Date(latest.dateTime).getTime() : 0) ? s : latest))
-                               : null
-                             const latestTimeAgo = latestInGroup?.dateTime ? formatTimeAgo(calculateTimeAgo(latestInGroup.dateTime)) : null
                              return (
                                <div key={sourceName} className="space-y-4">
                                  <div className="flex flex-wrap items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
@@ -686,7 +682,6 @@ export default function NewsDetailClient({
                                      <AvatarFallback className="bg-[var(--text-primary)] text-[var(--bg-primary)] text-[8px] font-bold rounded-sm">{sourceAbbr}</AvatarFallback>
                                    </Avatar>
                                    <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wider">{sourceName}</h3>
-                                   {latestTimeAgo && <span className="text-xs text-[var(--text-muted)] ml-auto">Updated {latestTimeAgo}</span>}
                                    {(() => {
                                      const total = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative
                                      if (total === 0) return null

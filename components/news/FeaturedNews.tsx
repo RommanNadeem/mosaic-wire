@@ -121,17 +121,12 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare, initialI
           <ShareButton newsItem={newsItem} onShare={onShare} />
         </div>
 
-        {/* Headline */}
-        <div className="mb-6">
+        {/* Headline - on mobile: clamp 2 lines, no overflow; on desktop: full title */}
+        <div className="mb-6 min-w-0 overflow-hidden sm:overflow-visible">
           <h2
-            className="text-2xl md:text-4xl lg:text-[49px] font-bold text-[var(--text-primary)] leading-[1.25] transition-all line-clamp-2 text-left group-hover:underline decoration-2 underline-offset-2"
-            style={{ 
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              paddingBottom: '0.15em'
+            className="text-2xl md:text-4xl lg:text-[49px] font-bold text-[var(--text-primary)] leading-[1.25] transition-all line-clamp-2 sm:line-clamp-none text-left group-hover:underline decoration-2 underline-offset-2"
+            style={{
+              paddingBottom: '0.15em',
             }}
           >
             {title}

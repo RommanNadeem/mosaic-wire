@@ -78,8 +78,8 @@ export default function NewsCard({
         onClick={() => onTitleClick?.(String(id))}
       >
         <div className="flex flex-col sm:flex-row">
-          {/* Content Section - Left */}
-          <div className="flex-1 flex flex-col pt-5 pb-5 pr-5 min-w-0">
+          {/* Content Section - Left; less top padding on mobile (image above) */}
+          <div className="flex-1 flex flex-col pt-2 sm:pt-5 pb-5 pr-5 min-w-0">
             {/* Category and Share Button */}
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export default function NewsCard({
         )}
       </div>
 
-      <div className="pr-4 pt-4 pb-4">
+      <div className="pr-4 pt-2 sm:pt-4 pb-4">
         {/* Category and Share Button */}
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-3">

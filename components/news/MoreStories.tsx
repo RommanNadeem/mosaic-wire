@@ -27,7 +27,7 @@ export default function MoreStories({
       {/* Bottom divider - slightly thicker */}
       <div className="border-t-2 border-[var(--text-primary)] mb-4"></div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-[28px]">
         {newsItems.map((item) => (
           <NewsCard
             key={item.id}

@@ -23,7 +23,7 @@ export default function BigUpdates({ newsItems, onTitleClick, onShare }: BigUpda
         <div className="border-t border-[var(--text-primary)]"></div>
       </div>
       
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-[28px]">
         {newsItems.map((item) => (
           <NewsCard
             key={item.id}
