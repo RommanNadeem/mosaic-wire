@@ -35,9 +35,11 @@ const HowToRead = dynamic(() => import('@/components/shared/HowToRead'), {
 interface HomePageClientProps {
   initialNewsData: NewsItem[]
   usingSampleData: boolean
+  /** Server-resolved hero image URL for LCP (homepage featured card) */
+  featuredImageUrl?: string | null
 }
 
-function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientProps) {
+function HomePageContent({ initialNewsData, usingSampleData, featuredImageUrl }: HomePageClientProps) {
   const router = useRouter()
   const [newsData] = useState<NewsItem[]>(initialNewsData)
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
@@ -74,6 +76,7 @@ function HomePageContent({ initialNewsData, usingSampleData }: HomePageClientPro
               newsItem={newsData[0]}
               onTitleClick={handleTitleClick}
               onShare={() => {}}
+              initialImageUrl={featuredImageUrl}
             />
           )}
 
@@ -138,10 +141,10 @@ function LoadingFallback() {
   )
 }
 
-export default function HomePageClient({ initialNewsData, usingSampleData }: HomePageClientProps) {
+export default function HomePageClient({ initialNewsData, usingSampleData, featuredImageUrl }: HomePageClientProps) {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <HomePageContent initialNewsData={initialNewsData} usingSampleData={usingSampleData} />
+      <HomePageContent initialNewsData={initialNewsData} usingSampleData={usingSampleData} featuredImageUrl={featuredImageUrl} />
     </Suspense>
   )
 }

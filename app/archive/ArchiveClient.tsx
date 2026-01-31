@@ -11,17 +11,17 @@ const PAGE_SIZE = 30
 
 export interface ArchiveTopicRow {
   id?: string
-  display_label?: string | null
-  category_tag?: string | null
-  first_seen_at?: string | null
-  last_updated_at?: string | null
+  headline?: string | null
+  tag?: string | null
+  topic_created_at?: string | null
+  updated_at?: string | null
 }
 
 function normalizeArchiveTopic(row: any): { id: string; title: string; category: string | null; createdAt: string | null } {
   const id = String(row?.id ?? '')
-  const title = row?.display_label ?? 'Untitled'
-  const category = row?.category_tag ?? null
-  const createdAt = row?.last_updated_at ?? row?.first_seen_at ?? null
+  const title = row?.headline ?? 'Untitled'
+  const category = row?.tag ?? null
+  const createdAt = row?.updated_at ?? row?.topic_created_at ?? null
   return { id, title, category, createdAt }
 }
 

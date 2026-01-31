@@ -15,14 +15,31 @@ export function generateNewsUrl(title: string, id: string | number): string {
 }
 
 /**
- * Convert title to URL-friendly slug and append last 6 characters of ID
+ * Extract short_id from a UUID (last 2 blocks with hyphen)
+ * UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ * Returns: xxxx-xxxxxxxxxxxx (17 chars, e.g. "b2ae-c2687c18c955")
+ * This matches the database _topic_short_id() function format
+ */
+export function extractShortIdFromUUID(uuid: string): string {
+  const parts = String(uuid).split('-')
+  if (parts.length >= 2) {
+    // Last 2 UUID blocks with hyphen: "b2ae-c2687c18c955"
+    return `${parts[parts.length - 2]}-${parts[parts.length - 1]}`
+  }
+  // Fallback for non-UUID IDs
+  return uuid.slice(-17)
+}
+
+/**
+ * Convert title to URL-friendly slug and append short_id
+ * Example: "headline-text--b2ae-c2687c18c955" (double hyphen separator)
+ * The double hyphen separates the title slug from the short_id which contains a hyphen
  */
 export function createSlug(title: string, id: string | number): string {
-  const idString = String(id)
-  const shortId = idString.slice(-6) // Last 6 characters
+  const shortId = extractShortIdFromUUID(String(id))
 
   if (!title) {
-    return `news-${shortId}`
+    return `news--${shortId}`
   }
   
   const slug = title
@@ -31,23 +48,29 @@ export function createSlug(title: string, id: string | number): string {
     .replace(/[^\w\s-]/g, '') // Remove special chars
     .replace(/\s+/g, '-')      // Replace spaces with hyphens
     .replace(/-+/g, '-')       // Replace multiple hyphens with single
-    .substring(0, 60)          // Limit length to leave room for ID
+    .substring(0, 50)          // Limit length to leave room for short_id
     .replace(/-$/, '')         // Remove trailing hyphen
   
-  return `${slug}-${shortId}`
+  // Use double hyphen as separator so we can identify where short_id starts
+  return `${slug}--${shortId}`
 }
 
 /**
- * Extract short ID (last 6 chars) from slug
+ * Extract short_id from slug (after double hyphen separator)
+ * Format: "xxxx-xxxxxxxxxxxx" (17 chars, e.g. "b2ae-c2687c18c955")
  */
 export function extractShortIdFromSlug(slug: string): string | null {
   if (!slug) return null
   
-  const parts = slug.split('-')
-  const lastPart = parts[parts.length - 1]
+  // Find double hyphen separator
+  const separatorIndex = slug.lastIndexOf('--')
+  if (separatorIndex === -1) return null
   
-  if (lastPart && lastPart.length <= 6 && /^[a-zA-Z0-9]+$/.test(lastPart)) {
-    return lastPart
+  const shortId = slug.substring(separatorIndex + 2)
+  
+  // Validate: should be 17 chars (4 + hyphen + 12) matching UUID last 2 blocks
+  if (shortId && shortId.length === 17 && /^[a-f0-9]{4}-[a-f0-9]{12}$/i.test(shortId)) {
+    return shortId
   }
   
   return null

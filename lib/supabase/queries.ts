@@ -79,11 +79,18 @@ export async function getTopicBySlug(slug: string) {
   }
 
   try {
-    // Extract short ID from slug (last part after last hyphen)
-    const parts = slug.split('-')
-    const shortId = parts[parts.length - 1]
+    // Extract short_id from slug (after double hyphen separator)
+    // Slug format: "headline-text--b2ae-c2687c18c955"
+    // Short ID: "b2ae-c2687c18c955" (17 chars, matches database _topic_short_id() format)
+    const separatorIndex = slug.lastIndexOf('--')
+    if (separatorIndex === -1) {
+      return null
+    }
     
-    if (!shortId || shortId.length > 6) {
+    const shortId = slug.substring(separatorIndex + 2)
+    
+    // Validate short_id format: 17 chars (4 + hyphen + 12)
+    if (!shortId || shortId.length !== 17 || !/^[a-f0-9]{4}-[a-f0-9]{12}$/i.test(shortId)) {
       return null
     }
 
@@ -95,7 +102,7 @@ export async function getTopicBySlug(slug: string) {
 }
 
 /**
- * Get a single topic by short ID (last 6 characters of topic_id)
+ * Get a single topic by short_id (indexed column for fast lookup)
  * Used for server-side meta tag generation
  * Falls back to topics table if not found in topic_snapshots
  */
@@ -106,76 +113,29 @@ export async function getTopicByShortIdServer(shortId: string) {
   }
 
   try {
-    // First, try to find in topic_snapshots (current/active topics)
-    const { data: snapshotTopics, error: snapshotError } = await supabaseClient
+    // Direct lookup using indexed short_id column in topic_snapshots
+    const { data: snapshotTopic, error: snapshotError } = await supabaseClient
       .from('topic_snapshots')
       .select('*')
-      .order('trending_score', { ascending: false })
-      .limit(200)
+      .eq('short_id', shortId)
+      .single()
 
-    if (!snapshotError && snapshotTopics && snapshotTopics.length > 0) {
-      const topic = snapshotTopics.find(t => {
-        const topicIdString = String(t.topic_id || t.id || '')
-        const topicShortId = topicIdString.slice(-6)
-        return topicShortId === shortId
-      })
-
-      if (topic) {
-        return topic
-      }
+    if (!snapshotError && snapshotTopic) {
+      return snapshotTopic
     }
 
-    // If not found in snapshots, fallback to topics table (e.g. old/archived topics).
-    // topics table schema uses: id, display_label, category_tag, first_seen_at, last_updated_at.
-    const PAGE_SIZE = 500
-    const MAX_PAGES = 40 // safety cap: 500 * 40 = 20k rows scanned max
+    // Fallback to topics table for archived topics (also uses indexed short_id)
+    const { data: archivedTopic, error: archiveError } = await supabaseClient
+      .from('topics')
+      .select('*')
+      .eq('short_id', shortId)
+      .single()
 
-    let topicFromTable: any | null = null
-
-    for (let page = 0; page < MAX_PAGES; page++) {
-      const from = page * PAGE_SIZE
-      const to = from + PAGE_SIZE - 1
-
-      const { data: topicsPage, error: topicsError } = await supabaseClient
-        .from('topics')
-        .select('*')
-        .order('last_updated_at', { ascending: false, nullsFirst: false })
-        .range(from, to)
-
-      if (topicsError) {
-        console.error('Error fetching topics from topics table:', topicsError)
-        return null
-      }
-
-      if (!topicsPage || topicsPage.length === 0) {
-        break
-      }
-
-      topicFromTable = topicsPage.find((t: any) => {
-        const topicIdString = String(t.id || t.topic_id || '')
-        const topicShortId = topicIdString.slice(-6)
-        return topicShortId === shortId
-      }) || null
-
-      if (topicFromTable) {
-        break
-      }
-    }
-
-    if (topicFromTable) {
-      // Map topics table schema to topic_snapshots-like shape for transformTopicToNewsItem
+    if (!archiveError && archivedTopic) {
+      // Topics table has unified schema - minimal mapping needed
       return {
-        ...topicFromTable,
-        topic_id: topicFromTable.id || topicFromTable.topic_id,
-        headline: topicFromTable.display_label || topicFromTable.headline || topicFromTable.topic_name || null,
-        summary: topicFromTable.summary || topicFromTable.ai_summary || null,
-        tag: topicFromTable.category_tag || topicFromTable.tag || topicFromTable.category || null,
-        image_url: topicFromTable.image_url || topicFromTable.image || null,
-        article_count: topicFromTable.article_count || topicFromTable.cluster_size || 0,
-        source_count: topicFromTable.source_count || 0,
-        recent_articles_count: topicFromTable.recent_articles_count || 0,
-        updated_at: topicFromTable.last_updated_at || topicFromTable.updated_at || new Date().toISOString(),
-        topic_created_at: topicFromTable.first_seen_at || topicFromTable.created_at || topicFromTable.topic_created_at || null,
+        ...archivedTopic,
+        topic_id: archivedTopic.id || archivedTopic.topic_id,
       }
     }
 
@@ -242,7 +202,7 @@ export async function getArticlesForTopic(topicId: string) {
 }
 
 /**
- * Fetch distinct category_tag values from topics (for archive tabs).
+ * Fetch distinct tag values from topics (for archive tabs).
  * Returns sorted list of non-null tags from recent topics.
  */
 export async function getArchiveCategoryTagsServer(): Promise<string[]> {
@@ -254,8 +214,8 @@ export async function getArchiveCategoryTagsServer(): Promise<string[]> {
   try {
     const { data, error } = await supabaseClient
       .from('topics')
-      .select('category_tag')
-      .order('last_updated_at', { ascending: false, nullsFirst: false })
+      .select('tag')
+      .order('updated_at', { ascending: false, nullsFirst: false })
       .limit(500)
 
     if (error) {
@@ -263,7 +223,7 @@ export async function getArchiveCategoryTagsServer(): Promise<string[]> {
       return []
     }
 
-    const tags = [...new Set((data || []).map((r: { category_tag?: string | null }) => r.category_tag).filter(Boolean))] as string[]
+    const tags = [...new Set((data || []).map((r: { tag?: string | null }) => r.tag).filter(Boolean))] as string[]
     return tags.sort((a, b) => a.localeCompare(b))
   } catch (error) {
     console.error('Error in getArchiveCategoryTagsServer:', error)
@@ -273,8 +233,8 @@ export async function getArchiveCategoryTagsServer(): Promise<string[]> {
 
 /**
  * Fetch archive topics from topics table (server-side).
- * Order: recent to older (last_updated_at descending).
- * Optional categoryTag filters by category_tag.
+ * Order: recent to older (updated_at descending).
+ * Optional categoryTag filters by tag.
  */
 export async function getArchiveTopicsServer(limit: number, offset: number = 0, categoryTag?: string | null) {
   const supabaseClient = createServerClient()
@@ -288,10 +248,10 @@ export async function getArchiveTopicsServer(limit: number, offset: number = 0, 
     let query = supabaseClient
       .from('topics')
       .select('*')
-      .order('last_updated_at', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false, nullsFirst: false })
 
     if (categoryTag && categoryTag !== 'All') {
-      query = query.eq('category_tag', categoryTag)
+      query = query.eq('tag', categoryTag)
     }
     const { data, error } = await query.range(from, to)
 
@@ -309,7 +269,7 @@ export async function getArchiveTopicsServer(limit: number, offset: number = 0, 
 
 /**
  * Fetch archive topics from topics table (client-side, for load-more).
- * Optional categoryTag filters by category_tag.
+ * Optional categoryTag filters by tag.
  */
 export async function getArchiveTopics(limit: number, offset: number = 0, categoryTag?: string | null) {
   if (!isSupabaseConfigured || !supabase) {
@@ -322,10 +282,10 @@ export async function getArchiveTopics(limit: number, offset: number = 0, catego
     let query = supabase
       .from('topics')
       .select('*')
-      .order('last_updated_at', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false, nullsFirst: false })
 
     if (categoryTag && categoryTag !== 'All') {
-      query = query.eq('category_tag', categoryTag)
+      query = query.eq('tag', categoryTag)
     }
     const { data, error } = await query.range(from, to)
 

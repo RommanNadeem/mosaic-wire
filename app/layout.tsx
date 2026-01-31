@@ -74,10 +74,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const organizationSchema = generateOrganizationSchema()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : null
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
         <link rel="preconnect" href="https://platform.twitter.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://platform.twitter.com" />
         <link rel="preload" href="https://platform.twitter.com/widgets.js" as="script" />

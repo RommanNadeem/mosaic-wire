@@ -15,10 +15,13 @@ interface FeaturedNewsProps {
   newsItem: NewsItem | null
   onTitleClick?: (id: string) => void
   onShare?: (url: string) => void
+  /** Server-resolved hero image URL for LCP */
+  initialImageUrl?: string | null
 }
 
-export default function FeaturedNews({ newsItem, onTitleClick, onShare }: FeaturedNewsProps) {
-  const { imageUrl, imageError } = useImage(newsItem?.image || null)
+export default function FeaturedNews({ newsItem, onTitleClick, onShare, initialImageUrl }: FeaturedNewsProps) {
+  const { imageUrl: clientImageUrl, imageError } = useImage(newsItem?.image || null)
+  const heroImageUrl = initialImageUrl ?? clientImageUrl
   const { isTouchDevice } = useTouchDevice()
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
@@ -70,15 +73,16 @@ export default function FeaturedNews({ newsItem, onTitleClick, onShare }: Featur
       className="group overflow-hidden mb-8 relative transition-all duration-200 cursor-pointer rounded-none"
       onClick={() => onTitleClick?.(String(id))}
     >
-      {/* Image */}
+      {/* Image - LCP hero: eager + high priority */}
       <div className="w-full h-64 md:h-80 lg:h-[450px] overflow-hidden relative">
-        {imageUrl && !imageError ? (
+        {heroImageUrl && !imageError ? (
           <img
-            src={imageUrl}
+            src={heroImageUrl}
             alt={title || 'News image'}
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center top' }}
-            loading="lazy"
+            loading="eager"
+            fetchPriority="high"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center opacity-20">

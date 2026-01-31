@@ -2,6 +2,7 @@ import { getTopicBySlug, getLatestTopicsServer, getArticlesForTopicServer } from
 import { transformTopicToNewsItem, transformSupabaseData } from '@/utils/data/transformers'
 import { generateNewsMetadata } from '@/utils/meta/generate'
 import { processImageForMetaTags } from '@/utils/images/meta-processing'
+import { getDisplayImageUrlServer } from '@/utils/images/server-url'
 import { formatTimeAgo, calculateTimeAgo } from '@/utils/formatting/time'
 import { createSlug } from '@/utils/routing/navigation'
 import { generateNewsArticleSchema, generateBreadcrumbSchema } from '@/utils/seo/structured-data'
@@ -155,8 +156,15 @@ export default async function NewsPage({ params }: PageProps) {
     { name: newsItem.title, url: `/news/${params.slug}` },
   ], baseUrl)
 
+  // Resolve hero image URL on server for LCP (avoids client round-trip)
+  const heroImageUrl = await getDisplayImageUrlServer(newsItem.image ?? null)
+
   return (
     <>
+      {/* Preload LCP hero image */}
+      {heroImageUrl && (
+        <link rel="preload" as="image" href={heroImageUrl} />
+      )}
       {/* NewsArticle Schema */}
       <Script
         id="news-article-schema"
@@ -178,6 +186,7 @@ export default async function NewsPage({ params }: PageProps) {
         primarySourcesCount={primarySourcesCount}
         keywordDensity={keywordDensity}
         aggregationLatency={aggregationLatency}
+        initialImageUrl={heroImageUrl}
       />
     </>
   )

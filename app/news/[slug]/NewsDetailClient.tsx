@@ -22,6 +22,8 @@ interface NewsDetailClientProps {
   primarySourcesCount: number
   keywordDensity: string
   aggregationLatency: string
+  /** Server-resolved hero image URL for LCP (avoids client round-trip) */
+  initialImageUrl?: string | null
 }
 
 const TRENDING_SIDEBAR_COUNT = 5
@@ -71,8 +73,10 @@ export default function NewsDetailClient({
   primarySourcesCount,
   keywordDensity,
   aggregationLatency,
+  initialImageUrl,
 }: NewsDetailClientProps) {
-  const { imageUrl, imageError } = useImage(newsItem?.image || null)
+  const { imageUrl: clientImageUrl, imageError } = useImage(newsItem?.image || null)
+  const heroImageUrl = initialImageUrl ?? clientImageUrl
   const { isTouchDevice } = useTouchDevice()
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
@@ -392,13 +396,14 @@ export default function NewsDetailClient({
 
             {/* Image */}
             <figure className="w-full h-[200px] md:h-[300px] lg:h-[400px] mb-12 overflow-hidden relative">
-              {imageUrl && !imageError ? (
+              {heroImageUrl && !imageError ? (
                 <img
                   itemProp="image"
-                  src={imageUrl}
+                  src={heroImageUrl}
                   alt={title || 'News image'}
                   className="w-full h-full object-cover"
-                  loading="lazy"
+                  loading="eager"
+                  fetchPriority="high"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[var(--bg-surface)]" aria-hidden="true">

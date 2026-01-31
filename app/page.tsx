@@ -3,6 +3,7 @@ import { transformSupabaseData } from '@/utils/data/transformers'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
 import { generateWebSiteSchema, generateItemListSchema, generateFAQSchema, generateHowToSchema } from '@/utils/seo/structured-data'
 import { generatePlatformFAQSchema } from '@/utils/seo/ai-optimization'
+import { getDisplayImageUrlServer } from '@/utils/images/server-url'
 import HomePageClient from './HomePageClient'
 import { sampleNewsData } from '@/data/sampleData'
 import Script from 'next/script'
@@ -49,6 +50,10 @@ export default async function HomePage() {
   const howToSchema = generateHowToSchema()
   const platformFAQSchema = generatePlatformFAQSchema()
 
+  const featuredImageUrl = newsData.length > 0
+    ? await getDisplayImageUrlServer(newsData[0].image ?? null)
+    : null
+
   return (
     <>
       {/* Structured Data Schemas */}
@@ -77,7 +82,11 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(platformFAQSchema) }}
       />
-      <HomePageClient initialNewsData={newsData} usingSampleData={usingSampleData} />
+      <HomePageClient
+        initialNewsData={newsData}
+        usingSampleData={usingSampleData}
+        featuredImageUrl={featuredImageUrl}
+      />
     </>
   )
 }
